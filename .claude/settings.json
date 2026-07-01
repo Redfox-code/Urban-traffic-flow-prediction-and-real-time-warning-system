@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(pip install *)",
+      "Bash(pip list *)",
+      "Bash(flask *)",
+      "Bash(pytest *)",
+      "Bash(git *)",
+      "Bash(mkdir *)",
+      "Bash(cd *)",
+      "Bash(ls *)",
+      "Bash(python *)"
+    ]
+  },
+  "worktree": {
+    "baseRef": "head"
+  }
+}
