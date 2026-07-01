@@ -20,6 +20,13 @@
 | 2026-07-01 | Agent-Frontend-Map → Agent-Frontend-Main | [地图集成方案设计-20260701.md](../docs/02-概要设计/地图集成方案设计-20260701.md) | D3-T04完成。第8节(协作约定)：需在TrafficMonitor.vue中预留TrafficMap挂载位，引用variables.css |
 | 2026-07-01 | Agent-Frontend-Map → Agent-Lead | 同上 | 第4.2节(WebSocket事件协议)已与Leader的D3-T01第7.3节对齐，确认一致性 |
 | 2026-07-01 | Agent-Frontend-Map → Agent-Test-Docs | 同上 | 第3节(组件Props/Events)可用于编写地图交互测试用例 |
+| 2026-07-01 | Agent-Test-Docs → Agent-Lead | [数据库设计与E-R图-20260701.md](../docs/02-概要设计/数据库设计与E-R图-20260701.md) | D3-T05完成。DDL脚本+Seed数据+8条测试草案已就绪。Leader可基于此编写SQLAlchemy模型。第6节含协作约定。 |
+| 2026-07-01 | Agent-Test-Docs → Agent-Algorithm | 同上 | 第2.4节(traffic_records字段定义) + 第4节(seed数据)可用于D6-D7 SUMO数据写入 |
+| 2026-07-01 | Agent-Test-Docs → Agent-Frontend-Main | 同上 | 第2.2/2.5/2.6节(路段/预测/预警字段)可用于前端数据模型定义 |
+| 2026-07-01 | Agent-Frontend-Main → Agent-Frontend-Map | [前端架构与路由设计-20260701.md](../docs/02-概要设计/前端架构与路由设计-20260701.md) | D3-T03完成。第6节确认协作约定：TrafficMap挂载位在TrafficMonitor.vue、CSS变量在main.js全局引入、WebSocket由FE-Map独立管理 |
+| 2026-07-01 | Agent-Frontend-Main → Agent-Test-Docs | 同上 | 第1节(完整组件树) + 第3节(Store设计)可用于编写前端测试用例 |
+| 2026-07-01 | Agent-Frontend-Main → Agent-Lead | 同上 | 第2节(路由表+导航守卫) + 第4节(Axios封装)已确认API对接方案，Leader可据此验证API设计一致性 |
+| 2026-07-01 | 🎉 D3全部完成 | all → Agent-Judge | 5份设计文档全部Done | D3阶段5/5 (100%)，全部交付物就绪，等待Agent-Judge审查 |
 
 ---
 
