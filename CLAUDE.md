@@ -199,3 +199,34 @@ python -m prediction.evaluate            # 模型评估
 | 4 | MCP连接器 | 内置工具(文件/Bash/Git) + 预留MySQL/GitHub MCP接口 |
 | 5 | 子代理 | 5个Implementer + 1个独立Verifier(Judge) — 写代码和审查分离 |
 | 6 | 记忆/状态 | `STATE.md` + `run-log.md` + `task-board.md` + `agent-logs/` |
+
+## 十一、设计文档索引
+
+> Agent被唤醒时，除了读取自己的角色文件和STATE.md，还必须读取这里列出的设计文档。确保后续开发基于前期设计，不重复造轮子、不偏离已批准的接口。
+
+### 全局文档（所有Agent需了解）
+
+| 文档 | 路径 | 说明 |
+|------|------|------|
+| 总体架构设计 | [docs/02-概要设计/总体架构设计与模块划分-20260701.md](docs/02-概要设计/总体架构设计与模块划分-20260701.md) | 全局架构蓝图、模块划分、接口契约 |
+| API详细规范 | [docs/02-概要设计/API详细接口规范-20260701.md](docs/02-概要设计/API详细接口规范-20260701.md) | 所有端点的请求/响应格式 |
+| 概要设计报告 | [docs/02-概要设计/概要设计报告-城市交通流量预测与实时预警系统.md](docs/02-概要设计/概要设计报告-城市交通流量预测与实时预警系统.md) | D3-D5整合报告，快速了解全局 |
+
+### 各Agent专属文档（详见各自角色文件中的「启动必读文档」）
+
+| Agent | 必读文档数 | 角色文件 |
+|-------|-----------|---------|
+| Agent-Lead | 2必读 + 4按需 | [agent-lead.md](.claude/agents/agent-lead.md) |
+| Agent-Algorithm | 2必读 + 4按需 | [agent-algorithm.md](.claude/agents/agent-algorithm.md) |
+| Agent-Frontend-Main | 2必读 + 4按需 | [agent-frontend-main.md](.claude/agents/agent-frontend-main.md) |
+| Agent-Frontend-Map | 2必读 + 4按需 | [agent-frontend-map.md](.claude/agents/agent-frontend-map.md) |
+| Agent-Test-Docs | 3必读 + 3按需 | [agent-test-docs.md](.claude/agents/agent-test-docs.md) |
+
+### Agent唤醒后的标准流程（已更新）
+
+1. 读取自己的角色文件（含 **启动必读文档** 章节）
+2. 根据角色文件中的文档索引，读取 🔴必读 的设计文档
+3. 读取 `CLAUDE.md` + `STATE.md`
+4. 读取 `task-board.md` 找到自己的任务
+5. 检查依赖关系 → 执行任务 → 产出交付物
+6. 更新 `task-board.md` + 自己的 `agent-logs/` + `handoff-queue.md` + `decisions-log.md`
