@@ -8,7 +8,18 @@
 
 ## 🆕 新登记（待下游Agent接收）
 
-（当前无）
+| 时间 | 交付方 → 接收方 | 交付物 | 说明 |
+|------|----------------|--------|------|
+| 2026-07-01 | Agent-Lead → Agent-Test-Docs | [总体架构设计与模块划分-20260701.md](../docs/02-概要设计/总体架构设计与模块划分-20260701.md) | D3-T01完成，D3-T05阻塞解除。Agent-Test-Docs现在可以开始数据库设计了。关键接口：第5节(8个实体清单) + 第6节(实体关系) |
+| 2026-07-01 | Agent-Lead → Agent-Algorithm | 同上 | 第2.2节(数据接口M1→M2) + 第7.1节(PredictionService接口)已就绪，可开始D3-T02算法模块设计 |
+| 2026-07-01 | Agent-Lead → Agent-Frontend-Main | 同上 | 第8节(前端架构约定) + 第4.2节(API路由表)已就绪，可开始D3-T03前端架构设计 |
+| 2026-07-01 | Agent-Lead → Agent-Frontend-Map | 同上 | 第7.3节(WebSocket事件定义)已就绪，可开始D3-T04地图集成方案设计 |
+| 2026-07-01 | Agent-Algorithm → Agent-Lead | [算法模块设计-20260701.md](../docs/02-概要设计/算法模块设计-20260701.md) | D3-T02完成。第6.2节(predict_flow接口)可供Leader设计predict API；第6.3节(Celery重训练)可供Leader注册异步任务 |
+| 2026-07-01 | Agent-Algorithm → Agent-Frontend-Main | 同上 | 第6.2节预测结果JSON格式可用于设计预测看板ECharts图表 |
+| 2026-07-01 | Agent-Algorithm → Agent-Test-Docs | 同上 | 第5节(评估指标+合格阈值)可用于编写模型评估测试用例 |
+| 2026-07-01 | Agent-Frontend-Map → Agent-Frontend-Main | [地图集成方案设计-20260701.md](../docs/02-概要设计/地图集成方案设计-20260701.md) | D3-T04完成。第8节(协作约定)：需在TrafficMonitor.vue中预留TrafficMap挂载位，引用variables.css |
+| 2026-07-01 | Agent-Frontend-Map → Agent-Lead | 同上 | 第4.2节(WebSocket事件协议)已与Leader的D3-T01第7.3节对齐，确认一致性 |
+| 2026-07-01 | Agent-Frontend-Map → Agent-Test-Docs | 同上 | 第3节(组件Props/Events)可用于编写地图交互测试用例 |
 
 ---
 
