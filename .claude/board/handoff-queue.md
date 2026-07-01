@@ -27,6 +27,9 @@
 | 2026-07-01 | Agent-Frontend-Main → Agent-Test-Docs | 同上 | 第1节(完整组件树) + 第3节(Store设计)可用于编写前端测试用例 |
 | 2026-07-01 | Agent-Frontend-Main → Agent-Lead | 同上 | 第2节(路由表+导航守卫) + 第4节(Axios封装)已确认API对接方案，Leader可据此验证API设计一致性 |
 | 2026-07-01 | 🎉 D3全部完成 | all → Agent-Judge | 5份设计文档全部Done | D3阶段5/5 (100%)，全部交付物就绪，等待Agent-Judge审查 |
+| 2026-07-01 | Agent-Lead → Agent-Frontend-Main | [API详细接口规范-20260701.md](../docs/02-概要设计/API详细接口规范-20260701.md) | D4-T01完成。7模块30+端点完整规范(含Request/Response/Error)。D4-T03阻塞解除，FE-Main可基于此设计Mock数据。 |
+| 2026-07-01 | Agent-Lead → Agent-Frontend-Map | 同上 | 第9节(WebSocket事件协议)已确认与D3-T04一致。D4-T04阻塞解除。 |
+| 2026-07-01 | Agent-Lead → Agent-Test-Docs | 同上 | 全部30+端点的详细规范就绪。D4-T05阻塞解除，可编写API测试用例。 |
 
 ---
 
