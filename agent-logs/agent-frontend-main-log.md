@@ -67,6 +67,13 @@
 **修复**：加预测窗口选择(5/15/30min)、el-alert错误提示、预测序列卡片(每个时间点独立展示)、模拟数据标签提醒。
 **新增**：`using_trained_model` 字段展示——无真实模型时显示「模拟」标签。
 
+### BUG-TIMEOUT-01 SUMO仿真超时
+
+**🎯Bug接收**：Agent-Lead分配。用户点击「一键运行仿真」报timeout 15000ms exceeded。
+**💭分析**：SUMO仿真需要1-2分钟，但Axios默认timeout=15000(15秒)。request.js全局超时对/sumo/run不适用。
+**📝修复**：Dashboard.vue中sumo/run请求单独设置`{ timeout: 180000 }`(3分钟)，覆盖全局15秒超时。
+**✅验证**：重启前端后再点按钮不再超时。
+
 ### UI-06 Dashboard一键仿真按钮
 
 **🎯任务**：前端添加一键运行SUMO仿真+导入的按钮。
