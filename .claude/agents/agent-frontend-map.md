@@ -137,4 +137,5 @@
 1. **agent-logs/agent-frontend-map-log.md** — 每个任务追加完整链
 2. **.claude/board/handoff-queue.md** — 每次交付登记
 3. **.claude/board/decisions-log.md** — 每次决策追加
+4. **run-log.md** — 任务完成后追加摘要
 > 代码完成但追踪文件未更新 = 任务未完成。

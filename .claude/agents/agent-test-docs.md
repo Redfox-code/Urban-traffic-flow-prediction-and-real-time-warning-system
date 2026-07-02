@@ -133,5 +133,6 @@
 1. **agent-logs/agent-test-docs-log.md** — 每个任务追加完整链
 2. **.claude/board/handoff-queue.md** — 每次交付登记
 3. **.claude/board/decisions-log.md** — 每次测试发现/Bug报告/决策追加
+4. **run-log.md** — 任务完成后追加摘要
 > 代码/文档完成但追踪文件未更新 = 任务未完成。
 - ❌ 不要一个人写完整份报告正文 — 各Agent提供各自章节
