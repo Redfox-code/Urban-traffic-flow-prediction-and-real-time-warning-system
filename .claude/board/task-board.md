@@ -1,20 +1,17 @@
-# 任务看板 — 前端功能补齐
+# 任务看板 — 地图修复+美化
 
-## 🐛 Bugs/功能缺失
+## 📋 Todo
 
-| ID | 描述 | 严重 | 分配给 | 现象 |
-|----|------|------|--------|------|
-| BUG-FE-03 | Dashboard卡片全是0，未调statsApi | 🔴 | agent-frontend-main | 静态数据 |
-| BUG-FE-04 | TrafficMonitor无实时数据+地图空 | 🔴 | agent-frontend-main+agent-frontend-map | 有壳无数据 |
-| BUG-FE-05 | PredictionBoard无ECharts图表 | 🔴 | agent-frontend-main | 只有按钮 |
-| BUG-FE-06 | WarningManager空列表+无WS弹窗 | 🔴 | agent-frontend-main+agent-frontend-map | 无数据+无推送 |
-| BUG-FE-07 | RoutePlanner sections数据未加载 | 🟡 | agent-frontend-main | 下拉空 |
-| BUG-FE-08 | sections API未返回路段数据(数据库空) | 🔴 | agent-lead | 需seed数据 |
+| ID | 任务 | Agent |
+|----|------|-------|
+| UI-01 | 地图无Key友好提示+加载失败处理 | agent-frontend-map |
+| UI-02 | Dashboard卡片美化(图标+渐变+动画) | agent-frontend-main |
+| UI-03 | 全局样式优化(间距/侧边栏图标/空状态/加载态) | agent-frontend-main |
 
 ## 🔄 InProgress
 
-BUG-FE-08 (Agent-Lead)
+UI-01 (Agent-Frontend-Map)
 
 ## ✅ 已修复
 
-BUG-BE-02~05 (JWT保护) | BUG-FE-02 (@/ alias)
+BUG-BE-02~05 (JWT) | BUG-FE-02~08 (前端+Seed)

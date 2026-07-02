@@ -17,6 +17,8 @@
 | 7/02 | BUG-FE-06 | ✅修复 | WarningManager接入warningApi筛选+解除。 |
 | 7/02 | BUG-FE-07 | ✅修复 | RoutePlanner接入sectionsApi+routeApi。 |
 | 7/02 | stats.js | 📝新增 | statsApi.getDashboard() API模块。 |
+| 7/02 | UI-02 | ✅美化 | Dashboard卡片：图标+渐变色+悬浮动画。 |
+| 7/02 | UI-03 | ✅美化 | 全局样式：卡片圆角+表格暗色+输入框+标签+按钮统一暗色主题。 |
 
 ## 思考轨迹
 

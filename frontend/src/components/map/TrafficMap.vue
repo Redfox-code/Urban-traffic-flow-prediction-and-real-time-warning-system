@@ -1,6 +1,17 @@
 <template>
   <div ref="mapContainer" class="traffic-map" style="width:100%;height:500px;border-radius:8px;overflow:hidden">
-    <div v-if="!mapReady" style="color:var(--text-secondary);padding:20px">🗺️ 地图加载中...</div>
+    <div v-if="!mapReady && !loadError" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-secondary)">
+      <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+      <span style="margin-left:8px">地图加载中...</span>
+    </div>
+    <div v-if="loadError" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-secondary);text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🗺️</div>
+      <div style="font-size:16px;font-weight:bold;margin-bottom:8px">地图未配置</div>
+      <div style="font-size:13px;max-width:300px;line-height:1.6">
+        需要在 <code>.env.development</code> 中配置高德地图 Key。<br/>
+        前往 <a href="https://lbs.amap.com" target="_blank" style="color:var(--accent-blue)">lbs.amap.com</a> 申请免费Key。
+      </div>
+    </div>
   </div>
 </template>
 
@@ -13,9 +24,12 @@ const props = defineProps({
 })
 const emit = defineEmits(['section-click'])
 
+import { Loading } from '@element-plus/icons-vue'
+
 const mapContainer = ref(null)
 const mapInstance = ref(null)
 const mapReady = ref(false)
+const loadError = ref(false)
 
 const AMAP_KEY = import.meta.env.VITE_AMAP_KEY
 
@@ -55,6 +69,7 @@ onMounted(async () => {
     })
   } catch (err) {
     console.warn('[TrafficMap]', err.message)
+    loadError.value = true
   }
 })
 
