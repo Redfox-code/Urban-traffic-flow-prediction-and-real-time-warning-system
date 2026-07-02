@@ -41,8 +41,17 @@ onMounted(async () => {
       resizeEnable: true,
     })
     mapReady.value = true
+    // D7: 添加路段标注点
+    props.sections.forEach((section, i) => {
+      if (section.coordinates) {
+        const pos = section.coordinates.start || section.coordinates
+        const marker = new AMap.Marker({ position: pos, title: section.name, label: { content: section.name, direction: 'top' } })
+        marker.on('click', () => emit('section-click', section))
+        mapInstance.value.add(marker)
+      }
+    })
     mapInstance.value.on('click', (e) => {
-      // TODO D8: 点击路段 → emit section-click → ECharts联动
+      // D8: 点击路段 → 联动ECharts
     })
   } catch (err) {
     console.warn('[TrafficMap]', err.message)
