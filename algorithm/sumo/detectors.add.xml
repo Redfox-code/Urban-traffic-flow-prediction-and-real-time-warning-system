@@ -1,67 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
-
-    <!-- E2 感应线圈检测器 — 40个检测器，15min采样间隔 -->
-    <!-- 每个主干道3个(E/M/X)，每个次干道2个(E/X)，每个支路1个(M) -->
-
-    <!-- ===== 主干道检测器 (4条 × 3 = 12个) ===== -->
-    <laneAreaDetector id="det_main_ns_01" lane="north_to_south_0"
-                      pos="100" endPos="200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_ns_02" lane="north_to_south_0"
-                      pos="600" endPos="700" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_ns_03" lane="north_to_south_0"
-                      pos="1100" endPos="1200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-
-    <laneAreaDetector id="det_main_sn_01" lane="south_to_north_0"
-                      pos="100" endPos="200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_sn_02" lane="south_to_north_0"
-                      pos="600" endPos="700" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_sn_03" lane="south_to_north_0"
-                      pos="1100" endPos="1200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-
-    <laneAreaDetector id="det_main_ew_01" lane="east_to_west_0"
-                      pos="100" endPos="200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_ew_02" lane="east_to_west_0"
-                      pos="600" endPos="700" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_ew_03" lane="east_to_west_0"
-                      pos="1100" endPos="1200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-
-    <laneAreaDetector id="det_main_we_01" lane="west_to_east_0"
-                      pos="100" endPos="200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_we_02" lane="west_to_east_0"
-                      pos="600" endPos="700" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_main_we_03" lane="west_to_east_0"
-                      pos="1100" endPos="1200" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-
-    <!-- ===== 次干道检测器 (8条 × 2 = 16个) ===== -->
-    <laneAreaDetector id="det_sec_nw_01" lane="sec_nw_to_se_0"
-                      pos="50" endPos="150" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_sec_nw_02" lane="sec_nw_to_se_0"
-                      pos="400" endPos="500" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-
-    <laneAreaDetector id="det_sec_ne_01" lane="sec_ne_to_sw_0"
-                      pos="50" endPos="150" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-    <laneAreaDetector id="det_sec_ne_02" lane="sec_ne_to_sw_0"
-                      pos="400" endPos="500" period="900"
-                      file="algorithm/data/raw/e2_output.xml" friendlyPos="true"/>
-
-    <!-- 其余次干道+支路检测器在netgenerate生成路网后根据实际lane名补充 -->
-    <!-- 使用 generate_detectors.py 脚本自动生成剩余24个检测器 -->
-
+    <e2detector id="e2_output" file="../data/raw/e2_output.xml" period="900">
+        <item id="det_bottom0A0" lane="bottom0A0_0" pos="19"/>
+        <item id="det_bottom1B0" lane="bottom1B0_0" pos="19"/>
+        <item id="det_bottom2C0" lane="bottom2C0_0" pos="19"/>
+        <item id="det_bottom3D0" lane="bottom3D0_0" pos="19"/>
+        <item id="det_bottom4E0" lane="bottom4E0_0" pos="19"/>
+        <item id="det_bottom5F0" lane="bottom5F0_0" pos="19"/>
+        <item id="det_left0A0" lane="left0A0_0" pos="19"/>
+        <item id="det_left1A1" lane="left1A1_0" pos="19"/>
+        <item id="det_left2A2" lane="left2A2_0" pos="19"/>
+        <item id="det_left3A3" lane="left3A3_0" pos="19"/>
+        <item id="det_right0F0" lane="right0F0_0" pos="19"/>
+        <item id="det_right1F1" lane="right1F1_0" pos="19"/>
+        <item id="det_right2F2" lane="right2F2_0" pos="19"/>
+        <item id="det_right3F3" lane="right3F3_0" pos="19"/>
+        <item id="det_top0A3" lane="top0A3_0" pos="19"/>
+        <item id="det_top1B3" lane="top1B3_0" pos="19"/>
+        <item id="det_top2C3" lane="top2C3_0" pos="19"/>
+        <item id="det_top3D3" lane="top3D3_0" pos="19"/>
+        <item id="det_top4E3" lane="top4E3_0" pos="19"/>
+        <item id="det_top5F3" lane="top5F3_0" pos="19"/>
+    </e2detector>
 </additional>

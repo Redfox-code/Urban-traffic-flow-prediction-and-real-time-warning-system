@@ -57,13 +57,13 @@ def generate_detectors():
     det_xml = ['<?xml version="1.0" encoding="UTF-8"?>',
                '<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
                '            xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">',
-               '    <e2detector id="e2_output" file="../data/raw/e2_output.xml" period="900">']
+               '    <laneAreaDetector id="e2_output" file="../data/raw/e2_output.xml" period="900">']
 
     for i, (eid, lane_id, length) in enumerate(edges):
         pos = min(50, length * 0.1)
         det_xml.append(f'        <item id="det_{eid}" lane="{lane_id}" pos="{pos:.0f}"/>')
 
-    det_xml.append('    </e2detector>')
+    det_xml.append('    </laneAreaDetector>')
     det_xml.append('</additional>')
 
     with open(DET_FILE, 'w', encoding='utf-8') as f:
