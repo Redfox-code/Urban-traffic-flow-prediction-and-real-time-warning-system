@@ -101,7 +101,7 @@ def generate_routes():
         ew_in, ew_out = edge_ids[0], edge_ids[1]
 
     flows = [
-        (0, 7200, 'am'), (7200, 14400, 'md'), (14400, 21600, 'pm')
+        (0, 3600, 'sim'),  # 1小时仿真
     ]
     for begin, end, label in flows:
         factor = 1.0 if label == 'am' else (0.5 if label == 'md' else 0.9)
