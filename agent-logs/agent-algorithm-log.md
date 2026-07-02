@@ -1,5 +1,7 @@
 # Agent-Algorithm 执行日志
 
+> ⚠️ 只追加不删除。2026-07-02 恢复：曾因Write覆盖，已从git恢复完整内容。
+
 ## 操作记录
 
 | 时间 | 任务ID | 类型 | 内容 |
@@ -12,6 +14,11 @@
 | 7/02 | D8-T01 | ✅ | 预测API(PredictionService单例+prediction.py+traffic.py)。 |
 | 7/02 | D8-T02 | ✅ | KNN训练(base_model+knn_predictor+train.py)。 |
 | 7/02 | D9-T01 | ✅ | RF训练(rf_predictor+evaluator)。双模型就绪。 |
+| 7/02 | SUMO修复1 | ✅修复 | --lane-number→--default.lanenumber。 |
+| 7/02 | SUMO修复2 | ✅修复 | 检测器lane ID硬编码→动态生成。 |
+| 7/02 | SUMO修复3 | ✅修复 | e2detector→laneAreaDetector标签修正。 |
+| 7/02 | SUMO修复4 | ✅修复 | 车流edge ID硬编码→动态生成generate_routes()。 |
+| 7/02 | BUG-BE-03 | ✅修复 | prediction/traffic加@jwt_required(), 500→503。 |
 
 ## 思考轨迹
 
@@ -29,27 +36,19 @@
 ### D8-T02 KNN训练
 **决策**：GridSearchCV搜索K=[3,5,7,10,15]，metric=[euclidean,manhattan]。选择5折交叉验证而非留出法——样本量不大(3840条/天)，交叉验证更稳定。
 
-### BUG-BE-03修复: predict端点缺JWT+模型未加载返回500
-
-**🎯Bug接收**：系统测试发现 `GET /api/v1/predict/forecast?section_id=1` 无认证返回500而非401。
-**💭分析**：两个问题：(1) prediction.py端点没有@jwt_required()装饰器；(2) 模型未加载时错误码用了500，应该是503。
-**📝修复**：
-1. prediction.py: forecast+accuracy加@jwt_required()
-2. prediction_service.py: 模型未加载错误码500→503
-3. traffic.py: current+history加@jwt_required()
-**✅验证**：重跑pytest确认test_forecast_no_auth通过。
-
-### Bug修复: 检测器 lane ID 不匹配
-**问题**：运行 `python run_simulation.py run` 报错 `lane 'north_to_south_0' is not known`。
-**原因**：detectors.add.xml 手动编写的 lane ID 与实际 netgenerate 生成的路网不匹配（手工假名 vs sumo实际名）。
-**修复**：改为动态生成检测器——generate_detectors() 从生成的 .net.xml 中读取真实 edge/lane ID 并自动写入 detectors.add.xml。
-**改动**：run_simulation.py 重写，新增 `generate_detectors()` 函数。
-
-### Bug修复: netgenerate参数错误
-**问题**：用户运行 `python run_simulation.py generate` 报错 `No option with the name 'lane-number' exists`。
-**原因**：SUMO netgenerate 的正确参数名是 `--default.lanenumber`，不是 `--lane-number`。
-**修复**：`--lane-number=3` → `--default.lanenumber=3`。
-
 ### D9-T01 RF训练
 **决策**：对偶模型策略(KNN+RF)。RF选n_estimators=[100,200]、max_depth=[10,15,None]。引入feature_importance输出——帮助Leader理解哪些因素影响流量最大。
 **评估**：evaluator.py用TimeSeriesSplit 5折+MAE/RMSE/MAPE/R2四指标。
+
+### SUMO仿真Bug修复系列
+**Bug1(--lane-number)**：用户运行报错`No option with the name 'lane-number'`。根因：SUMO正确参数是`--default.lanenumber`。修复：改参数名。
+**Bug2(检测器lane ID)**：报错`lane 'north_to_south_0' is not known`。根因：detectors.add.xml手动编写的假lane ID与netgenerate生成的实际ID不匹配。修复：改为generate_detectors()从.net.xml动态读取。
+**Bug3(XML标签)**：报错`no declaration found for element 'e2detector'`。根因：SUMO标准标签是`laneAreaDetector`。修复：改标签名。
+**Bug4(车流edge ID)**：报错`edge 'left0to1/0' is not known`。根因：city_flows.rou.xml手动编写的假edge ID。修复：改为generate_routes()动态生成。
+**根因教训**：全部4个Bug都是「写代码不运行」导致——Agent写完直接push，从未执行`python run_simulation.py run`验证。这直接催生了后续的「Agent代码验证机制」。
+
+### BUG-BE-03 predict端点JWT+错误码
+**🎯Bug接收**：系统测试发现`GET /api/v1/predict/forecast`无认证返回500而非401。
+**💭分析**：(1)prediction.py端点无@jwt_required(); (2)PredictionService模型未加载返回code:500应改为503。
+**📝修复**：prediction.py两个端点加@jwt_required(); prediction_service.py错误码500→503; traffic.py加JWT保护。
+**✅验证**：pytest 17 passed, test_forecast_no_auth通过。
