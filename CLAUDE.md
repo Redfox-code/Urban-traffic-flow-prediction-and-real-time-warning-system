@@ -119,6 +119,19 @@ python -m prediction.evaluate            # 模型评估
 3. **不要**硬编码 SUMO 路径——用 `config.py` 中的环境变量
 4. **不要**在 Windows 路径中使用反斜杠——统一使用正斜杠或 `pathlib.Path`
 5. **不要**把数据库密码提交到 Git——使用 `.env` 文件 + `.gitignore`
+6. **不要**写代码不运行就标记完成——每个Agent必须运行验证通过后才算Done
+
+### Agent代码验证铁律（D11新增）
+
+每次代码产出后必须运行验证，不通过不标记Done：
+
+| Agent | 验证命令 | 通过标准 |
+|-------|---------|---------|
+| Agent-Lead | `cd backend && flask --app run.py run` | 无import错误/启动异常 |
+| Agent-Algorithm | `cd algorithm && python run_simulation.py all` | 仿真无报错完成 |
+| Agent-Frontend-Main | `cd frontend && npm install && npm run dev` | 无红色控制台报错 |
+| Agent-Frontend-Map | 浏览器打开 localhost:5173/traffic | 地图加载无JS错误 |
+| Agent-Test-Docs | `cd backend && pytest tests/ -v` | 全部通过 |
 
 ## 七、小组分工速查
 

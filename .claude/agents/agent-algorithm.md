@@ -128,6 +128,11 @@
 7. **数据处理任务**：先探索数据(describe/可视化) → 确定预处理策略 → 实现Pipeline
 8. **模型训练任务**：先跑baseline(KNN) → 再跑随机森林 → 对比评估 → 调优
 9. 每完成一个子步骤，更新自己的日志文件
+10. ⚠️ **运行验证（必须执行，不通过不算完成）**：
+   - `cd algorithm && python run_simulation.py generate` → 路网+检测器生成成功
+   - `python run_simulation.py run` → 仿真无报错完成
+   - `python preprocessor.py data/raw/e2_output.xml` → 数据管道运行通过
+   - 如果任何一步失败 → 修复代码 → 重新验证 → 直到通过
 
 ### 步骤4：记录与交接（⚠️ 三个追踪文件必须全部更新，缺一不可）
 
@@ -158,3 +163,4 @@
 4. **run-log.md** — 任务完成后追加一条 `[时间] 🤖Agent | ✅成功 | 摘要`
 - ❌ 不要在master上开发 — 每个任务创建独立分支
 - ❌ 不要超参数暴力搜索 — 先理解参数含义，合理设置搜索范围
+- ❌ 不要写代码不运行就标记Done — 必须 `python run_simulation.py all` 通过后才算完成
