@@ -6,6 +6,9 @@
 
 ---
 
+| 2026-07-02 | Agent-Lead → Agent-Algorithm | Flask脚手架已就绪 | D6-T01完成。traffic.py和prediction.py骨架已注册，backend/app/ml/和backend/app/tasks/目录已创建。Agent-Algorithm可在其Blueprint和目录内填充实现。分支：feature/agent-lead/D6-T01-flask-scaffold → master。 |
+| 2026-07-02 | Agent-Lead → Agent-Test-Docs | 同上 | backend/tests/目录已创建，pytest+SQLite内存库已就绪，可开始编写测试。 |
+
 ## 🆕 新登记（待下游Agent接收）
 
 | 时间 | 交付方 → 接收方 | 交付物 | 说明 |

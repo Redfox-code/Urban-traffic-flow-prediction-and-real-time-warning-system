@@ -26,7 +26,6 @@
 
 | ID | 任务 | Agent | 优先级 | BlockedBy | 预估 | 验收条件 |
 |----|------|-------|--------|-----------|------|----------|
-| D6-T02 | SUMO路网搭建 | agent-algorithm | P0 | — | 2h | .net.xml/.rou.xml/.det.xml可被sumo加载 |
 | D6-T03 | Vue 3项目初始化 | agent-frontend-main | P0 | — | 1.5h | npm run dev启动+Vite+路由+Axios+布局 |
 | D6-T04 | 高德地图Key+基础地图 | agent-frontend-map | P0 | D6-T03 | 1h | 地图加载无报错 |
 | D6-T05 | 测试框架搭建 | agent-test-docs | P0 | — | 1h | pytest+conftest+fixture可运行 |
@@ -35,15 +34,33 @@
 
 ## 🔄 InProgress（进行中）
 
-| ID | 任务 | Agent | 开始时间 | 预估剩余 |
-|----|------|-------|---------|---------|
-| D6-T01 | Flask项目脚手架搭建 | agent-lead | 2026-07-02 | 2h |
+（无）
 
 ---
 
 ## ✅ Done（待审查）
 
+| ID | 任务 | Agent | 完成时间 | 交付物 |
+|----|------|-------|---------|--------|
+| D6-T01 | Flask项目脚手架搭建 | agent-lead | 2026-07-02 | 28文件，7 Blueprint + 8 Model |
+| D6-T02 | SUMO路网搭建 | agent-algorithm | 2026-07-02 | city_flows.rou.xml + detectors.add.xml + config.sumocfg + run_simulation.py |
+| D6-T03 | Vue 3项目初始化 | agent-frontend-main | P0 | — | 1.5h | npm run dev启动+Vite+路由+Axios+布局 |
+| D6-T04 | 高德地图Key+基础地图 | agent-frontend-map | P0 | D6-T03 | 1h | 地图加载无报错 |
+| D6-T05 | 测试框架搭建 | agent-test-docs | P0 | — | 1h | pytest+conftest+fixture可运行 |
+
+---
+
+## 🔄 InProgress（进行中）
+
 （无）
+
+---
+
+## ✅ Done（待审查）
+
+| ID | 任务 | Agent | 完成时间 | 交付物 |
+|----|------|-------|---------|--------|
+| D6-T01 | Flask项目脚手架搭建 | agent-lead | 2026-07-02 | 28个文件，7 Blueprint + 8 Model + config + utils |
 
 ---
 

@@ -14,7 +14,8 @@
 | 2026-07-01 首次站会 | — | 📋站报 | 主持首次站会。系统就绪，D3待启动。 |
 | 2026-07-01 第二次站会 | — | 📋站报 | 主持第二次站会。D3进度80%(4/5)。发现D3-T03超时。修复看板D3-T04去重问题。 |
 | 2026-07-01 | D4启动 | 🎯Sprint启动 | 用户触发D4启动。D3已全部Approved。拆分D4为6个任务。 |
-| 2026-07-01 | D4-T01 | ✅完成 | 创建API详细接口规范(10章节)：7模块30+端点完整规范。每个端点含Method/Path/Request Body/Query Params/Response(200)/Error示例。WebSocket协议确认。D4-T03/T04/T05阻塞解除。文件：[API详细接口规范-20260701.md](../docs/02-概要设计/API详细接口规范-20260701.md) |
+| 2026-07-01 | D4-T01 | ✅完成 | API详细接口规范(10章节)。D4-T03/T04/T05阻塞解除。 |
+| 2026-07-02 | D6-T01 | ✅完成 | Flask脚手架搭建(28文件)。7 Blueprint(Leader:5+Algorithm:2骨架)+8 Model+config+error_codes+SocketIO+Celery+ML初始化。Git分支: feature/agent-lead/D6-T01-flask-scaffold → merged to master。通知Algorithm和Test-Docs可开始开发。 |
 | 2026-07-01 | D3-T01 | 🎯任务开始 | 心跳触发，执行D3-T01：总体架构设计与模块划分。标记InProgress。 |
 | 2026-07-01 | D3-T01 | 📝产出 | 创建总体架构设计文档（12章节）：架构图、6大模块、API路由表、8个DB实体、接口契约、数据流。文件：[总体架构设计与模块划分-20260701.md](../docs/02-概要设计/总体架构设计与模块划分-20260701.md) |
 | 2026-07-01 | D3-T01 | ✅完成 | D3-T01完成。更新task-board→Done。handoff-queue通知4个下游Agent。D3-T05阻塞解除。 |

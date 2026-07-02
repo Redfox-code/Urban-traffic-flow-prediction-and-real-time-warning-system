@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+
+    <vType id="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5.0" maxSpeed="60" vClass="passenger"/>
+    <vType id="bus" accel="1.5" decel="3.5" sigma="0.5" length="12.0" maxSpeed="40" vClass="bus"/>
+    <vType id="truck" accel="1.0" decel="3.0" sigma="0.5" length="10.0" maxSpeed="30" vClass="truck"/>
+
+    <!-- 早高峰 7:00-9:00 (0-7200s) — 主干道双向 -->
+    <flow id="am_ns" begin="0" end="7200" from="left0to1/0" to="right4to5/0" number="2400" type="passenger"/>
+    <flow id="am_sn" begin="0" end="7200" from="right5to4/0" to="left1to0/0" number="2200" type="passenger"/>
+    <flow id="am_ew" begin="0" end="7200" from="top0to1/0" to="bottom2to3/0" number="2000" type="passenger"/>
+    <flow id="am_we" begin="0" end="7200" from="bottom3to2/0" to="top1to0/0" number="2100" type="passenger"/>
+    <flow id="am_bus" begin="0" end="7200" from="left0to1/0" to="right4to5/0" number="226" type="bus"/>
+    <flow id="am_truck" begin="0" end="7200" from="left0to1/0" to="right4to5/0" number="198" type="truck"/>
+
+    <!-- 平峰 10:00-12:00 (7200-14400s) — 流量减半 -->
+    <flow id="md_ns" begin="7200" end="14400" from="left0to1/0" to="right4to5/0" number="1200" type="passenger"/>
+    <flow id="md_sn" begin="7200" end="14400" from="right5to4/0" to="left1to0/0" number="1100" type="passenger"/>
+
+    <!-- 晚高峰 17:00-19:00 (14400-21600s) — 流量回升 -->
+    <flow id="pm_ns" begin="14400" end="21600" from="left0to1/0" to="right4to5/0" number="2200" type="passenger"/>
+    <flow id="pm_sn" begin="14400" end="21600" from="right5to4/0" to="left1to0/0" number="2100" type="passenger"/>
+
+</routes>
