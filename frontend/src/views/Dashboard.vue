@@ -12,12 +12,42 @@
         </div>
       </el-col>
     </el-row>
+
+    <el-card style="background:var(--bg-panel);margin-top:20px">
+      <template #header><span style="font-weight:bold;color:var(--text-primary)">🔬 SUMO 仿真控制</span></template>
+      <div style="display:flex;align-items:center;gap:16px">
+        <el-button type="primary" @click="runSumo" :loading="sumoRunning" :disabled="sumoRunning">
+          {{ sumoRunning ? '仿真运行中...' : '▶ 一键运行仿真' }}
+        </el-button>
+        <span v-if="sumoResult" :style="{color: sumoResult.includes('成功') ? '#00e676' : '#f44336'}">{{ sumoResult }}</span>
+        <span v-if="sumoRunning" style="color:var(--text-secondary);font-size:13px">正在生成路网→运行仿真→导入数据库，约需1-2分钟...</span>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { statsApi } from '@/api/stats'
+import request from '@/api/request'
+
+const sumoRunning = ref(false)
+const sumoResult = ref('')
+
+const runSumo = async () => {
+  sumoRunning.value = true; sumoResult.value = ''
+  try {
+    const res = await request.post('/sumo/run')
+    const data = res.data || res
+    sumoResult.value = `✅ ${data.status || '完成'} (导入${data.records_imported || 0}条记录)`
+    ElMessage.success('仿真完成，数据已导入')
+  } catch (e) {
+    sumoResult.value = `❌ 仿真失败: ${e?.message || '未知错误'}`
+    ElMessage.error('仿真失败，请检查 SUMO 是否安装')
+  } finally { sumoRunning.value = false }
+}
+
 const statsCards = ref([
   { icon:'🛣️', title:'路段总数', value:0,   color:'linear-gradient(135deg,#00d4ff,#0099cc)' },
   { icon:'📡', title:'检测器数', value:0,   color:'linear-gradient(135deg,#00e676,#00b248)' },

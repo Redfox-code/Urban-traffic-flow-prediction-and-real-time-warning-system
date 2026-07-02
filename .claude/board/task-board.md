@@ -1,12 +1,12 @@
-# 任务看板 — SUMO数据导入
+# 任务看板 — 一键仿真
 
 ## 🔄 InProgress
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| BUG-DATA-01 | 创建import_sumo_data.py: SUMO e2_output→traffic_records表 | agent-algorithm |
-| BUG-DATA-02 | traffic.py/current端点优先读DB, 空则fallback到mock | agent-lead |
+| BUG-SUMO-API | 创建POST /api/v1/sumo/run端点(后端触发SUMO+导入) | agent-lead |
+| UI-06 | Dashboard加「运行仿真」按钮+状态提示 | agent-frontend-main |
 
 ## ✅ 已修复
 
-全部BUG + UI + 预测 + 路况
+全部BUG + UI + 数据导入

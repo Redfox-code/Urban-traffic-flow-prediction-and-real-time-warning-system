@@ -72,3 +72,10 @@
 **💭设计**：/current端点改为双层策略——先查TrafficRecord表是否有数据，有则读最新记录(带`source:'db'`标记)，无则fallback到mock(带`source:'mock'`标记)。前端可通过source字段知道数据来源。
 **📝修复**：`_real_traffic(section)`函数从DB查询每个路段最新traffic_record。`_mock_traffic`作为fallback保留。`has_db_data`检查全局是否有记录。
 **决策**：保留mock fallback——课程项目阶段SUMIO数据可能不完整，fallback确保系统始终可展示。
+
+### BUG-SUMO-API 一键仿真端点
+
+**🎯任务**：用户不想在终端手动执行3个命令（generate→run→import），希望前端一键完成。
+**💭设计**：创建`POST /api/v1/sumo/run`端点，后端用subprocess依次执行3步：生成路网(30s超时)→运行仿真(120s超时)→导入数据库(30s超时)。任一步失败返回具体错误+stderr。
+**决策**：同步执行而非Celery异步——课程项目并发量低，1-2分钟等待可接受，前端显示加载状态即可。
+**关键**：必须用`sys.executable`而非`python`，确保使用当前虚拟环境的Python。

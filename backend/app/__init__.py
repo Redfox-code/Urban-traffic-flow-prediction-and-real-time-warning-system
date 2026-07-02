@@ -40,6 +40,10 @@ def create_app(config_name=None):
     app.register_blueprint(traffic_bp, url_prefix='/api/v1/traffic')
     app.register_blueprint(prediction_bp, url_prefix='/api/v1/predict')
 
+    # 注册 SUMO 仿真控制 Blueprint
+    from app.routes.sumo import sumo_bp
+    app.register_blueprint(sumo_bp, url_prefix='/api/v1/sumo')
+
     # 创建数据库表（开发环境）
     with app.app_context():
         from app.models import user, traffic_section, traffic_detector
