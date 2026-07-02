@@ -1,12 +1,12 @@
-# 任务看板 — 流量预测修复
+# 任务看板 — 实时路况修复
 
 ## 🔄 InProgress
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| BUG-PRED-01 | PredictionService无模型时返回503→改为返回mock预测 | agent-algorithm |
-| UI-05 | PredictionBoard加预测图表+精度展示+错误提示 | agent-frontend-main |
+| BUG-TRAFFIC-01 | traffic.py动态生成mock数据(支持任意section_id) | agent-algorithm |
+| BUG-TRAFFIC-02 | TrafficMonitor空数据显示"暂无数据"非"加载中" | agent-frontend-main |
 
 ## ✅ 已修复
 
-全部JWT/前端/UI Bug
+全部BUG + UI

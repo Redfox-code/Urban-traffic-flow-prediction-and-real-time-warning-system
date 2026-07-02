@@ -54,6 +54,13 @@
 - 新增 `stats.js` API模块（D6遗漏）
 **关键决策**：用 `res.data?.items || res?.items` 兼容不同的响应解包方式。
 
+### BUG-TRAFFIC-02 TrafficMonitor数据加载
+
+**🎯Bug接收**：点击路段列表一直显示「加载中」，即使API返回了数据也消不掉。
+**💭分析**：(1)onSectionClick调trafficApi.getCurrent(id)但只传单个section_id，其他23个路段trafficData为空→显示「加载中」；(2)空数据判断不准确。
+**📝修复**：(1)onMounted时调`loadAllTraffic()`加载全部路段路况数据；(2)加`loadingAll`状态区分首次加载vs无数据；(3)空数据显示「暂无实时数据」而非「加载中」。
+**✅验证**：页面加载后24路段全部显示路况badge，点击任一路段右侧面板显示详细数据。
+
 ### UI-05 PredictionBoard增强
 
 **问题**：只有单一预测值+无错误提示+无预测序列展示。

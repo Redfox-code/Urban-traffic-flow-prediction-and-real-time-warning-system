@@ -47,6 +47,13 @@
 **Bug4(车流edge ID)**：报错`edge 'left0to1/0' is not known`。根因：city_flows.rou.xml手动编写的假edge ID。修复：改为generate_routes()动态生成。
 **根因教训**：全部4个Bug都是「写代码不运行」导致——Agent写完直接push，从未执行`python run_simulation.py run`验证。这直接催生了后续的「Agent代码验证机制」。
 
+### BUG-TRAFFIC-01 traffic.py动态mock数据
+
+**🎯Bug接收**：前端点击任意路段显示「加载中」——traffic.py只有section_id=1的硬编码数据。
+**💭分析**：D8-T01实现的traffic/current端点用固定mock列表`[{section_id:1,...}]`，其他23个路段过滤后返回空数组。
+**📝修复**：改为`_mock_traffic(section)`函数——从数据库读取所有路段，基于每个路段的capacity/max_speed/id动态生成合理mock数据(车流量/速度/占有率/路况等级)。支持`?section_id=`筛选。
+**✅验证**：curl测试任意section_id均返回数据。
+
 ### BUG-PRED-01 PredictionService无模型返回503
 
 **🎯Bug接收**：前端调用预测API返回503「模型未加载」。

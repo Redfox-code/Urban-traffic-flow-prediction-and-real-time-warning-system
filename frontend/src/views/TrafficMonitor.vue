@@ -31,7 +31,8 @@
           <div class="data-row"><span>通行能力</span><b>{{ selectedSection.capacity }} veh/h</b></div>
           <div class="data-row"><span>限速</span><b>{{ selectedSection.max_speed }} km/h</b></div>
         </div>
-        <div v-else style="color:var(--text-secondary);text-align:center;padding:20px">加载中...</div>
+        <div v-else-if="loadingAll" style="color:var(--text-secondary);text-align:center;padding:20px">加载中...</div>
+        <div v-else style="color:var(--text-secondary);text-align:center;padding:20px">暂无实时数据</div>
       </el-card>
     </div>
   </div>
@@ -49,22 +50,33 @@ const selectedId = ref(null)
 const selectedSection = ref(null)
 const trafficData = reactive({})
 
+const loadingAll = ref(false)
+
+const loadAllTraffic = async () => {
+  loadingAll.value = true
+  try {
+    const res = await trafficApi.getCurrent()
+    const data = res.data || res
+    if (Array.isArray(data)) data.forEach(d => { trafficData[d.section_id] = d })
+  } catch {}
+  loadingAll.value = false
+}
+
 const onSectionClick = async (section) => {
   selectedId.value = section.id
   selectedSection.value = section
-  try {
-    const res = await trafficApi.getCurrent(section.id)
-    const data = res.data || res
-    if (Array.isArray(data)) {
-      data.forEach(d => { trafficData[d.section_id] = d })
-    } else if (data) {
-      trafficData[section.id] = data
-    }
-  } catch {}
+  if (!trafficData[section.id]) {
+    try {
+      const res = await trafficApi.getCurrent(section.id)
+      const data = res.data || res
+      if (Array.isArray(data) && data.length > 0) trafficData[data[0].section_id] = data[0]
+    } catch {}
+  }
 }
 
 onMounted(async () => {
   try { const res = await sectionsApi.getList(); sections.value = res.data?.items || res?.items || [] } catch {}
+  loadAllTraffic()
 })
 </script>
 
