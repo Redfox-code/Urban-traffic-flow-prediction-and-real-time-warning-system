@@ -65,3 +65,10 @@
 **💭根因**：D6建表但从未插入数据。SQLite dev.db在gitignore中，每次clone都是空库。
 **📝修复**：seed_data.py预置2用户(admin+analyst)+24路段(模拟6x4城市路网)+36检测器。
 **决策**：用独立Python脚本而非Flask CLI自定义命令——简单直接，课程项目够用。
+
+### BUG-DATA-02 traffic.py数据库集成
+
+**🎯任务**：解决traffic.py只用mock数据、不读数据库的问题。
+**💭设计**：/current端点改为双层策略——先查TrafficRecord表是否有数据，有则读最新记录(带`source:'db'`标记)，无则fallback到mock(带`source:'mock'`标记)。前端可通过source字段知道数据来源。
+**📝修复**：`_real_traffic(section)`函数从DB查询每个路段最新traffic_record。`_mock_traffic`作为fallback保留。`has_db_data`检查全局是否有记录。
+**决策**：保留mock fallback——课程项目阶段SUMIO数据可能不完整，fallback确保系统始终可展示。

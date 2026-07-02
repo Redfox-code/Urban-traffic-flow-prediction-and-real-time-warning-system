@@ -1,12 +1,12 @@
-# 任务看板 — 实时路况修复
+# 任务看板 — SUMO数据导入
 
 ## 🔄 InProgress
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| BUG-TRAFFIC-01 | traffic.py动态生成mock数据(支持任意section_id) | agent-algorithm |
-| BUG-TRAFFIC-02 | TrafficMonitor空数据显示"暂无数据"非"加载中" | agent-frontend-main |
+| BUG-DATA-01 | 创建import_sumo_data.py: SUMO e2_output→traffic_records表 | agent-algorithm |
+| BUG-DATA-02 | traffic.py/current端点优先读DB, 空则fallback到mock | agent-lead |
 
 ## ✅ 已修复
 
-全部BUG + UI
+全部BUG + UI + 预测 + 路况

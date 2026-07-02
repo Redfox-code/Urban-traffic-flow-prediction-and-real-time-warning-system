@@ -47,6 +47,14 @@
 **Bug4(车流edge ID)**：报错`edge 'left0to1/0' is not known`。根因：city_flows.rou.xml手动编写的假edge ID。修复：改为generate_routes()动态生成。
 **根因教训**：全部4个Bug都是「写代码不运行」导致——Agent写完直接push，从未执行`python run_simulation.py run`验证。这直接催生了后续的「Agent代码验证机制」。
 
+### BUG-DATA-01 SUMO→数据库导入脚本
+
+**🎯任务**：解决SUMO仿真输出和traffic_records表之间的数据断层。
+**💭设计**：创建`import_sumo_data.py`——调用preprocessor.parse_e2_output()解析XML→遍历DataFrame→为每条记录创建TrafficRecord并写入数据库。
+**📝实现**：使用Flask app_context()访问数据库。检测器→路段映射：从traffic_detectors表读取，取section_id。时间戳：每条记录间隔15分钟(模拟SUMO采样)。
+**使用**：`cd algorithm && python run_simulation.py all` 生成e2_output.xml → `python import_sumo_data.py` 导入数据库 → 前端立即显示真实路况(source: 'db')。
+**✅验证**：导入后traffic.py/current端点返回`source:'db'`标记的数据。
+
 ### BUG-TRAFFIC-01 traffic.py动态mock数据
 
 **🎯Bug接收**：前端点击任意路段显示「加载中」——traffic.py只有section_id=1的硬编码数据。
