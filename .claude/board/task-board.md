@@ -1,16 +1,14 @@
 # 任务看板
 
 > **状态流转**：Backlog → Todo → InProgress → Done → Approved
-> **更新时间**：2026-07-02
+> **更新时间**：2026-07-02 D6 Sprint启动
 
 ---
 
-## 📥 Backlog（D6-D13）
+## 📥 Backlog（D7-D13）
 
 | ID | 任务 | 阶段 | 优先级 | 备注 |
 |----|------|------|--------|------|
-| BL-D6-01 | Flask项目脚手架搭建 | D6 | P0 | Agent-Lead |
-| BL-D6-02 | SUMO路网搭建 | D6 | P0 | Agent-Algorithm |
 | BL-D7-01 | 用户认证JWT实现 | D7 | P0 | Agent-Lead |
 | BL-D7-02 | SUMO数据解析和预处理 | D7 | P0 | Agent-Algorithm |
 | BL-D8-01 | 预测API实现 | D8 | P0 | Agent-Lead |
@@ -24,15 +22,22 @@
 
 ---
 
-## 📋 Todo
+## 📋 Todo（就绪待执行）
 
-（D6 Sprint待启动）
+| ID | 任务 | Agent | 优先级 | BlockedBy | 预估 | 验收条件 |
+|----|------|-------|--------|-----------|------|----------|
+| D6-T02 | SUMO路网搭建 | agent-algorithm | P0 | — | 2h | .net.xml/.rou.xml/.det.xml可被sumo加载 |
+| D6-T03 | Vue 3项目初始化 | agent-frontend-main | P0 | — | 1.5h | npm run dev启动+Vite+路由+Axios+布局 |
+| D6-T04 | 高德地图Key+基础地图 | agent-frontend-map | P0 | D6-T03 | 1h | 地图加载无报错 |
+| D6-T05 | 测试框架搭建 | agent-test-docs | P0 | — | 1h | pytest+conftest+fixture可运行 |
 
 ---
 
-## 🔄 InProgress
+## 🔄 InProgress（进行中）
 
-（无）
+| ID | 任务 | Agent | 开始时间 | 预估剩余 |
+|----|------|-------|---------|---------|
+| D6-T01 | Flask项目脚手架搭建 | agent-lead | 2026-07-02 | 2h |
 
 ---
 
@@ -42,18 +47,18 @@
 
 ---
 
-## ✔️ Approved
+## ✔️ Approved（概要设计阶段）
 
 | ID | 任务 | Agent | 审查人 | 通过时间 |
 |----|------|-------|--------|---------|
 | D3-T01 | 总体架构设计与模块划分 | agent-lead | Agent-Judge | 2026-07-01 |
-| D3-T02 | 算法模块设计（含数据管道） | agent-algorithm | Agent-Judge | 2026-07-01 |
+| D3-T02 | 算法模块设计 | agent-algorithm | Agent-Judge | 2026-07-01 |
 | D3-T03 | 前端架构与路由设计 | agent-frontend-main | Agent-Judge | 2026-07-01 |
 | D3-T04 | 地图集成方案设计 | agent-frontend-map | Agent-Judge | 2026-07-01 |
 | D3-T05 | 数据库设计与E-R图 | agent-test-docs | Agent-Judge | 2026-07-01 |
-| D4-T01 | 7模块API详细接口规范 | agent-lead | Agent-Judge | 2026-07-02 |
-| D4-T02 | 模型接口详细规范+数据格式 | agent-algorithm | Agent-Judge | 2026-07-02 |
-| D4-T03 | 前端API对接+Mock数据 | agent-frontend-main | Agent-Judge | 2026-07-02 |
+| D4-T01 | API详细接口规范 | agent-lead | Agent-Judge | 2026-07-02 |
+| D4-T02 | 模型接口详细规范 | agent-algorithm | Agent-Judge | 2026-07-02 |
+| D4-T03 | 前端API对接+Mock | agent-frontend-main | Agent-Judge | 2026-07-02 |
 | D4-T04 | WebSocket消息格式规范 | agent-frontend-map | Agent-Judge | 2026-07-02 |
 | D4-T05 | API测试用例设计 | agent-test-docs | Agent-Judge | 2026-07-02 |
 | D5-T01 | 概要设计报告整合 | agent-test-docs | Agent-Judge | 2026-07-02 |
