@@ -16,7 +16,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { Loading } from '@element-plus/icons-vue'
 
 const props = defineProps({
   sections: { type: Array, default: () => [] },
@@ -24,24 +25,37 @@ const props = defineProps({
 })
 const emit = defineEmits(['section-click'])
 
-import { Loading } from '@element-plus/icons-vue'
-
 const mapContainer = ref(null)
 const mapInstance = ref(null)
 const mapReady = ref(false)
 const loadError = ref(false)
+const markers = ref([])
 
 const AMAP_KEY = import.meta.env.VITE_AMAP_KEY
 
 const loadAMapScript = () => {
   return new Promise((resolve, reject) => {
     if (window.AMap) return resolve()
-    // 用户需在高德开放平台申请Key，替换.env.development中的VITE_AMAP_KEY
     const script = document.createElement('script')
-    script.src = `https://webapi.amap.com/v2/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.HeatMap`
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Marker`
     script.onload = resolve
-    script.onerror = () => reject(new Error('高德地图加载失败：请检查 VITE_AMAP_KEY'))
+    script.onerror = () => reject(new Error('高德地图加载失败：请检查 Key 是否正确'))
     document.head.appendChild(script)
+  })
+}
+
+const addMarkers = () => {
+  if (!mapInstance.value) return
+  markers.value.forEach(m => mapInstance.value.remove(m))
+  markers.value = []
+  props.sections.forEach(s => {
+    if (s.coordinates?.start) {
+      const pos = [s.coordinates.start[0], s.coordinates.start[1]]
+      const marker = new AMap.Marker({ position: pos, title: s.name })
+      marker.on('click', () => emit('section-click', s))
+      mapInstance.value.add(marker)
+      markers.value.push(marker)
+    }
   })
 }
 
@@ -55,23 +69,14 @@ onMounted(async () => {
       resizeEnable: true,
     })
     mapReady.value = true
-    // D7: 添加路段标注点
-    props.sections.forEach((section, i) => {
-      if (section.coordinates) {
-        const pos = section.coordinates.start || section.coordinates
-        const marker = new AMap.Marker({ position: pos, title: section.name, label: { content: section.name, direction: 'top' } })
-        marker.on('click', () => emit('section-click', section))
-        mapInstance.value.add(marker)
-      }
-    })
-    mapInstance.value.on('click', (e) => {
-      // D8: 点击路段 → 联动ECharts
-    })
+    addMarkers()
   } catch (err) {
     console.warn('[TrafficMap]', err.message)
     loadError.value = true
   }
 })
+
+watch(() => props.sections, () => { if (mapReady.value) addMarkers() }, { deep: true })
 
 onUnmounted(() => {
   mapInstance.value?.destroy()
