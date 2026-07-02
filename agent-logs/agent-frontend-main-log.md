@@ -19,6 +19,7 @@
 | 7/02 | stats.js | 📝新增 | statsApi.getDashboard() API模块。 |
 | 7/02 | UI-02 | ✅美化 | Dashboard卡片：图标+渐变色+悬浮动画。 |
 | 7/02 | UI-03 | ✅美化 | 全局样式：卡片圆角+表格暗色+输入框+标签+按钮统一暗色主题。 |
+| 7/02 | UI-04 | ✅重写 | TrafficMonitor: 左地图+右数据面板。点路段→调trafficApi.getCurrent()→实时数据。TrafficBadge组件(畅通/缓行/拥堵/严重拥堵)。 |
 
 ## 思考轨迹
 
