@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
-    <laneAreaDetector id="e2_output" file="../data/raw/e2_output.xml" period="900">
-        <item id="det_bottom0A0" lane="bottom0A0_0" pos="19"/>
-        <item id="det_bottom1B0" lane="bottom1B0_0" pos="19"/>
-        <item id="det_bottom2C0" lane="bottom2C0_0" pos="19"/>
-        <item id="det_bottom3D0" lane="bottom3D0_0" pos="19"/>
-        <item id="det_bottom4E0" lane="bottom4E0_0" pos="19"/>
-        <item id="det_bottom5F0" lane="bottom5F0_0" pos="19"/>
-        <item id="det_left0A0" lane="left0A0_0" pos="19"/>
-        <item id="det_left1A1" lane="left1A1_0" pos="19"/>
-        <item id="det_left2A2" lane="left2A2_0" pos="19"/>
-        <item id="det_left3A3" lane="left3A3_0" pos="19"/>
-        <item id="det_right0F0" lane="right0F0_0" pos="19"/>
-        <item id="det_right1F1" lane="right1F1_0" pos="19"/>
-        <item id="det_right2F2" lane="right2F2_0" pos="19"/>
-        <item id="det_right3F3" lane="right3F3_0" pos="19"/>
-        <item id="det_top0A3" lane="top0A3_0" pos="19"/>
-        <item id="det_top1B3" lane="top1B3_0" pos="19"/>
-        <item id="det_top2C3" lane="top2C3_0" pos="19"/>
-        <item id="det_top3D3" lane="top3D3_0" pos="19"/>
-        <item id="det_top4E3" lane="top4E3_0" pos="19"/>
-        <item id="det_top5F3" lane="top5F3_0" pos="19"/>
-    </laneAreaDetector>
+    <laneAreaDetector id="det_bottom0A0" lanes="bottom0A0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_bottom1B0" lanes="bottom1B0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_bottom2C0" lanes="bottom2C0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_bottom3D0" lanes="bottom3D0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_bottom4E0" lanes="bottom4E0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_bottom5F0" lanes="bottom5F0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_left0A0" lanes="left0A0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_left1A1" lanes="left1A1_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_left2A2" lanes="left2A2_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_left3A3" lanes="left3A3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_right0F0" lanes="right0F0_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_right1F1" lanes="right1F1_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_right2F2" lanes="right2F2_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_right3F3" lanes="right3F3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_top0A3" lanes="top0A3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_top1B3" lanes="top1B3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_top2C3" lanes="top2C3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_top3D3" lanes="top3D3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_top4E3" lanes="top4E3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
+    <laneAreaDetector id="det_top5F3" lanes="top5F3_0" pos="19" endPos="119" period="900" file="../data/raw/e2_output.xml" friendlyPos="true"/>
 </additional>
