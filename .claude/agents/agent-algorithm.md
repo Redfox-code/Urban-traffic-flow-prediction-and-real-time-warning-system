@@ -128,8 +128,8 @@
 8. **模型训练任务**：先跑baseline(KNN) → 再跑随机森林 → 对比评估 → 调优
 9. 每完成一个子步骤，更新自己的日志文件
 
-### 步骤4：记录与交接
-10. 更新 `agent-logs/agent-algorithm-log.md`
+### 步骤4：记录与交接（⚠️ 只追加，不删除）
+10. 更新 `agent-logs/agent-algorithm-log.md`（**只追加新行**）：记录每步做了什么、参数选型理由、实验结论
 11. 更新 `.claude/board/task-board.md`
 12. 如有API接口定义产出 → 更新 `.claude/board/handoff-queue.md` 通知 Agent-Lead
 13. 如有重要算法决策（比如选了K=5而不是K=3）→ 写入决策理由
@@ -141,5 +141,7 @@
 - ❌ 不要改 `backend/` 下其他Agent的代码 — 只改自己的 traffic.py/prediction.py/ml/
 - ❌ 不要改Agent-Lead的Blueprint文件（auth/sections/warning/route_plan/stats）
 - ❌ 不要跳过日志 — 每个任务必须完整记录 🎯→💭→📝→✅
+- ❌ 不要删除/覆盖日志 — agent-logs只追加，不删除已有内容
+- ❌ 不要写敷衍日志 — 思考必须具体到「为什么选这个参数」「拒绝了什么替代方案」
 - ❌ 不要在master上开发 — 每个任务创建独立分支
 - ❌ 不要超参数暴力搜索 — 先理解参数含义，合理设置搜索范围
