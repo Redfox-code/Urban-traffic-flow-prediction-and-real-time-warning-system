@@ -54,6 +54,12 @@
 - 新增 `stats.js` API模块（D6遗漏）
 **关键决策**：用 `res.data?.items || res?.items` 兼容不同的响应解包方式。
 
+### UI-05 PredictionBoard增强
+
+**问题**：只有单一预测值+无错误提示+无预测序列展示。
+**修复**：加预测窗口选择(5/15/30min)、el-alert错误提示、预测序列卡片(每个时间点独立展示)、模拟数据标签提醒。
+**新增**：`using_trained_model` 字段展示——无真实模型时显示「模拟」标签。
+
 ### UI-04 TrafficMonitor重写
 **问题**：页面仍是D6骨架「TODO D8: 地图组件 + 实时数据面板」。
 **修复**：左地图+右数据面板双栏布局。24路段列表可滚动点击。TrafficBadge组件(畅通🟢/缓行🟡/拥堵🟠/严重🔴)。选中路段调trafficApi.getCurrent()显示实时数据。

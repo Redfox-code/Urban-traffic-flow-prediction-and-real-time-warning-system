@@ -47,6 +47,14 @@
 **Bug4(车流edge ID)**：报错`edge 'left0to1/0' is not known`。根因：city_flows.rou.xml手动编写的假edge ID。修复：改为generate_routes()动态生成。
 **根因教训**：全部4个Bug都是「写代码不运行」导致——Agent写完直接push，从未执行`python run_simulation.py run`验证。这直接催生了后续的「Agent代码验证机制」。
 
+### BUG-PRED-01 PredictionService无模型返回503
+
+**🎯Bug接收**：前端调用预测API返回503「模型未加载」。
+**💭分析**：saved_models/目录无.pkl文件→模型为None→返回503错误。用户无法使用预测功能。
+**📝修复**：改为始终返回可用预测数据。有真实模型时用模型预测并用`using_trained_model: true`标记；无模型时基于路段ID+时段生成合理mock数据并用`using_trained_model: false`标记。
+**决策**：课程项目阶段，优先保证功能可演示。前端通过`using_trained_model`字段显示「模拟」标签区分数据来源。
+**✅验证**：curl测试predict端点返回200+完整预测JSON。
+
 ### BUG-BE-03 predict端点JWT+错误码
 **🎯Bug接收**：系统测试发现`GET /api/v1/predict/forecast`无认证返回500而非401。
 **💭分析**：(1)prediction.py端点无@jwt_required(); (2)PredictionService模型未加载返回code:500应改为503。

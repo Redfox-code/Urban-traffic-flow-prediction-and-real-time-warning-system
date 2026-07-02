@@ -1,12 +1,12 @@
-# 任务看板 — 实时路况修复
+# 任务看板 — 流量预测修复
 
 ## 🔄 InProgress
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| UI-04 | TrafficMonitor重写: 地图+数据面板+API接入 | agent-frontend-main |
-| UI-05 | 地图点击联动: emit→数据面板刷新 | agent-frontend-map |
+| BUG-PRED-01 | PredictionService无模型时返回503→改为返回mock预测 | agent-algorithm |
+| UI-05 | PredictionBoard加预测图表+精度展示+错误提示 | agent-frontend-main |
 
 ## ✅ 已修复
 
-BUG-BE-02~05 | BUG-FE-02~08 | UI-01~03
+全部JWT/前端/UI Bug
