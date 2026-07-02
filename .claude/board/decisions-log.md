@@ -387,3 +387,55 @@
 2. D4 API详细设计时建议Leader产出OpenAPI/Swagger格式文档
 3. D6开发前建议所有Agent重新阅读decisions-log.md中的9条决策
 4. DDL脚本需在D6由Leader在MySQL上实际执行验证
+
+---
+
+## D6-D13 开发阶段决策记录
+
+### [决策] D6-T02 netgenerate vs 手写XML — Agent-Algorithm (2026-07-02)
+
+**背景**：需创建24路段/12交叉口的SUMO路网
+**选项**：A-手写.net.xml(~800行) / B-netgenerate --grid一行命令
+**决议**：B。理由：14天工期手写易出错；网格路网足够验证算法；run_simulation.py封装了generate命令
+**影响**：网格路网非真实城市路网，迁移需重新建模
+
+### [决策] D6-T03 直接写package.json vs Vite CLI — Agent-Frontend-Main (2026-07-02)
+
+**背景**：需初始化Vue 3项目，CLI是交互式的不适合Agent
+**决议**：直接写package.json+vite.config.js+源文件。D3-T03已设计好所有文件结构
+
+### [决策] D8-T01 PredictionService单例模式 — Agent-Algorithm (2026-07-02)
+
+**背景**：禁忌#1禁止每次请求加载模型
+**选项**：A-每次joblib.load / B-Flask全局变量 / C-Python单例(__new__)
+**决议**：C。理由：全局唯一实例；首次实例化自动加载；与Flask工厂函数兼容
+**影响**：模型路径硬编码saved_models/，后续需config化
+
+### [决策] D8-T03 预警阈值85%/95% — Agent-Lead (2026-07-02)
+
+**背景**：预警规则需要occupancy阈值区分WARNING/CRITICAL
+**选项**：A-70%/90%(敏感) / B-85%/95%(平衡) / C-自适应(需历史数据)
+**决议**：B。理由：交通领域常用阈值；自适应需历史数据(暂缺)；阈值可通过API动态修改
+
+### [决策] D9-T02 Dijkstra用heapq vs networkx — Agent-Lead (2026-07-02)
+
+**背景**：路径规划需最短路径算法
+**选项**：A-networkx(功能完整+依赖) / B-手写heapq Dijkstra(零依赖~50行)
+**决议**：B。理由：24路段不需要networkx完整图论；零依赖适合课程项目
+
+### [决策] D11 ID相邻→haversine坐标距离 — Agent-Lead (2026-07-02)
+
+**背景**：D9的build_graph用ID相邻简化，真实路网不准确
+**选项**：A-保持ID相邻 / B-haversine公式+1km阈值
+**决议**：B。理由：地理距离标准公式；使路径规划适配任意路网
+
+### [决策] D6-T04 高德Key用.env vs 硬编码 — Agent-Frontend-Map (2026-07-02)
+
+**背景**：禁忌#5禁止硬编码密钥
+**决议**：import.meta.env.VITE_AMAP_KEY + .env + .gitignore。提供.env.example模板
+
+### [决策] D10 测试用SQLite内存库 vs MySQL — Agent-Test-Docs (2026-07-02)
+
+**背景**：测试需快速创建/销毁，不应依赖外部MySQL
+**选项**：A-MySQL(真实环境) / B-SQLite内存库(零外部依赖)
+**决议**：B。理由：CI可直接跑；pytest fixture自动管理；14天工期够用

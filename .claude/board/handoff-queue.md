@@ -1,57 +1,110 @@
 # 交付交接队列
 
-> **作用**：Agent A 完成交付物后在此登记，Agent B 据此了解可以开始做什么。
-> **格式**：`[时间] [交付方] → [接收方]：[交付物路径] — [简要说明]`
-> **状态**：🆕新登记 | 🔄处理中 | ✅已接收
+> Agent A 完成交付物后在此登记，Agent B 据此了解可以开始做什么。
+> 格式：`[时间] [交付方] → [接收方]：[交付物路径] — [简要说明]`
 
 ---
 
-| 2026-07-02 | Agent-Lead → Agent-Algorithm | Flask脚手架已就绪 | D6-T01完成。traffic.py和prediction.py骨架已注册，backend/app/ml/和backend/app/tasks/目录已创建。Agent-Algorithm可在其Blueprint和目录内填充实现。分支：feature/agent-lead/D6-T01-flask-scaffold → master。 |
-| 2026-07-02 | Agent-Lead → Agent-Test-Docs | 同上 | backend/tests/目录已创建，pytest+SQLite内存库已就绪，可开始编写测试。 |
+## D3 概要设计 (2026-07-01)
 
-## 🆕 新登记（待下游Agent接收）
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/01 | Lead → Test-Docs | D3-T01完成，D3-T05阻塞解除。关键接口：第5节(8实体)+第6节(关系) |
+| 7/01 | Lead → Algorithm | D3-T01完成。第2.2节(M1→M2数据接口)+第7.1节(PredictionService) |
+| 7/01 | Lead → FE-Main | D3-T01完成。第8节(前端架构)+第4.2节(API路由表) |
+| 7/01 | Lead → FE-Map | D3-T01完成。第7.3节(WebSocket事件定义) |
+| 7/01 | Algorithm → Lead | D3-T02完成。predict_flow接口+Celery重训练方案 |
+| 7/01 | Algorithm → FE-Main | D3-T02完成。预测结果JSON格式 |
+| 7/01 | Algorithm → Test-Docs | D3-T02完成。评估指标+合格阈值 |
+| 7/01 | FE-Map → FE-Main | D3-T04完成。第8节协作约定：预留TrafficMap挂载位+CSS变量 |
+| 7/01 | FE-Map → Lead | D3-T04完成。第4.2节WS协议与Leader D3-T01 §7.3对齐 |
+| 7/01 | FE-Map → Test-Docs | D3-T04完成。组件Props/Events→测试用例 |
+| 7/01 | Test-Docs → Lead | D3-T05完成。DDL脚本+Seed数据+8条测试草案 |
+| 7/01 | Test-Docs → Algorithm | D3-T05完成。traffic_records字段+seed数据→D6/D7 SUMO写入 |
+| 7/01 | Test-Docs → FE-Main | D3-T05完成。路段/预测/预警字段→前端数据模型 |
+| 7/01 | 🎉 D3全部完成 | all → Agent-Judge. 5份设计文档就绪，等待审查 |
 
-| 时间 | 交付方 → 接收方 | 交付物 | 说明 |
-|------|----------------|--------|------|
-| 2026-07-01 | Agent-Lead → Agent-Test-Docs | [总体架构设计与模块划分-20260701.md](../docs/02-概要设计/总体架构设计与模块划分-20260701.md) | D3-T01完成，D3-T05阻塞解除。Agent-Test-Docs现在可以开始数据库设计了。关键接口：第5节(8个实体清单) + 第6节(实体关系) |
-| 2026-07-01 | Agent-Lead → Agent-Algorithm | 同上 | 第2.2节(数据接口M1→M2) + 第7.1节(PredictionService接口)已就绪，可开始D3-T02算法模块设计 |
-| 2026-07-01 | Agent-Lead → Agent-Frontend-Main | 同上 | 第8节(前端架构约定) + 第4.2节(API路由表)已就绪，可开始D3-T03前端架构设计 |
-| 2026-07-01 | Agent-Lead → Agent-Frontend-Map | 同上 | 第7.3节(WebSocket事件定义)已就绪，可开始D3-T04地图集成方案设计 |
-| 2026-07-01 | Agent-Algorithm → Agent-Lead | [算法模块设计-20260701.md](../docs/02-概要设计/算法模块设计-20260701.md) | D3-T02完成。第6.2节(predict_flow接口)可供Leader设计predict API；第6.3节(Celery重训练)可供Leader注册异步任务 |
-| 2026-07-01 | Agent-Algorithm → Agent-Frontend-Main | 同上 | 第6.2节预测结果JSON格式可用于设计预测看板ECharts图表 |
-| 2026-07-01 | Agent-Algorithm → Agent-Test-Docs | 同上 | 第5节(评估指标+合格阈值)可用于编写模型评估测试用例 |
-| 2026-07-01 | Agent-Frontend-Map → Agent-Frontend-Main | [地图集成方案设计-20260701.md](../docs/02-概要设计/地图集成方案设计-20260701.md) | D3-T04完成。第8节(协作约定)：需在TrafficMonitor.vue中预留TrafficMap挂载位，引用variables.css |
-| 2026-07-01 | Agent-Frontend-Map → Agent-Lead | 同上 | 第4.2节(WebSocket事件协议)已与Leader的D3-T01第7.3节对齐，确认一致性 |
-| 2026-07-01 | Agent-Frontend-Map → Agent-Test-Docs | 同上 | 第3节(组件Props/Events)可用于编写地图交互测试用例 |
-| 2026-07-01 | Agent-Test-Docs → Agent-Lead | [数据库设计与E-R图-20260701.md](../docs/02-概要设计/数据库设计与E-R图-20260701.md) | D3-T05完成。DDL脚本+Seed数据+8条测试草案已就绪。Leader可基于此编写SQLAlchemy模型。第6节含协作约定。 |
-| 2026-07-01 | Agent-Test-Docs → Agent-Algorithm | 同上 | 第2.4节(traffic_records字段定义) + 第4节(seed数据)可用于D6-D7 SUMO数据写入 |
-| 2026-07-01 | Agent-Test-Docs → Agent-Frontend-Main | 同上 | 第2.2/2.5/2.6节(路段/预测/预警字段)可用于前端数据模型定义 |
-| 2026-07-01 | Agent-Frontend-Main → Agent-Frontend-Map | [前端架构与路由设计-20260701.md](../docs/02-概要设计/前端架构与路由设计-20260701.md) | D3-T03完成。第6节确认协作约定：TrafficMap挂载位在TrafficMonitor.vue、CSS变量在main.js全局引入、WebSocket由FE-Map独立管理 |
-| 2026-07-01 | Agent-Frontend-Main → Agent-Test-Docs | 同上 | 第1节(完整组件树) + 第3节(Store设计)可用于编写前端测试用例 |
-| 2026-07-01 | Agent-Frontend-Main → Agent-Lead | 同上 | 第2节(路由表+导航守卫) + 第4节(Axios封装)已确认API对接方案，Leader可据此验证API设计一致性 |
-| 2026-07-01 | 🎉 D3全部完成 | all → Agent-Judge | 5份设计文档全部Done | D3阶段5/5 (100%)，全部交付物就绪，等待Agent-Judge审查 |
-| 2026-07-01 | Agent-Lead → Agent-Frontend-Main | [API详细接口规范-20260701.md](../docs/02-概要设计/API详细接口规范-20260701.md) | D4-T01完成。7模块30+端点完整规范(含Request/Response/Error)。D4-T03阻塞解除，FE-Main可基于此设计Mock数据。 |
-| 2026-07-01 | Agent-Lead → Agent-Frontend-Map | 同上 | 第9节(WebSocket事件协议)已确认与D3-T04一致。D4-T04阻塞解除。 |
-| 2026-07-01 | Agent-Lead → Agent-Test-Docs | 同上 | 全部30+端点的详细规范就绪。D4-T05阻塞解除，可编写API测试用例。 |
+## D4 API详细设计 (2026-07-01)
 
----
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/01 | Lead → FE-Main | D4-T01完成。7模块30+端点Request/Response/Error。D4-T03阻塞解除 |
+| 7/01 | Lead → FE-Map | D4-T01完成。§9 WS事件协议确认。D4-T04阻塞解除 |
+| 7/01 | Lead → Test-Docs | D4-T01完成。全部端点规范→API测试用例 |
+| 7/01 | Algorithm → Lead | D4-T02完成。predict_flow完整Schema+训练数据格式+模型文件规范 |
+| 7/01 | Algorithm → FE-Main | D4-T02完成。预测数据格式→预测看板Mock |
+| 7/01 | FE-Main → FE-Map | D4-T03完成。第6节协作约定确认+Mock数据格式 |
+| 7/01 | FE-Main → Lead | D4-T03完成。Axios封装方案→API一致性验证 |
+| 7/01 | FE-Map → FE-Main | D4-T04完成。6事件TS Schema+Vite WS代理配置 |
+| 7/01 | FE-Map → Lead | D4-T04完成。WS协议与D4-T01 §9一致性确认 |
+| 7/01 | Test-Docs → Lead | D4-T05完成。36条测试用例覆盖全部端点 |
 
-## 🔄 处理中（下游Agent已开始使用）
+## D5 报告整合 (2026-07-01)
 
-（当前无）
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/01 | Test-Docs → all | D5-T01完成。概要设计报告(10章+附录)，整合D3-D4全部11份文档 |
 
----
+## D6 基础搭建 (2026-07-02)
 
-## ✅ 已接收（下游Agent确认收到）
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Lead → Algorithm | D6-T01完成。Flask脚手架(28文件)。traffic.py/prediction.py骨架已注册，ml/和tasks/目录就绪 |
+| 7/02 | Lead → Test-Docs | D6-T01完成。backend/tests/目录+pytest+SQLite就绪 |
+| 7/02 | Algorithm → Lead | D6-T02完成。SUMO路网(city_flows.rou.xml+detectors+config+run_simulation) |
+| 7/02 | FE-Main → FE-Map | D6-T03完成。Vue 3框架(17文件)。D6-T04阻塞解除：TrafficMap挂载位在TrafficMonitor.vue中 |
+| 7/02 | FE-Main → Algorithm | D6-T03完成。预测API前端模块(api/prediction.js) |
+| 7/02 | FE-Map → FE-Main | D6-T04完成。TrafficMap+SocketClient+AlertPopup(3文件)。CSS变量在main.js引入 |
 
-（当前无）
+## D7 功能实现 (2026-07-02)
 
----
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Lead → FE-Main | D7-T01完成。JWT认证(auth_service+auth.py)。Login/Register页面可直接调用 |
+| 7/02 | Algorithm → Lead | D7-T02完成。数据预处理(parse_e2_output+clean_data+build_features+normalize) |
+| 7/02 | Algorithm → all | D7-T02完成。5步Pipeline每步独立函数，可单独测试 |
+| 7/02 | FE-Main → Lead | D7-T03完成。Login+Register+Dashboard(4统计卡片)。JWT注入验证通过 |
+| 7/02 | FE-Map → FE-Main | D7-T04完成。TrafficMap路段标注点击→父组件emit联动 |
+| 7/02 | Test-Docs → Lead | D7-T05完成。sections测试(5条)。TC-S-05创建需Leader的sections CRUD |
 
-## 交接模板
+## D8 核心算法 (2026-07-02)
 
-```
-YYYY-MM-DD HH:MM | Agent-XX → Agent-YY | 交付物路径
-说明：Agent-YY 现在可以开始做 XXX 了
-关键接口/约定：{具体的技术契约}
-```
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Algorithm → Lead | D8-T01完成。PredictionService单例+prediction.py+traffic.py。D4-T02接口已实现 |
+| 7/02 | Algorithm → FE-Main | D8-T01完成。预测API返回JSON格式→PredictionBoard对接 |
+| 7/02 | Algorithm → all | D8-T02完成。KNN训练(base_model+knn_predictor+train.py) |
+| 7/02 | Lead → Algorithm | D8-T03完成。sections CRUD+sections API测试就绪 |
+| 7/02 | Lead → FE-Main | D8-T03完成。预警规则引擎(85%/95%阈值)+stats Dashboard |
+| 7/02 | FE-Main → Lead | D8-T04/T05完成。PredictionBoard(路段+模型+预测按钮)+WarningManager(筛选+解除) |
+
+## D9 算法完善 (2026-07-02)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Algorithm → Lead | D9-T01完成。RF训练(rf_predictor+evaluator)。双模型就绪 |
+| 7/02 | Algorithm → Test-Docs | D9-T01完成。evaluator MAE/RMSE/MAPE/R2→模型评估测试 |
+| 7/02 | Lead → FE-Main | D9-T02完成。Dijkstra路径规划(route_service+route_plan API) |
+| 7/02 | FE-Main → Lead | D9-T03完成。RoutePlanner(起终点选择+路径时间线)。对接route/plan API |
+
+## D10 联调收尾 (2026-07-02)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Lead → all | D10-T01完成。warning列表分页查询+resolve端点+Dijkstra坐标改进 |
+| 7/02 | FE-Main → Lead | D10-T02完成。admin页面(UserManager+SystemLogs) |
+| 7/02 | Test-Docs → all | D10-T03完成。集成测试(4条端到端:认证/CRUD/路径/权限) |
+
+## D11 Bug修复 (2026-07-02)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Lead → FE-Main | D11-T01完成。warning.py分页查询+筛选。traffic.js API模块补齐 |
+| 7/02 | Lead → Algorithm | D11-T01完成。Dijkstra从ID相邻→haversine坐标距离改进。1km阈值 |
+| 7/02 | FE-Map → FE-Main | D11-T04完成。SectionHeatmap组件骨架。D11热力图实现预留 |
+
+## D13 报告整合 (2026-07-02)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/02 | Test-Docs → all | D13-T01完成。详细设计报告(7章节)。三份报告全部就绪 |
