@@ -1,49 +1,42 @@
 # Agent-Lead 执行日志
 
-> 记录本Agent的每一次操作、思考过程和关键决策。
-> 格式：`[时间戳] [任务ID] [类型] 内容`
-> 类型：🎯任务开始 | 💭思考 | 📝产出 | ⚠️阻塞 | ✅完成 | 📋站报
-
----
-
 ## 操作记录
 
 | 时间 | 任务ID | 类型 | 内容 |
 |------|--------|------|------|
-| 系统初始化 | — | 📝 | Agent #1 日志文件创建，角色：组长/后端架构师。等待用户或心跳触发D3任务。 |
-| 2026-07-01 首次站会 | — | 📋站报 | 主持首次站会。系统就绪，D3待启动。 |
-| 2026-07-01 第二次站会 | — | 📋站报 | 主持第二次站会。D3进度80%(4/5)。发现D3-T03超时。修复看板D3-T04去重问题。 |
-| 2026-07-01 | D4启动 | 🎯Sprint启动 | 用户触发D4启动。D3已全部Approved。拆分D4为6个任务。 |
-| 2026-07-01 | D4-T01 | ✅完成 | API详细接口规范(10章节)。D4-T03/T04/T05阻塞解除。 |
-| 2026-07-02 | D6-T01 | ✅完成 | Flask脚手架搭建(28文件)。7 Blueprint(Leader:5+Algorithm:2骨架)+8 Model+config+error_codes+SocketIO+Celery+ML初始化。Git分支: feature/agent-lead/D6-T01-flask-scaffold → merged to master。通知Algorithm和Test-Docs可开始开发。 |
-| 2026-07-01 | D3-T01 | 🎯任务开始 | 心跳触发，执行D3-T01：总体架构设计与模块划分。标记InProgress。 |
-| 2026-07-01 | D3-T01 | 📝产出 | 创建总体架构设计文档（12章节）：架构图、6大模块、API路由表、8个DB实体、接口契约、数据流。文件：[总体架构设计与模块划分-20260701.md](../docs/02-概要设计/总体架构设计与模块划分-20260701.md) |
-| 2026-07-01 | D3-T01 | ✅完成 | D3-T01完成。更新task-board→Done。handoff-queue通知4个下游Agent。D3-T05阻塞解除。 |
+| 系统初始化 | — | 📝 | Agent #1 日志创建。角色：组长/后端架构师。 |
+| 7/01 | 站会1 | 📋 | 首次站会。D3待启动。 |
+| 7/01 | D3-T01 | ✅ | 总体架构设计(12章)。D3-T05阻塞解除。 |
+| 7/01 | 站会2 | 📋 | D3进度80%。D3-T03超时标记。 |
+| 7/01 | D4启动 | 🎯 | Sprint启动。D4拆分6任务。 |
+| 7/01 | D4-T01 | ✅ | API详细接口规范(10章,30+端点)。 |
+| 7/02 | D6启动 | 🎯 | D6 Sprint启动。5任务分配。 |
+| 7/02 | D6-T01 | ✅ | Flask脚手架(28文件)。7 Blueprint+8 Model。 |
+| 7/02 | D7启动 | 🎯 | D7 Sprint启动。 |
+| 7/02 | D7-T01 | ✅ | JWT认证实现(auth_service+auth.py)。 |
+| 7/02 | D8-T03 | ✅ | 预警引擎+sections CRUD+stats实现。 |
+| 7/02 | D9启动 | 🎯 | D9 Sprint启动。 |
+| 7/02 | D9-T02 | ✅ | Dijkstra路径规划(route_service+route_plan)。 |
+| 7/02 | D10 | ✅ | 联调+admin页面+集成测试。D3-D10正式完成。 |
 
 ## 思考轨迹
 
-> 以下记录每次被唤醒时的完整思考过程。
+### D6-T01 Flask脚手架
+**决策**：一次注册全部7个Blueprint，Algorithm的prediction.py/traffic.py留骨架。这样Algorithm只需填充实现，不用关心注册逻辑。
+**风险**：如果Algorithm修改了Blueprint注册方式，需要我配合调整。
 
-### D3-T01：总体架构设计与模块划分（2026-07-01）
+### D7-T01 JWT认证
+**决策**：auth_service分离认证逻辑（register_user/authenticate），auth.py只处理HTTP请求。符合MVC三层分离。
+**关键**：werkzeug密码哈希不存明文，符合禁忌#5。
 
-**我理解的任务**：设计系统的整体架构，为所有下游Agent提供统一的蓝图和接口契约。
+### D8-T03 预警+sections CRUD
+**决策**：sections CRUD用Flask-SQLAlchemy的paginate，避免手写分页SQL。warning_service用简单阈值规则（85%/95%），后续可扩展。
+**风险**：Dijkstra的build_graph基于ID相邻简化，真实路网需要基于coordinates拓扑——D11可优化。
 
-**我的方案**：
-1. **三层架构**：前端展示层(Vue3) → 后端服务层(Flask MVC) → 数据层(MySQL+Redis+SUMO)
-2. **6个模块**严格映射到Agent分工：M3/M4涉及多个Agent协作，接口契约必须明确
-3. **API路由先行**：先定义7个路由模块的名字和端点命名，具体请求响应体在D4详设
-4. **数据库8个实体**：给Agent-Test-Docs提供实体清单和关系描述，不替代他做E-R图
+### D9-T02 Dijkstra
+**决策**：用heapq实现标准Dijkstra，不引入networkx依赖。build_graph基于路段ID相邻关系简化——适合24路段的SUMO网格。
+**已知局限**：图构建假设ID相邻=物理相邻，大型路网需改为坐标拓扑。
 
-**为什么选择这个方案**：
-- 前后端分离是ADR-003已确认的决策
-- MVC三层是Flask社区最佳实践，路由→服务→数据职责清晰
-- 策略模式（base_model.py）让KNN和RF可插拔，满足ADR-002的双模型要求
-- API版本化(/api/v1/)为后续升级留空间
-
-**关键决策**：
-- 预测服务封装为PredictionService单例，应用启动时预加载模型（对应禁忌#1）
-- WebSocket事件名规范化：`warning:new/update/resolve`，`traffic:update`
-- 前端Store分为3个（user/traffic/warning），不合并——各自职责独立
-- D3-T05的阻塞已解除，Agent-Test-Docs可基于第5/6节开始数据库设计
-
-**风险**：无。设计阶段产出的是蓝图，在详细设计阶段如果发现不合理可以调整。
+### D10 联调总结
+**完成**：admin页面(UserManager/SystemLogs)+ 4条集成测试(认证流程/CRUD/路径规划/权限)。
+**待做**：D11 Bug修复 + D12演示视频 + D13报告整合。

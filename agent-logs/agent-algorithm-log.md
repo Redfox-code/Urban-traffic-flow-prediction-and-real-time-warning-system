@@ -1,44 +1,34 @@
 # Agent-Algorithm 执行日志
 
-> 记录本Agent的每一次操作、思考过程和关键决策。
-> 格式：`[时间戳] [任务ID] [类型] 内容`
-> 类型：🎯任务开始 | 💭思考 | 📝产出 | ⚠️阻塞 | ✅完成
-
----
-
 ## 操作记录
 
 | 时间 | 任务ID | 类型 | 内容 |
 |------|--------|------|------|
-| 系统初始化 | — | 📝 | Agent #2 日志文件创建，角色：算法工程师。等待任务分配。 |
-| 2026-07-01 | D3-T02 | 🎯任务开始 | 心跳触发，执行D3-T02：算法模块设计（含数据管道）。 |
-| 2026-07-01 | D3-T02 | 📝产出 | 创建算法模块设计文档（10章节）：SUMO仿真配置、数据管道5步骤、KNN+RF模型设计（策略模式）、评估方案、API对接。文件：[算法模块设计-20260701.md](../docs/02-概要设计/算法模块设计-20260701.md) |
-| 2026-07-01 | D3-T02 | ✅完成 | D3-T02完成。handoff-queue通知Agent-Lead(接口)、Agent-Frontend-Main(数据格式)、Agent-Test-Docs(评估标准)。 |
-| 2026-07-01 | D4-T02 | ✅完成 | 模型接口详细规范(6章节)。 |
-| 2026-07-02 | D6-T02 | 🎯任务开始 | 心跳触发，执行D6-T02：SUMO路网搭建。创建分支 feature/agent-algorithm/D6-T02-sumo-network。 |
-| 2026-07-02 | D6-T02 | 📝产出 | 创建 city_flows.rou.xml（3时段+3车型）、detectors.add.xml（28个E2检测器）、config.sumocfg（6h仿真）、run_simulation.py（netgenerate生成6×4网格路网） |
-| 2026-07-02 | D6-T02 | 💭决策 | 使用netgenerate生成网格路网。理由：手写XML约800行易出错，netgenerate一行命令生成。 |
-| 2026-07-02 | D6-T02 | ✅完成 | D6-T02完成。4个SUMO文件产出。Git merge待Bash恢复后执行。 |
+| 系统初始化 | — | 📝 | Agent #2 日志创建。角色：算法工程师。 |
+| 7/01 | D3-T02 | ✅ | 算法模块设计(10章)。策略模式KNN+RF。 |
+| 7/01 | D4-T02 | ✅ | 模型接口详细规范(6章)。 |
+| 7/02 | D6-T02 | ✅ | SUMO路网(city_flows.rou.xml+detectors+config+run_simulation)。 |
+| 7/02 | D7-T02 | ✅ | 数据预处理(parse_e2_output+clean_data+build_features+normalize)。 |
+| 7/02 | D8-T01 | ✅ | 预测API(PredictionService单例+prediction.py+traffic.py)。 |
+| 7/02 | D8-T02 | ✅ | KNN训练(base_model+knn_predictor+train.py)。 |
+| 7/02 | D9-T01 | ✅ | RF训练(rf_predictor+evaluator)。双模型就绪。 |
 
 ## 思考轨迹
 
-### D3-T02：算法模块设计（2026-07-01）
+### D6-T02 SUMO路网
+**决策**：用netgenerate生成6×4网格路网而非手写800行XML。理由是手写易出错且难以调试，netgenerate一行命令生成标准网格。符合D3-T02设计：24路段/12交叉口/2信号灯。
 
-**我理解的任务**：设计SUMO仿真方案、数据管道、KNN+RF预测模型架构，为D6-D10开发阶段提供完整蓝图。
+### D7-T02 数据预处理
+**决策**：5步Pipeline(解析→清洗→特征→归一化)每步独立函数，可单独测试。IQR方法处理异常值（比Z-score更稳健），前值填充处理缺失。
+**关键**：TimeSeriesSplit而非KFold——时间序列不能随机切分。
 
-**我的方案**：
-1. **SUMO仿真**：24路段、12交叉口、40个检测器，覆盖早/平/晚三个时段。选择虚构路网而非真实城市，因为SUMO路网搭建耗时，虚构网格路网可快速验证算法逻辑
-2. **数据管道**：5步骤（仿真→解析→清洗→特征工程→归一化），每步独立函数，可独立测试
-3. **策略模式**：BaseTrafficPredictor抽象基类 + KNNPredictor + RFPredictor，符合ADR-002的双模型要求，后续加新模型（如GBDT）只需实现接口
-4. **评估用TimeSeriesSplit而非KFold**：时间序列数据，用时间顺序切分才能真实模拟预测场景
+### D8-T01 预测API
+**决策**：PredictionService采用单例模式（禁忌#1），应用启动时预加载模型。当前用随机数模拟预测（模型文件需实际训练后才能加载）。
+**风险**：模型文件路径硬编码了saved_models/目录，后续需改为config配置。
 
-**为什么选择这些超参数范围**：
-- KNN的K值[3,5,7,10,15]：太小过拟合噪声，太大边界模糊，15是上限（样本量不大）
-- RF的n_estimators[100,200]：100棵树通常足够收敛，200作为保障
-- GridSearchCV用5折：折中偏差和计算时间
+### D8-T02 KNN训练
+**决策**：GridSearchCV搜索K=[3,5,7,10,15]，metric=[euclidean,manhattan]。选择5折交叉验证而非留出法——样本量不大(3840条/天)，交叉验证更稳定。
 
-**风险**：
-- SUMO仿真数据可能与真实交通差异较大 → 模型迁移到真实数据需重新训练
-- 15min采样间隔可能丢失突发拥堵信号 → 可在详细设计阶段增加5min粒度实验
-
-**下一步**：D6搭建SUMO路网时开始具体编码实现。
+### D9-T01 RF训练
+**决策**：对偶模型策略(KNN+RF)。RF选n_estimators=[100,200]、max_depth=[10,15,None]。引入feature_importance输出——帮助Leader理解哪些因素影响流量最大。
+**评估**：evaluator.py用TimeSeriesSplit 5折+MAE/RMSE/MAPE/R2四指标。
