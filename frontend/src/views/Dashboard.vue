@@ -38,7 +38,7 @@ const sumoResult = ref('')
 const runSumo = async () => {
   sumoRunning.value = true; sumoResult.value = ''
   try {
-    const res = await request.post('/sumo/run')
+    const res = await request.post('/sumo/run', null, { timeout: 180000 })  // 3分钟超时
     const data = res.data || res
     sumoResult.value = `✅ ${data.status || '完成'} (导入${data.records_imported || 0}条记录)`
     ElMessage.success('仿真完成，数据已导入')
