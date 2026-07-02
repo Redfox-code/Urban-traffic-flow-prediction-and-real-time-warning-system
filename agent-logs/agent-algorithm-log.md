@@ -29,6 +29,12 @@
 ### D8-T02 KNN训练
 **决策**：GridSearchCV搜索K=[3,5,7,10,15]，metric=[euclidean,manhattan]。选择5折交叉验证而非留出法——样本量不大(3840条/天)，交叉验证更稳定。
 
+### Bug修复: 检测器 lane ID 不匹配
+**问题**：运行 `python run_simulation.py run` 报错 `lane 'north_to_south_0' is not known`。
+**原因**：detectors.add.xml 手动编写的 lane ID 与实际 netgenerate 生成的路网不匹配（手工假名 vs sumo实际名）。
+**修复**：改为动态生成检测器——generate_detectors() 从生成的 .net.xml 中读取真实 edge/lane ID 并自动写入 detectors.add.xml。
+**改动**：run_simulation.py 重写，新增 `generate_detectors()` 函数。
+
 ### Bug修复: netgenerate参数错误
 **问题**：用户运行 `python run_simulation.py generate` 报错 `No option with the name 'lane-number' exists`。
 **原因**：SUMO netgenerate 的正确参数名是 `--default.lanenumber`，不是 `--lane-number`。
