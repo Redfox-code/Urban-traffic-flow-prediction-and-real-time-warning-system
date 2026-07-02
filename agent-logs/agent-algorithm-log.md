@@ -29,6 +29,11 @@
 ### D8-T02 KNN训练
 **决策**：GridSearchCV搜索K=[3,5,7,10,15]，metric=[euclidean,manhattan]。选择5折交叉验证而非留出法——样本量不大(3840条/天)，交叉验证更稳定。
 
+### Bug修复: netgenerate参数错误
+**问题**：用户运行 `python run_simulation.py generate` 报错 `No option with the name 'lane-number' exists`。
+**原因**：SUMO netgenerate 的正确参数名是 `--default.lanenumber`，不是 `--lane-number`。
+**修复**：`--lane-number=3` → `--default.lanenumber=3`。
+
 ### D9-T01 RF训练
 **决策**：对偶模型策略(KNN+RF)。RF选n_estimators=[100,200]、max_depth=[10,15,None]。引入feature_importance输出——帮助Leader理解哪些因素影响流量最大。
 **评估**：evaluator.py用TimeSeriesSplit 5折+MAE/RMSE/MAPE/R2四指标。

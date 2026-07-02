@@ -15,7 +15,7 @@ def generate_network():
         '--grid.y-number=4',         # 4行（东西向道路）
         '--grid.y-length=400',       # 每格400m → 总长1.6km
         '--grid.attach-length=200',  # 出入口连接段200m
-        '--lane-number=3',           # 主干道3车道
+        '--default.lanenumber=3',    # 主干道3车道
         '--output=' + output,
         '--default.speed=13.89',     # 50km/h 默认限速
     ]
