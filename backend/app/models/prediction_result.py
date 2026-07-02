@@ -6,7 +6,7 @@ from datetime import datetime
 class PredictionResult(db.Model):
     __tablename__ = 'prediction_results'
 
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     section_id = db.Column(db.Integer, db.ForeignKey('traffic_sections.id'), nullable=False)
     model_type = db.Column(db.Enum('KNN', 'RF'), nullable=False)
     predicted_flow = db.Column(db.Numeric(8, 2), nullable=False)

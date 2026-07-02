@@ -6,7 +6,7 @@ from datetime import datetime
 class TrafficRecord(db.Model):
     __tablename__ = 'traffic_records'
 
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     section_id = db.Column(db.Integer, db.ForeignKey('traffic_sections.id'), nullable=False)
     detector_id = db.Column(db.Integer, db.ForeignKey('traffic_detectors.id'), nullable=False)
     vehicle_count = db.Column(db.Integer, nullable=False, comment='通过车辆数')

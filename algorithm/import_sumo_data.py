@@ -39,6 +39,7 @@ def import_sumo_data(xml_path):
             section_id = detector.section_id
 
             record = TrafficRecord(
+                id=None,
                 section_id=section_id,
                 detector_id=detector.id,
                 vehicle_count=int(row.get('vehicle_count', 0)),
