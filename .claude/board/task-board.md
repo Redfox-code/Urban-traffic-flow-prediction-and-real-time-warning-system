@@ -1,17 +1,15 @@
 # 任务看板
 
 > **状态流转**：Backlog → Todo → InProgress → Done → Approved
-> **阻塞标记**：在 BlockedBy 列填写依赖的任务ID
-> **更新时间**：每次状态变更时更新
-> ⚠️ 上次站会发现碎片化问题已全量重写修复
+> **更新时间**：2026-07-02
 
 ---
 
-## 📥 Backlog（待规划：后续阶段任务）
+## 📥 Backlog（D6-D13）
 
 | ID | 任务 | 阶段 | 优先级 | 备注 |
 |----|------|------|--------|------|
-| BL-D6-01 | Flask项目脚手架搭建 | D6 | P0 | 后端初始化 |
+| BL-D6-01 | Flask项目脚手架搭建 | D6 | P0 | Agent-Lead |
 | BL-D6-02 | SUMO路网搭建 | D6 | P0 | Agent-Algorithm |
 | BL-D7-01 | 用户认证JWT实现 | D7 | P0 | Agent-Lead |
 | BL-D7-02 | SUMO数据解析和预处理 | D7 | P0 | Agent-Algorithm |
@@ -26,35 +24,25 @@
 
 ---
 
-## 📋 Todo（就绪待执行）
+## 📋 Todo
 
-| ID | 任务 | Agent | 优先级 | BlockedBy | 预估 | 验收条件 |
-|----|------|-------|--------|-----------|------|----------|
+（D6 Sprint待启动）
 
 ---
 
-## 🚫 Blocked（阻塞）
+## 🔄 InProgress
 
-| ID | 任务 | Agent | 阻塞原因 | 阻塞于 | 阻塞开始 |
-|----|------|-------|---------|--------|---------|
-| — | — | — | — | — | — |
+（无）
 
 ---
 
 ## ✅ Done（待审查）
 
-| ID | 任务 | Agent | 完成时间 | 交付物 |
-|----|------|-------|---------|--------|
-| D4-T01 | 7模块API详细接口规范 | agent-lead | 2026-07-01 | [API详细接口规范-20260701.md](../docs/02-概要设计/API详细接口规范-20260701.md) |
-| D4-T02 | 模型接口详细规范+数据格式文档 | agent-algorithm | 2026-07-01 | [模型接口详细规范-20260701.md](../docs/02-概要设计/模型接口详细规范-20260701.md) |
-| D4-T03 | 前端API对接+Mock数据设计 | agent-frontend-main | 2026-07-01 | [前端API对接与Mock数据-20260701.md](../docs/02-概要设计/前端API对接与Mock数据设计-20260701.md) |
-| D4-T04 | WebSocket详细消息格式规范 | agent-frontend-map | 2026-07-01 | [WebSocket消息格式规范-20260701.md](../docs/02-概要设计/WebSocket消息格式规范-20260701.md) |
-| D4-T05 | API测试用例设计 | agent-test-docs | 2026-07-01 | [API测试用例设计-20260701.md](../docs/02-概要设计/API测试用例设计-20260701.md) |
-| D5-T01 | 概要设计报告整合 | agent-test-docs | 2026-07-01 | [概要设计报告](../docs/02-概要设计/概要设计报告-城市交通流量预测与实时预警系统.md) |
+（无）
 
 ---
 
-## ✔️ Approved（审查通过）
+## ✔️ Approved
 
 | ID | 任务 | Agent | 审查人 | 通过时间 |
 |----|------|-------|--------|---------|
@@ -63,11 +51,9 @@
 | D3-T03 | 前端架构与路由设计 | agent-frontend-main | Agent-Judge | 2026-07-01 |
 | D3-T04 | 地图集成方案设计 | agent-frontend-map | Agent-Judge | 2026-07-01 |
 | D3-T05 | 数据库设计与E-R图 | agent-test-docs | Agent-Judge | 2026-07-01 |
-
----
-
-## 🐛 Bugs（缺陷）
-
-| ID | 描述 | 严重程度 | 发现者 | 分配给 | 状态 |
-|----|------|---------|--------|--------|------|
-| — | — | — | — | — | — |
+| D4-T01 | 7模块API详细接口规范 | agent-lead | Agent-Judge | 2026-07-02 |
+| D4-T02 | 模型接口详细规范+数据格式 | agent-algorithm | Agent-Judge | 2026-07-02 |
+| D4-T03 | 前端API对接+Mock数据 | agent-frontend-main | Agent-Judge | 2026-07-02 |
+| D4-T04 | WebSocket消息格式规范 | agent-frontend-map | Agent-Judge | 2026-07-02 |
+| D4-T05 | API测试用例设计 | agent-test-docs | Agent-Judge | 2026-07-02 |
+| D5-T01 | 概要设计报告整合 | agent-test-docs | Agent-Judge | 2026-07-02 |
