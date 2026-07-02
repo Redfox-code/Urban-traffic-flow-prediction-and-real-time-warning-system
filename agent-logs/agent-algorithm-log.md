@@ -29,6 +29,16 @@
 ### D8-T02 KNN训练
 **决策**：GridSearchCV搜索K=[3,5,7,10,15]，metric=[euclidean,manhattan]。选择5折交叉验证而非留出法——样本量不大(3840条/天)，交叉验证更稳定。
 
+### BUG-BE-03修复: predict端点缺JWT+模型未加载返回500
+
+**🎯Bug接收**：系统测试发现 `GET /api/v1/predict/forecast?section_id=1` 无认证返回500而非401。
+**💭分析**：两个问题：(1) prediction.py端点没有@jwt_required()装饰器；(2) 模型未加载时错误码用了500，应该是503。
+**📝修复**：
+1. prediction.py: forecast+accuracy加@jwt_required()
+2. prediction_service.py: 模型未加载错误码500→503
+3. traffic.py: current+history加@jwt_required()
+**✅验证**：重跑pytest确认test_forecast_no_auth通过。
+
 ### Bug修复: 检测器 lane ID 不匹配
 **问题**：运行 `python run_simulation.py run` 报错 `lane 'north_to_south_0' is not known`。
 **原因**：detectors.add.xml 手动编写的 lane ID 与实际 netgenerate 生成的路网不匹配（手工假名 vs sumo实际名）。

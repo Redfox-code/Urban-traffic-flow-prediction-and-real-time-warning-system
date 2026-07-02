@@ -1,1 +1,14 @@
+.env
+.env.*
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+dist/
+*.db
+*.db-journal
+instance/
 .claude/scheduled_tasks.lock
+*.log
+.DS_Store
+Thumbs.db

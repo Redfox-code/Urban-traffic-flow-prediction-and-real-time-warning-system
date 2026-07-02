@@ -1,5 +1,6 @@
 """流量模块 — /api/v1/traffic/* — Agent-Algorithm"""
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 
 traffic_bp = Blueprint('traffic', __name__)
 

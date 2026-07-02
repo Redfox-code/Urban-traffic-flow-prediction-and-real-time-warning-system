@@ -27,7 +27,7 @@ class PredictionService:
     def predict(self, section_id, model_type='RF', horizon=15):
         model = self._models.get(model_type)
         if model is None:
-            return {'error': f'模型 {model_type} 未加载，请先训练模型', 'code': 500}
+            return {'error': f'模型 {model_type} 未加载，请先训练模型', 'code': 503}
         # TODO D8-D9: 接入真实模型预测
         predicted = 120.0 + np.random.normal(0, 5)
         return {

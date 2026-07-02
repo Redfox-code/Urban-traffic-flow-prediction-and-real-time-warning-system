@@ -1,5 +1,6 @@
 """预测模块 — /api/v1/predict/* — Agent-Algorithm"""
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from app.services.prediction_service import PredictionService
 
 prediction_bp = Blueprint('prediction', __name__)
@@ -7,6 +8,7 @@ service = PredictionService()
 
 
 @prediction_bp.route('/forecast', methods=['GET'])
+@jwt_required()
 def forecast():
     section_id = request.args.get('section_id', type=int)
     horizon = request.args.get('horizon', 15, type=int)
@@ -22,6 +24,7 @@ def forecast():
 
 
 @prediction_bp.route('/accuracy', methods=['GET'])
+@jwt_required()
 def accuracy():
     section_id = request.args.get('section_id', type=int)
     # TODO D9: 接入真实评估数据
