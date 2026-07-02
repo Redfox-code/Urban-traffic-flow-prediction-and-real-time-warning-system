@@ -128,3 +128,10 @@
 - ❌ 不要硬编码API地址 — 用`.env`环境变量
 - ❌ 不要在地图相关组件中直接操作高德API — 留给Agent-Frontend-Map
 - ❌ 不要在组件中直接调Axios — 通过Store或API层
+
+## ⚠️ 追踪文件强制更新规则（违反即为任务未完成）
+
+1. **agent-logs/agent-frontend-main-log.md** — 每个任务追加 🎯→💭→📝→✅ 链
+2. **.claude/board/handoff-queue.md** — 每次交付登记
+3. **.claude/board/decisions-log.md** — 每次决策追加
+> 代码完成但追踪文件未更新 = 任务未完成。

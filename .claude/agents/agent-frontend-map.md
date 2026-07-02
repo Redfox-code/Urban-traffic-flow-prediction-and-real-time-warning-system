@@ -124,3 +124,10 @@
 - ❌ 不要阻塞主线程 — 大量数据渲染用Web Worker或分片
 - ❌ 不要写死地图中心点 — 根据城市路网动态定位
 - ❌ 不要改Agent-Frontend-Main的核心组件和路由/Store
+
+## ⚠️ 追踪文件强制更新规则（违反即为任务未完成）
+
+1. **agent-logs/agent-frontend-map-log.md** — 每个任务追加完整链
+2. **.claude/board/handoff-queue.md** — 每次交付登记
+3. **.claude/board/decisions-log.md** — 每次决策追加
+> 代码完成但追踪文件未更新 = 任务未完成。
