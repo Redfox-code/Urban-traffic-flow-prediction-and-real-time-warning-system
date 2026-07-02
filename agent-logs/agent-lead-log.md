@@ -39,6 +39,22 @@
 
 | 7/02 | D11-T01 | 🎯任务开始 | D11 Bug修复+代码完善。计划：修复warning.py列表查询+完善Dijkstra图构建+补齐缺失端点。 |
 
+### BUG-BE-02修复: sections端点缺少JWT保护
+
+**🎯Bug接收**：系统测试发现 `GET /api/v1/sections` 未认证返回200而非401。
+**💭分析根因**：D6搭建sections.py骨架时没有加 `@jwt_required()` 装饰器，后续D8实现CRUD时也忘记加了。同理检查所有Leader负责的Blueprint。
+**📝修复**：
+1. sections.py: 所有端点加 `@jwt_required()`
+2. stats.py: 加 `@jwt_required()`
+3. 检查auth.py: login/register不加（公开端点），refresh已加✅
+4. config.py: JWT_SECRET_KEY从21字节扩展到32字节（修复BUG-BE-04）
+
+### BUG-BE-04修复: JWT key过短
+
+**🎯Bug接收**：pytest警告 `InsecureKeyLengthWarning: HMAC key is 21 bytes long, below minimum 32`
+**💭分析**：config.py默认JWT_SECRET_KEY='jwt-secret-key-change'只有21字节。
+**📝修复**：改为32字节随机字符串。
+
 ### D11-T01 Bug修复+代码完善
 
 **步骤1**：修复warning.py — 目前warning/list端点返回空数组，需要实现从warning_events表查询的逻辑。

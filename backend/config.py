@@ -6,8 +6,8 @@ load_dotenv()
 
 class Config:
     """基础配置"""
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production-32ch')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 

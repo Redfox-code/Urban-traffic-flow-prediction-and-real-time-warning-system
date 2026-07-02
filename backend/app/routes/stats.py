@@ -1,11 +1,13 @@
 """统计模块 — Agent-Lead"""
 from flask import Blueprint, jsonify
+from flask_jwt_extended import jwt_required
 from app.models.traffic_section import TrafficSection
 
 stats_bp = Blueprint('stats', __name__)
 
 
 @stats_bp.route('/dashboard', methods=['GET'])
+@jwt_required()
 def dashboard():
     total = TrafficSection.query.count()
     return jsonify({'code': 200, 'data': {
@@ -16,5 +18,6 @@ def dashboard():
 
 
 @stats_bp.route('/daily_report', methods=['GET'])
+@jwt_required()
 def daily_report():
     return jsonify({'code': 200, 'data': {}, 'message': 'ok'})

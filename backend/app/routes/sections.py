@@ -1,5 +1,6 @@
 """路段模块 — /api/v1/sections/* — Agent-Lead"""
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from app import db
 from app.models.traffic_section import TrafficSection
 
@@ -7,6 +8,7 @@ sections_bp = Blueprint('sections', __name__)
 
 
 @sections_bp.route('', methods=['GET'])
+@jwt_required()
 def list_sections():
     page = request.args.get('page', 1, type=int)
     page_size = min(request.args.get('page_size', 20, type=int), 100)
@@ -21,6 +23,7 @@ def list_sections():
 
 
 @sections_bp.route('/<int:section_id>', methods=['GET'])
+@jwt_required()
 def get_section(section_id):
     s = db.session.get(TrafficSection, section_id)
     if not s: return jsonify({'code': 404, 'data': None, 'message': '路段不存在'}), 404
@@ -28,6 +31,7 @@ def get_section(section_id):
 
 
 @sections_bp.route('', methods=['POST'])
+@jwt_required()
 def create_section():
     data = request.get_json(silent=True) or {}
     if not data.get('name'): return jsonify({'code': 400, 'data': None, 'message': '路段名称不能为空'}), 400
@@ -37,6 +41,7 @@ def create_section():
 
 
 @sections_bp.route('/<int:section_id>', methods=['PUT'])
+@jwt_required()
 def update_section(section_id):
     s = db.session.get(TrafficSection, section_id)
     if not s: return jsonify({'code': 404, 'data': None, 'message': '路段不存在'}), 404
@@ -48,6 +53,7 @@ def update_section(section_id):
 
 
 @sections_bp.route('/<int:section_id>', methods=['DELETE'])
+@jwt_required()
 def delete_section(section_id):
     s = db.session.get(TrafficSection, section_id)
     if not s: return jsonify({'code': 404, 'data': None, 'message': '路段不存在'}), 404

@@ -1,15 +1,24 @@
-# 任务看板 — D11 收尾
+# 任务看板 — 系统测试
+
+## 🐛 Bugs（待修复）
+
+| ID | 描述 | 严重 | 分配给 | 错误 |
+|----|------|------|--------|------|
+| BUG-BE-02 | sections端点缺少JWT保护(200≠401) | 🔴 | agent-lead | test_public_endpoints_blocked FAILED |
+| BUG-BE-03 | predict端点缺JWT+未训练模型返回500 | 🔴 | agent-algorithm | test_forecast_no_auth FAILED |
+| BUG-BE-04 | JWT key过短(<32字节)安全警告 | 🟡 | agent-lead | InsecureKeyLengthWarning |
+| BUG-FE-02 | Vite @/ alias未配置→import全部失败 | 🔴 | agent-frontend-main | npm run dev报错 |
 
 ## 🔄 InProgress
 
-| ID | 任务 | Agent |
-|----|------|-------|
-| D11-T01 | Bug修复+代码完善 | agent-lead |
-| D11-T02 | RF模型对接+评估 | agent-algorithm |
-| D11-T03 | 前端页面完善 | agent-frontend-main |
-| D11-T04 | 热力图+轨迹动画 | agent-frontend-map |
-| D11-T05 | 测试用例补全 | agent-test-docs |
+| ID | Agent | 开始 |
+|----|-------|------|
+| BUG-BE-02 | agent-lead | 修复中 |
 
 ## ✅ Done
 
-D3-D10: 35个任务全部完成
+D3-D13: 38任务完成
+
+## ✔️ 测试通过
+
+Phase 1: Auth✅ Sections✅ | Phase 2: SUMO✅ | Phase 4: 14/17 passed
