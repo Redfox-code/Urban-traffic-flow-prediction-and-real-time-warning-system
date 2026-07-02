@@ -32,8 +32,9 @@ def import_sumo_data(xml_path, db_path=None):
         print('[IMPORT] XML解析结果为空')
         return 0
 
-    # 2. 直接SQLite写入
+    # 2. 直接SQLite写入（WAL模式允许并发读写）
     conn = sqlite3.connect(db_path)
+    conn.execute('PRAGMA journal_mode=WAL')
     cur = conn.cursor()
 
     # 获取检测器→路段映射

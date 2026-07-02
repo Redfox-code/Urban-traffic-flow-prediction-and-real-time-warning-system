@@ -55,6 +55,13 @@
 **使用**：`cd algorithm && python run_simulation.py all` 生成e2_output.xml → `python import_sumo_data.py` 导入数据库 → 前端立即显示真实路况(source: 'db')。
 **✅验证**：导入后traffic.py/current端点返回`source:'db'`标记的数据。
 
+### BUG-SUMO-03 SQLite WAL模式修复DB锁
+
+**🎯Bug接收**：Agent-Lead分析。前端一键仿真500，终端直接运行却正常。根因：Flask进程持有dev.db读锁，子进程import_sumo_data.py无法写入。
+**💭分析**：SQLite默认journal_mode=DELETE，写操作需要独占锁。Flask打开连接后子进程写不进去。
+**📝修复**：(1)config.py DevConfig加SQLALCHEMY_ENGINE_OPTIONS允许check_same_thread=False；(2)import_sumo_data.py执行`PRAGMA journal_mode=WAL`。WAL模式允许多个读+一个写并发。
+**✅验证**：重启Flask后点一键仿真应不再500。
+
 ### BUG-TRAFFIC-01 traffic.py动态mock数据
 
 **🎯Bug接收**：前端点击任意路段显示「加载中」——traffic.py只有section_id=1的硬编码数据。

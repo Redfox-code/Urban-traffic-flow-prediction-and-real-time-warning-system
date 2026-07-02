@@ -21,8 +21,10 @@ def run_simulation():
             cwd=ALGORITHM_DIR, capture_output=True, text=True, timeout=30
         )
         if gen.returncode != 0:
-            return jsonify({'code': 500, 'data': {'step': 'generate', 'stderr': gen.stderr[-500:]},
-                            'message': '路网生成失败'}), 500
+            return jsonify({'code': 500, 'data': {
+                'step': 'generate', 'cwd': ALGORITHM_DIR,
+                'stdout': gen.stdout[-300:], 'stderr': gen.stderr[-500:]
+            }, 'message': f'路网生成失败: {gen.stderr[-200:]}'}), 500
 
         # Step 2: 运行仿真
         sim = subprocess.run(

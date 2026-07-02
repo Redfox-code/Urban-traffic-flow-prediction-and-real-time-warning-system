@@ -1,12 +1,11 @@
-# 任务看板 — 一键仿真
+# 任务看板 — 一键仿真500修复
 
 ## 🔄 InProgress
 
-| ID | 任务 | Agent |
-|----|------|-------|
-| BUG-SUMO-API | 创建POST /api/v1/sumo/run端点(后端触发SUMO+导入) | agent-lead |
-| UI-06 | Dashboard加「运行仿真」按钮+状态提示 | agent-frontend-main |
+| ID | 任务 | Agent | 分析 |
+|----|------|-------|------|
+| BUG-SUMO-02 | sumo端点增加详细错误日志(stderr返回) | agent-lead | 定位500根因 |
+| BUG-SUMO-03 | import_sumo_data.py改为WAL模式避免DB锁 | agent-algorithm | Flask+子进程共享DB |
 
 ## ✅ 已修复
-
-全部BUG + UI + 数据导入
+全部

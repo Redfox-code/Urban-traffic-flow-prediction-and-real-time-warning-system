@@ -79,3 +79,9 @@
 **💭设计**：创建`POST /api/v1/sumo/run`端点，后端用subprocess依次执行3步：生成路网(30s超时)→运行仿真(120s超时)→导入数据库(30s超时)。任一步失败返回具体错误+stderr。
 **决策**：同步执行而非Celery异步——课程项目并发量低，1-2分钟等待可接受，前端显示加载状态即可。
 **关键**：必须用`sys.executable`而非`python`，确保使用当前虚拟环境的Python。
+
+### BUG-SUMO-02 sumo端点错误信息增强
+
+**🎯分析**：前端报500但无具体错误信息，无法定位根因。
+**📝修复**：sumo.py错误返回增加cwd/stdout/stderr详细输出，500响应message包含stderr最后200字符。
+**同时修复**：ALGORITHM_DIR加os.path.abspath确保路径正确。
