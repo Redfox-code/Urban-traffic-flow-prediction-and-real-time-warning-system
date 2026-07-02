@@ -5,18 +5,25 @@ from sklearn.preprocessing import StandardScaler
 
 
 def parse_e2_output(xml_path):
-    """解析 SUMO e2_output.xml → DataFrame"""
+    """解析 SUMO e2_output.xml → DataFrame
+    SUMO 实际输出字段: nVehEntered, meanSpeed, meanOccupancy, sampledSeconds
+    """
     import xml.etree.ElementTree as ET
     tree = ET.parse(xml_path)
     records = []
-    for interval in tree.findall('.//interval'):
+    for interval in tree.iter('interval'):
+        veh = int(float(interval.get('nVehEntered', 0)))
+        speed = float(interval.get('meanSpeed', -1))
+        occ = float(interval.get('meanOccupancy', 0))
+        if veh == 0 and speed == -1:
+            veh, speed = 0, 0.0  # 无车通过时speed=-1修正为0
         records.append({
             'detector_id': interval.get('id'),
             'begin': float(interval.get('begin', 0)),
             'end': float(interval.get('end', 0)),
-            'vehicle_count': int(float(interval.get('sampledSeconds', 0))),
-            'avg_speed': float(interval.get('speed', 0)),
-            'occupancy': float(interval.get('occupancy', 0)),
+            'vehicle_count': veh,
+            'avg_speed': round(speed, 2),
+            'occupancy': round(occ, 2),
         })
     return pd.DataFrame(records)
 
