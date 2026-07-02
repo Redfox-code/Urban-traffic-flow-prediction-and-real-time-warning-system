@@ -1,25 +1,23 @@
-# 任务看板
+# 任务看板 — D9
 
-## 📋 Todo (D8待启动)
+## 📋 Todo
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| D8-T01 | 预测API实现(prediction.py) | agent-algorithm |
-| D8-T02 | KNN模型训练 | agent-algorithm |
-| D8-T03 | 预警规则引擎+stats.py | agent-lead |
-| D8-T04 | PredictionBoard ECharts | agent-frontend-main |
-| D8-T05 | 预警管理页面 | agent-frontend-main |
+| D9-T01 | 随机森林模型训练 | agent-algorithm |
+| D9-T02 | Dijkstra路径规划 | agent-lead |
+| D9-T03 | RoutePlanner页面 | agent-frontend-main |
+| D9-T04 | 地图热力图+轨迹动画 | agent-frontend-map |
+| D9-T05 | 模型评估测试 | agent-test-docs |
+
+## 🔄 InProgress
+
+D9-T01 (agent-algorithm)
 
 ## ✅ Done
 
-| ID | 任务 | Agent |
-|----|------|-------|
-| D7-T01 | JWT认证实现 | agent-lead |
-| D7-T02 | SUMO数据预处理 | agent-algorithm |
-| D7-T03 | Login+Register+Dashboard | agent-frontend-main |
-| D7-T04 | 地图标注+点击联动 | agent-frontend-map |
-| D7-T05 | API测试扩展 | agent-test-docs |
+D6×5 + D7×5 + D8×5 (15个)
 
 ## ✔️ Approved
 
-D3×5 + D4×5 + D5×1 + D6×5 (16份)
+11份 (D3-D5)
