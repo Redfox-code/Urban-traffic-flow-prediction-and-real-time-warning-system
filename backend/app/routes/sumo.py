@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required
 
 sumo_bp = Blueprint('sumo', __name__)
 
-ALGORITHM_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm')
+ALGORITHM_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
 
 
 @sumo_bp.route('/run', methods=['POST'])

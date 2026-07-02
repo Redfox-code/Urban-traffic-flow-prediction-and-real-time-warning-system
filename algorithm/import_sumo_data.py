@@ -1,58 +1,64 @@
-"""SUMO仿真数据导入脚本 — Agent-Algorithm
-将 e2_output.xml 的数据解析后写入 backend/traffic_records 表。
-用法: cd algorithm && python import_sumo_data.py [e2_output.xml路径]
-"""
+"""SUMO仿真数据导入脚本 — 使用独立SQLite连接避免锁DB"""
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
-from app import create_app, db
-from app.models.traffic_section import TrafficSection
-from app.models.traffic_detector import TrafficDetector
-from app.models.traffic_record import TrafficRecord
-from preprocessor import parse_e2_output
+import sqlite3
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
 
-def import_sumo_data(xml_path):
-    """将SUMO e2_output.xml导入数据库"""
-    app = create_app()
-    with app.app_context():
-        # 1. 解析SUMO输出
-        df = parse_e2_output(xml_path)
-        if df.empty:
-            print('[IMPORT] 警告: XML解析结果为空')
-            return 0
 
-        # 2. 获取已seed的路段和检测器映射
-        sections = {s.id: s for s in TrafficSection.query.all()}
-        detectors = {d.id: d for d in TrafficDetector.query.all()}
-        print(f'[IMPORT] 数据库中有 {len(sections)} 路段, {len(detectors)} 检测器')
+def import_sumo_data(xml_path, db_path=None):
+    """将SUMO e2_output.xml导入数据库（直接SQLite写入，不通过Flask）"""
+    if db_path is None:
+        db_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'instance', 'dev.db')
 
-        # 3. 将每条记录插入traffic_records
-        count = 0
-        for _, row in df.iterrows():
-            det_id = row.get('detector_id', '')
-            # 提取数字部分: 'det_left0to1_0' → 取第一个路段的检测器
-            detector = detectors.get(1)  # fallback: 使用第一个检测器
-            if not detector:
-                continue
-            section_id = detector.section_id
+    # 1. 解析SUMO XML
+    tree = ET.parse(xml_path)
+    records = []
+    for interval in tree.iter('interval'):
+        veh = int(float(interval.get('nVehEntered', 0)))
+        speed = float(interval.get('meanSpeed', -1))
+        occ = float(interval.get('meanOccupancy', 0))
+        if veh == 0 and speed == -1:
+            veh, speed = 0, 0.0
+        records.append({
+            'detector_id': interval.get('id'),
+            'vehicle_count': veh,
+            'avg_speed': round(speed, 2),
+            'occupancy': round(occ, 2),
+        })
+    if not records:
+        print('[IMPORT] XML解析结果为空')
+        return 0
 
-            record = TrafficRecord(
-                id=None,
-                section_id=section_id,
-                detector_id=detector.id,
-                vehicle_count=int(row.get('vehicle_count', 0)),
-                avg_speed=float(row.get('avg_speed', 0)),
-                occupancy=float(row.get('occupancy', 0)),
-                timestamp=datetime.utcnow() - timedelta(minutes=count * 15)
-            )
-            db.session.add(record)
-            count += 1
+    # 2. 直接SQLite写入
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
 
-        db.session.commit()
-        print(f'[IMPORT] 成功导入 {count} 条流量记录')
-        return count
+    # 获取检测器→路段映射
+    cur.execute('SELECT id, section_id FROM traffic_detectors LIMIT 1')
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        print('[IMPORT] 数据库无检测器，请先运行 seed_data.py')
+        return 0
+    detector_id, section_id = row
+
+    # 3. 批量插入
+    count = 0
+    for rec in records:
+        cur.execute(
+            'INSERT INTO traffic_records (section_id, detector_id, vehicle_count, avg_speed, occupancy, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+            (section_id, detector_id, rec['vehicle_count'], rec['avg_speed'], rec['occupancy'],
+             (datetime.utcnow() - timedelta(minutes=count * 15)).isoformat())
+        )
+        count += 1
+
+    conn.commit()
+    conn.close()
+    print(f'[IMPORT] 成功导入 {count} 条流量记录')
+    return count
 
 
 if __name__ == '__main__':
@@ -60,6 +66,5 @@ if __name__ == '__main__':
         os.path.dirname(__file__), 'data', 'raw', 'e2_output.xml')
     if not os.path.exists(path):
         print(f'[IMPORT] 文件不存在: {path}')
-        print('请先运行: python run_simulation.py all  生成仿真数据')
         sys.exit(1)
     import_sumo_data(path)
