@@ -1,24 +1,20 @@
-# 任务看板 — 系统测试
+# 任务看板 — 前端功能补齐
 
-## 🐛 Bugs（待修复）
+## 🐛 Bugs/功能缺失
 
-| ID | 描述 | 严重 | 分配给 | 错误 |
+| ID | 描述 | 严重 | 分配给 | 现象 |
 |----|------|------|--------|------|
-| BUG-BE-02 | sections端点缺少JWT保护(200≠401) | 🔴 | agent-lead | test_public_endpoints_blocked FAILED |
-| BUG-BE-03 | predict端点缺JWT+未训练模型返回500 | 🔴 | agent-algorithm | test_forecast_no_auth FAILED |
-| BUG-BE-04 | JWT key过短(<32字节)安全警告 | 🟡 | agent-lead | InsecureKeyLengthWarning |
-| BUG-FE-02 | Vite @/ alias未配置→import全部失败 | 🔴 | agent-frontend-main | npm run dev报错 |
+| BUG-FE-03 | Dashboard卡片全是0，未调statsApi | 🔴 | agent-frontend-main | 静态数据 |
+| BUG-FE-04 | TrafficMonitor无实时数据+地图空 | 🔴 | agent-frontend-main+agent-frontend-map | 有壳无数据 |
+| BUG-FE-05 | PredictionBoard无ECharts图表 | 🔴 | agent-frontend-main | 只有按钮 |
+| BUG-FE-06 | WarningManager空列表+无WS弹窗 | 🔴 | agent-frontend-main+agent-frontend-map | 无数据+无推送 |
+| BUG-FE-07 | RoutePlanner sections数据未加载 | 🟡 | agent-frontend-main | 下拉空 |
+| BUG-FE-08 | sections API未返回路段数据(数据库空) | 🔴 | agent-lead | 需seed数据 |
 
 ## 🔄 InProgress
 
-| ID | Agent | 开始 |
-|----|-------|------|
-| BUG-BE-02 | agent-lead | 修复中 |
+BUG-FE-08 (Agent-Lead)
 
-## ✅ Done
+## ✅ 已修复
 
-D3-D13: 38任务完成
-
-## ✔️ 测试通过
-
-Phase 1: Auth✅ Sections✅ | Phase 2: SUMO✅ | Phase 4: 14/17 passed
+BUG-BE-02~05 (JWT保护) | BUG-FE-02 (@/ alias)
