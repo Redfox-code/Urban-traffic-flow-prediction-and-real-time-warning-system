@@ -37,6 +37,15 @@
 **决策**：用heapq实现标准Dijkstra，不引入networkx依赖。build_graph基于路段ID相邻关系简化——适合24路段的SUMO网格。
 **已知局限**：图构建假设ID相邻=物理相邻，大型路网需改为坐标拓扑。
 
+| 7/02 | D11-T01 | 🎯任务开始 | D11 Bug修复+代码完善。计划：修复warning.py列表查询+完善Dijkstra图构建+补齐缺失端点。 |
+
+### D11-T01 Bug修复+代码完善
+
+**步骤1**：修复warning.py — 目前warning/list端点返回空数组，需要实现从warning_events表查询的逻辑。
+**步骤2**：完善route_service.py的build_graph — 从基于ID相邻改为基于coordinates距离构建邻接表。
+**步骤3**：补齐前端缺失的API模块(traffic.js) + SectionHeatmap组件骨架。
+**步骤4**：D11-T01完成。warning列表查询→DB分页; Dijkstra图构建→haversine坐标距离(改进D9的ID相邻简化); traffic API模块补齐。
+
 ### D10 联调总结
 **完成**：admin页面(UserManager/SystemLogs)+ 4条集成测试(认证流程/CRUD/路径规划/权限)。
 **待做**：D11 Bug修复 + D12演示视频 + D13报告整合。
