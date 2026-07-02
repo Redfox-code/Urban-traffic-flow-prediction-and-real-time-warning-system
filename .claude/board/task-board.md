@@ -1,6 +1,6 @@
 # 任务看板
 
-> **状态流转**：Backlog → Todo → InProgress → Done → Approved
+> D6-D10 详细设计+开发 | **D6: 5/5 ✅**
 
 ---
 
@@ -23,29 +23,22 @@
 
 ## 📋 Todo
 
-| ID | 任务 | Agent | BlockedBy | 预估 |
-|----|------|-------|-----------|------|
-| D6-T04 | 高德地图Key+基础地图 | agent-frontend-map | ~~D6-T03~~ ✅ | 1h |
-| D6-T05 | 测试框架搭建 | agent-test-docs | — | 1h |
-
----
-
-## 🔄 InProgress
-
-（无）
+（D7待启动）
 
 ---
 
 ## ✅ Done（待审查）
 
-| ID | 任务 | Agent |
-|----|------|-------|
-| D6-T01 | Flask项目脚手架搭建 | agent-lead |
-| D6-T02 | SUMO路网搭建 | agent-algorithm |
-| D6-T03 | Vue 3项目初始化 | agent-frontend-main |
+| ID | 任务 | Agent | 分支 |
+|----|------|-------|------|
+| D6-T01 | Flask脚手架(28文件) | lead | merged ✅ |
+| D6-T02 | SUMO路网(4文件) | algorithm | merged ✅ |
+| D6-T03 | Vue 3初始化(17文件) | fe-main | merged ✅ |
+| D6-T04 | 高德地图+WS(3文件) | fe-map | merged ✅ |
+| D6-T05 | 测试框架(3文件) | test-docs | git pending |
 
 ---
 
 ## ✔️ Approved (11)
 
-D3-T01~T05 | D4-T01~T05 | D5-T01
+D3×5 + D4×5 + D5×1
