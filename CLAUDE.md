@@ -195,6 +195,10 @@ python -m prediction.evaluate            # 模型评估
 | 决策记录 | [.claude/board/decisions-log.md](.claude/board/decisions-log.md) | 关键决策 + Judge审查报告 |
 | 各自日志 | [agent-logs/](agent-logs/) | 每个Agent的完整思考轨迹 |
 
+### 默认任务分配规则
+
+> **用户提出需求时，若未指定Agent，默认由 Agent-Lead 读取分析，拆分任务分配各Agent，各Agent完成后写日志。**
+
 ### Agent 唤醒后的标准流程
 1. 读取自己的角色文件（`.claude/agents/agent-*.md`）
 2. 读取 `CLAUDE.md` + `STATE.md` + `.claude/memory/MEMORY.md`
