@@ -1,5 +1,6 @@
 """路径规划模块 — Agent-Lead"""
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from app.services.route_service import plan_route
 from app.models.traffic_section import TrafficSection
 from app import db
@@ -8,6 +9,7 @@ route_bp = Blueprint('route', __name__)
 
 
 @route_bp.route('/plan', methods=['POST'])
+@jwt_required()
 def plan():
     data = request.get_json(silent=True) or {}
     origin = data.get('origin_section_id')
@@ -32,6 +34,7 @@ def plan():
 
 
 @route_bp.route('/<int:route_id>', methods=['GET'])
+@jwt_required()
 def get_route(route_id):
     # TODO D10: 数据库查询历史路径
     return jsonify({'code': 200, 'data': {}, 'message': 'ok'})

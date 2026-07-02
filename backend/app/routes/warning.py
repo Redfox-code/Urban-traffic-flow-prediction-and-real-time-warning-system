@@ -1,5 +1,6 @@
 """预警模块 — /api/v1/warning/* — Agent-Lead"""
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from app import db
 from app.models.warning_event import WarningEvent
 
@@ -7,6 +8,7 @@ warning_bp = Blueprint('warning', __name__)
 
 
 @warning_bp.route('/list', methods=['GET'])
+@jwt_required()
 def list_warnings():
     page = request.args.get('page', 1, type=int)
     page_size = min(request.args.get('page_size', 20, type=int), 100)
@@ -28,6 +30,7 @@ def list_warnings():
 
 
 @warning_bp.route('/<int:warning_id>/resolve', methods=['PUT'])
+@jwt_required()
 def resolve_warning(warning_id):
     w = db.session.get(WarningEvent, warning_id)
     if not w: return jsonify({'code': 404, 'data': None, 'message': '预警不存在'}), 404
