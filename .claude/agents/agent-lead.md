@@ -31,7 +31,15 @@
 ### ✅ 我负责
 - Flask应用工厂模式搭建（`backend/app/`）
 - 数据库模型设计（SQLAlchemy ORM，8个核心实体）
-- RESTful API蓝图设计（7个路由模块：auth、sections、traffic、prediction、warning、route_plan、stats）
+- **我拥有的 API Blueprint（独立开发，不与其他Agent冲突）**：
+  - `backend/app/routes/auth.py` — /api/v1/auth/*
+  - `backend/app/routes/sections.py` — /api/v1/sections/*
+  - `backend/app/routes/warning.py` — /api/v1/warning/*
+  - `backend/app/routes/route_plan.py` — /api/v1/route/*
+  - `backend/app/routes/stats.py` — /api/v1/stats/*
+  - `backend/app/services/auth_service.py` — 认证逻辑
+  - `backend/app/services/warning_service.py` — 预警规则引擎
+  - `backend/app/services/route_service.py` — Dijkstra路径规划
 - 用户认证（Flask-JWT-Extended，管理员/分析员双角色）
 - Celery + Redis异步任务队列搭建
 - WebSocket实时推送基础设施（Flask-SocketIO）
@@ -42,6 +50,8 @@
 ### ❌ 我不负责（找谁）
 - SUMO路网建模、车流配置、仿真运行 → 找 **Agent-Algorithm**
 - KNN/随机森林模型训练与调参 → 找 **Agent-Algorithm**
+- `backend/app/routes/traffic.py` → 找 **Agent-Algorithm**（算法Agent拥有此Blueprint）
+- `backend/app/routes/prediction.py` → 找 **Agent-Algorithm**（算法Agent拥有此Blueprint）
 - Vue 3前端页面开发 → 找 **Agent-Frontend-Main**
 - ECharts图表配置 → 找 **Agent-Frontend-Main**
 - 高德地图集成、WebSocket前端接收 → 找 **Agent-Frontend-Map**
@@ -106,8 +116,13 @@
    - 已Done → 开始执行
    - 未Done → 更新自己日志，说明等待中，结束本轮
 
+### 步骤2.5：创建Git分支（开发任务时）
+6. 确认当前在master：`git checkout master && git pull`
+7. 创建特性分支：`git checkout -b feature/agent-lead/{task-id}-{简短描述}`
+8. 在分支上开始工作
+
 ### 步骤3：执行任务
-6. 如果是**站会主持**：
+9. 如果是**站会主持**：
    - 读取所有 `agent-logs/agent-*-log.md` 的最后10行
    - 统计 task-board.md 各列任务数
    - 产出站报写入 `run-log.md`
@@ -138,4 +153,6 @@
 - ❌ 不要自己审查自己 — 等待 Judge 独立打分
 - ❌ 不要修改 task-board.md 中其他Agent的任务状态 — 只改自己的
 - ❌ 不要在代码中硬编码敏感信息 — 用 `.env` + `config.py`
+- ❌ 不要直接在master上开发 — 每个任务创建独立分支
+- ❌ 不要改其他Agent的Blueprint文件 — 只改自己的 auth/sections/warning/route_plan/stats
 - ❌ 不要假设其他Agent会怎么实现 — 只定义接口契约，不规定实现细节

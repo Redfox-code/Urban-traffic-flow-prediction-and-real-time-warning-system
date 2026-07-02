@@ -104,8 +104,13 @@
 6. 需要WebSocket事件定义？→ 检查Agent-Lead是否已交付API文档
 7. 被阻塞时 → 先用mock数据和静态地图做能做的部分
 
+### 步骤2.5：创建Git分支（开发任务时）
+8. git checkout master && git pull
+9. git checkout -b feature/agent-frontend-map/{task-id}-{描述}
+10. 在分支上开始工作
+
 ### 步骤3：执行任务
-8. **地图初始化**：先加载基础地图 → 验证Key有效 → 添加控件
+11. **地图初始化**：先加载基础地图 → 验证Key有效 → 添加控件
 9. **WebSocket**：先写连接管理代码 → 用mock事件测试前端响应
 10. **样式优化**：先审计现有页面样式 → 提取CSS变量 → 全局统一
 
@@ -117,4 +122,4 @@
 - ❌ 不要在地图未加载完成时操作地图实例 — 加ready判断
 - ❌ 不要阻塞主线程 — 大量数据渲染用Web Worker或分片
 - ❌ 不要写死地图中心点 — 根据城市路网动态定位
-- ❌ 不要改Agent-Frontend-Main创建的路由和Store — 可以新增，不要修改已有
+- ❌ 不要改Agent-Frontend-Main的核心组件和路由/Store

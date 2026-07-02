@@ -40,11 +40,20 @@
 - 双模型对比评估：MAE/RMSE/MAPE指标对比、残差分析、可视化
 - 模型持久化：joblib序列化，输出模型文件到 `backend/saved_models/`
 - 预测接口封装：`predict(traffic_data)` 函数签名，供后端调用
-- Celery定时重训练任务脚本
+- **我拥有的 API Blueprint（独立开发，不与其他Agent冲突）**：
+  - `backend/app/routes/traffic.py` — /api/v1/traffic/*
+  - `backend/app/routes/prediction.py` — /api/v1/predict/*
+  - `backend/app/ml/` — 机器学习模块（knn_predictor.py, rf_predictor.py, preprocessor.py等）
+- Celery定时重训练任务脚本（`backend/app/tasks/train_task.py`）
 - 概要设计报告中「算法模块设计」和「数据管道设计」章节
 - 详细设计报告中算法相关章节
 
 ### ❌ 我不负责（找谁）
+- `backend/app/routes/auth.py` → 找 **Agent-Lead**
+- `backend/app/routes/sections.py` → 找 **Agent-Lead**
+- `backend/app/routes/warning.py` → 找 **Agent-Lead**
+- `backend/app/routes/route_plan.py` → 找 **Agent-Lead**
+- `backend/app/routes/stats.py` → 找 **Agent-Lead**
 - Flask API路由实现 → 找 **Agent-Lead**
 - 数据库建表和ORM映射 → 找 **Agent-Lead**
 - 前端预测曲线展示 → 找 **Agent-Frontend-Main**
@@ -107,8 +116,13 @@
    - 已交付 → 开始执行
    - 未交付 → 写日志说明等待中，可先做不需要依赖的部分
 
+### 步骤2.5：创建Git分支（开发任务时）
+6. 确认当前在master：`git checkout master && git pull`
+7. 创建特性分支：`git checkout -b feature/agent-algorithm/{task-id}-{简短描述}`
+8. 在分支上开始工作
+
 ### 步骤3：执行任务
-6. **SUMO建模任务**：路网→车流→检测器→仿真脚本，逐步构建
+9. **SUMO建模任务**：路网→车流→检测器→仿真脚本，逐步构建
 7. **数据处理任务**：先探索数据(describe/可视化) → 确定预处理策略 → 实现Pipeline
 8. **模型训练任务**：先跑baseline(KNN) → 再跑随机森林 → 对比评估 → 调优
 9. 每完成一个子步骤，更新自己的日志文件
@@ -123,5 +137,7 @@
 - ❌ 不要跳过数据探索直接训练模型 — 先理解数据分布
 - ❌ 不要在仿真未验证前就开始预测 — SUMO输出先检查正确性
 - ❌ 不要只训练不评估 — 必须出具双模型对比报告
-- ❌ 不要改 `backend/` 下的代码 — 只通过接口定义与后端协作
+- ❌ 不要改 `backend/` 下其他Agent的代码 — 只改自己的 traffic.py/prediction.py/ml/
+- ❌ 不要改Agent-Lead的Blueprint文件（auth/sections/warning/route_plan/stats）
+- ❌ 不要直接在master上开发 — 每个任务创建独立分支
 - ❌ 不要超参数暴力搜索 — 先理解参数含义，合理设置搜索范围

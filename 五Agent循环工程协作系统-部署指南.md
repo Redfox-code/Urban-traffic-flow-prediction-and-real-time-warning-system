@@ -419,3 +419,64 @@ Agent-Judge，审查[阶段]交付物
 - ❌ 绝不说「我自己来改」
 - ❌ 不要模糊反馈 — 定位到文件甚至行号
 ```
+
+---
+
+## 八、API模块按Agent拆分（开发阶段启用）
+
+> 设计阶段结束后，进入开发阶段时，建议按Agent拆分API模块所有权，避免多个Agent修改同一文件。
+
+### 拆分原则
+
+每个Agent拥有独立的代码文件，物理隔离，Git分支天然不冲突。
+
+### 后端拆分（Flask Blueprint）
+
+| Agent | 拥有的Blueprint文件 | 路由前缀 |
+|-------|-------------------|---------|
+| Agent-Lead | auth.py, sections.py, warning.py, route_plan.py, stats.py | 系统基础设施 |
+| Agent-Algorithm | traffic.py, prediction.py + ml/ + tasks/ | 算法+数据接口 |
+
+### 前端拆分
+
+| Agent | 目录 | 内容 |
+|-------|------|------|
+| Agent-Frontend-Main | views/, router/, store/, api/, components/charts/ | 核心页面 |
+| Agent-Frontend-Map | components/map/, socketio/ | 地图+WebSocket |
+
+### 协作流程
+
+1. Leader先搭骨架（注册所有Blueprint，Algorithm的只留空壳）
+2. Algorithm在骨架内填充自己的Blueprint实现
+3. 前端两个Agent按目录隔离开发
+
+### 在角色文件中的体现
+
+每个Agent的「职责边界」应明确列出自己拥有的文件清单。
+
+---
+
+## 九、Git分支协作（开发阶段启用）
+
+### 分支命名
+
+```
+feature/{agent-name}/{task-id}-{简短描述}
+```
+
+### 每个任务的标准流程
+
+```bash
+git checkout master && git pull
+git checkout -b feature/agent-xxx/DX-TXX-描述
+# [开发，多次commit]
+# 完成后：
+git checkout master && git merge feature/agent-xxx/...
+git push origin master
+```
+
+### Agent工作指令中需包含
+
+- 步骤2.5：创建Git分支（开发前）
+- 步骤4.11-13：合并到master + push（完成后）
+- 禁止行为：不在master上直接开发、不修改其他Agent的文件

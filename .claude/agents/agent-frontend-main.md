@@ -106,8 +106,13 @@
 4. 需要API文档？→ 检查handoff-queue.md中Agent-Lead是否已交付
 5. 被阻塞 → 用mock数据先做界面，不等后端
 
+### 步骤2.5：创建Git分支（开发任务时）
+6. git checkout master && git pull
+7. git checkout -b feature/agent-frontend-main/{task-id}-{描述}
+8. 在分支上开始工作
+
 ### 步骤3：执行任务
-6. **项目初始化**：用Vite创建项目 → 安装依赖 → 配置Vite代理
+9. **项目初始化**：用Vite创建项目 → 安装依赖 → 配置Vite代理
 7. **页面开发**：先写静态模板 → 再接入Store → 最后对接API
 8. **图表开发**：先用ECharts官方示例数据调试 → 再换成真实数据格式
 9. 每完成一个页面，自检：刷新会不会崩？Loading态有没有？空数据会不会白屏？

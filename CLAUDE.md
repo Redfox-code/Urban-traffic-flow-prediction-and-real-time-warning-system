@@ -230,3 +230,80 @@ python -m prediction.evaluate            # 模型评估
 4. 读取 `task-board.md` 找到自己的任务
 5. 检查依赖关系 → 执行任务 → 产出交付物
 6. 更新 `task-board.md` + 自己的 `agent-logs/` + `handoff-queue.md` + `decisions-log.md`
+
+## 十二、API模块按Agent拆分规范
+
+> 进入D6开发阶段后，每个Agent拥有独立的Blueprint文件。不同Agent修改不同文件，Git分支天然不冲突。
+
+### Agent-Lead（系统基础设施）
+| 文件 | 路由前缀 |
+|------|---------|
+| `backend/app/routes/auth.py` | /api/v1/auth/* |
+| `backend/app/routes/sections.py` | /api/v1/sections/* |
+| `backend/app/routes/warning.py` | /api/v1/warning/* |
+| `backend/app/routes/route_plan.py` | /api/v1/route/* |
+| `backend/app/routes/stats.py` | /api/v1/stats/* |
+| `backend/app/services/auth_service.py` | 认证逻辑 |
+| `backend/app/services/warning_service.py` | 预警规则引擎 |
+| `backend/app/services/route_service.py` | Dijkstra路径规划 |
+
+### Agent-Algorithm（算法+数据接口）
+| 文件 | 路由前缀 |
+|------|---------|
+| `backend/app/routes/traffic.py` | /api/v1/traffic/* |
+| `backend/app/routes/prediction.py` | /api/v1/predict/* |
+| `backend/app/ml/` | KNN+RF模型+预处理 |
+| `backend/app/tasks/train_task.py` | Celery重训练 |
+
+### Agent-Frontend-Main
+| 目录 | 内容 |
+|------|------|
+| `frontend/src/views/` | 页面组件 |
+| `frontend/src/router/` | 路由 |
+| `frontend/src/store/` | Pinia状态 |
+| `frontend/src/api/` | Axios封装 |
+| `frontend/src/components/charts/` | ECharts图表 |
+
+### Agent-Frontend-Map
+| 目录 | 内容 |
+|------|------|
+| `frontend/src/components/map/` | 高德地图组件 |
+| `frontend/src/socketio/` | WebSocket客户端 |
+
+### Agent-Test-Docs
+| 目录 | 内容 |
+|------|------|
+| `backend/tests/` | pytest测试 |
+| `docs/` | 报告文档 |
+
+### 协作规则
+1. **Agent-Lead搭建脚手架**：Flask工厂函数 + 全部Blueprint注册骨架
+2. **Agent-Algorithm填充算法Blueprint**：在Leader的骨架内实现traffic.py/prediction.py
+3. **各自文件互不重叠**：不存在两个Agent修改同一文件的场景
+4. **API契约已锁定**：D4-T01定义了所有接口格式，实现时必须严格遵循
+
+## 十三、Git分支协作规范
+
+### 命名规范
+```
+feature/{agent-name}/{task-id}-{简短描述}
+
+示例：
+  feature/agent-lead/D6-T01-flask-scaffold
+  feature/agent-algorithm/D6-T02-sumo-network
+```
+
+### 每个任务的完整Git流程
+```
+1. git checkout master && git pull
+2. git checkout -b feature/agent-xxx/DX-TXX-描述
+3. [开发，git add + commit 若干次]
+4. 完成 → 更新task-board → 更新agent-log
+5. git checkout master && git merge feature/agent-xxx/...
+6. git push origin master
+```
+
+### 禁止行为
+- ❌ 不要在master上直接开发代码
+- ❌ 不要修改其他Agent的Blueprint文件
+- ❌ 不要force push到master
