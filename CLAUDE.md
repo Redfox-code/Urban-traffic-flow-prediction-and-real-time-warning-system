@@ -139,7 +139,7 @@ python -m prediction.evaluate            # 模型评估
 
 | Agent | 验证命令 | 通过标准 |
 |-------|---------|---------|
-| Agent-Lead | `cd backend && flask --app run.py run` | 无import错误/启动异常 |
+| Agent-Lead | `cd backend && flask --app run.py run` + 用curl测试auth/sections/stats三个关键端点返回200 | 无import错误 + 关键API可达 |
 | Agent-Algorithm | `cd algorithm && python run_simulation.py all` | 仿真无报错完成 |
 | Agent-Frontend-Main | `cd frontend && npm install && npm run dev` | 无红色控制台报错 |
 | Agent-Frontend-Map | 浏览器打开 localhost:5173/traffic | 地图加载无JS错误 |

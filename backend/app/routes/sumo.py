@@ -14,31 +14,38 @@ ALGORITHM_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 @jwt_required()
 def run_simulation():
     """一键运行SUMO仿真+导入数据库"""
+    results = {}
+
     try:
-        # Step 1+2: 生成路网并运行仿真 (run_simulation.py all = generate + run)
+        # Step 1: 生成路网（快速）
+        gen = subprocess.run(
+            [sys.executable, 'run_simulation.py', 'generate'],
+            cwd=ALGORITHM_DIR, capture_output=True, text=True, timeout=60
+        )
+        results['generate'] = {'ok': gen.returncode == 0, 'output': gen.stdout[-200:]}
+        if gen.returncode != 0:
+            return jsonify({'code': 500, 'data': results,
+                            'message': f'路网生成失败: {gen.stderr[-200:]}'}), 500
+
+        # Step 2: 运行仿真（1小时仿真，约30-60秒）
         sim = subprocess.run(
-            [sys.executable, 'run_simulation.py', 'all'],
+            [sys.executable, 'run_simulation.py', 'run'],
             cwd=ALGORITHM_DIR, capture_output=True, text=True, timeout=120
         )
+        results['simulation'] = {'ok': sim.returncode == 0, 'lines': len(sim.stdout.split(chr(10)))}
         if sim.returncode != 0:
-            return jsonify({'code': 500, 'data': {
-                'step': 'simulation',
-                'stdout': sim.stdout[-500:],
-                'stderr': sim.stderr[-500:]
-            }, 'message': f'仿真失败: {sim.stderr[-200:] or sim.stdout[-200:]}'}), 500
+            return jsonify({'code': 500, 'data': results,
+                            'message': f'仿真运行失败: {sim.stderr[-200:] or sim.stdout[-200:]}'}), 500
 
         # Step 3: 导入数据库
         imp = subprocess.run(
             [sys.executable, 'import_sumo_data.py'],
             cwd=ALGORITHM_DIR, capture_output=True, text=True, timeout=30
         )
-        import_out = imp.stdout + imp.stderr
+        results['import'] = {'ok': imp.returncode == 0, 'output': imp.stdout[:300]}
         if imp.returncode != 0:
-            return jsonify({'code': 500, 'data': {
-                'step': 'import',
-                'stdout': imp.stdout[-500:],
-                'stderr': imp.stderr[-500:]
-            }, 'message': f'导入失败: {import_out[-300:]}'}), 500
+            return jsonify({'code': 500, 'data': results,
+                            'message': f'导入失败: {imp.stderr[-200:]}'}), 500
 
         count = 0
         for line in imp.stdout.split('\n'):
@@ -46,12 +53,11 @@ def run_simulation():
                 count = int(line.split('成功导入')[1].split('条')[0].strip() or 0)
 
         return jsonify({'code': 200, 'data': {
-            'records_imported': count,
-            'stdout': sim.stdout[-300:],
-            'status': '仿真完成，数据已导入数据库'
+            'records_imported': count, 'status': '仿真完成', 'steps': results
         }, 'message': 'ok'})
 
-    except subprocess.TimeoutExpired:
-        return jsonify({'code': 500, 'data': None, 'message': '仿真超时(120秒)，请减少仿真时长'}), 500
+    except subprocess.TimeoutExpired as e:
+        return jsonify({'code': 500, 'data': results,
+                        'message': f'步骤超时({e.timeout}s)，请检查SUMO是否正常运行'}), 500
     except Exception as e:
-        return jsonify({'code': 500, 'data': None, 'message': f'异常: {str(e)}'}), 500
+        return jsonify({'code': 500, 'data': results, 'message': str(e)}), 500
