@@ -1,11 +1,11 @@
-# 任务看板 — 一键仿真500修复
+# 任务看板
 
 ## 🔄 InProgress
 
-| ID | 任务 | Agent | 分析 |
-|----|------|-------|------|
-| BUG-SUMO-02 | sumo端点增加详细错误日志(stderr返回) | agent-lead | 定位500根因 |
-| BUG-SUMO-03 | import_sumo_data.py改为WAL模式避免DB锁 | agent-algorithm | Flask+子进程共享DB |
+| ID | 任务 | Agent |
+|----|------|-------|
+| BUG-SUMO-02 | SUMO端点500根因：前端超时后端正常？需看Flask终端错误 | agent-lead |
+| FEAT-VERIFY | Agent自动运行验证机制实现 | agent-lead |
 
 ## ✅ 已修复
 全部
