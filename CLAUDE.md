@@ -5,6 +5,18 @@
 
 ---
 
+## ⚠️ 核心AI协作规则（每次会话必读）
+
+> **用户提出的任何问题或需求，若未明确指定由谁处理，一律由 Agent-Lead 负责：**
+> 1. Agent-Lead 读取并分析用户需求
+> 2. Agent-Lead 在 `.claude/board/task-board.md` 创建任务，分配给对应 Agent
+> 3. 各 Agent 修复完成后必须写 agent-logs + handoff-queue + decisions-log + run-log（追踪四文件）
+> 4. Agent-Lead 汇总结果
+>
+> **协调者（Claude）不得跳过 Agent 直接修改代码。即使改动只有一行，也必须走 Agent 流程。**
+
+---
+
 ## 一、项目概览
 
 - **课程**：智能运输系统设计与集成综合实验
