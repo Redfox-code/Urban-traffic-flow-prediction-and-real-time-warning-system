@@ -44,6 +44,10 @@ def create_app(config_name=None):
     from app.routes.sumo import sumo_bp
     app.register_blueprint(sumo_bp, url_prefix='/api/v1/sumo')
 
+    # 注册仿真管理 Blueprint
+    from app.routes.simulation_routes import sim_bp
+    app.register_blueprint(sim_bp, url_prefix='/api/v1/simulation')
+
     # 创建数据库表（开发环境）
     with app.app_context():
         from app.models import user, traffic_section, traffic_detector

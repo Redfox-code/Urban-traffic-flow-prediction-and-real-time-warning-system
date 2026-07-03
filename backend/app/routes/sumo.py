@@ -9,6 +9,7 @@ sumo_bp = Blueprint('sumo', __name__)
 
 # 实时仿真进程状态（简单全局变量）
 _realtime_process = None
+STOP_FILE = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm', '.stop_realtime')
 
 
 @sumo_bp.route('/run_realtime', methods=['POST'])
@@ -28,6 +29,20 @@ def run_realtime():
         return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真已启动'})
     except Exception as e:
         return jsonify({'code': 500, 'data': None, 'message': str(e)}), 500
+
+
+@sumo_bp.route('/stop', methods=['POST'])
+@jwt_required()
+def stop_realtime():
+    """停止实时仿真"""
+    global _realtime_process
+    # 创建stop文件（run_simulation_realtime.py会检测）
+    with open(STOP_FILE, 'w') as f:
+        f.write('stop')
+    if _realtime_process and _realtime_process.poll() is None:
+        _realtime_process.terminate()
+        _realtime_process = None
+    return jsonify({'code': 200, 'data': {'status': 'stopped'}, 'message': '仿真已停止'})
 
 
 @sumo_bp.route('/status', methods=['GET'])

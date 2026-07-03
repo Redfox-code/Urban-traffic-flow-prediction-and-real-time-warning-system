@@ -6,8 +6,9 @@ from app.models.prediction_result import PredictionResult
 from app.models.warning_event import WarningEvent
 from app.models.route_record import RouteRecord
 from app.models.system_log import SystemLog
+from app.models.simulation import Simulation
 
 __all__ = [
     'User', 'TrafficSection', 'TrafficDetector', 'TrafficRecord',
-    'PredictionResult', 'WarningEvent', 'RouteRecord', 'SystemLog',
+    'PredictionResult', 'WarningEvent', 'RouteRecord', 'SystemLog', 'Simulation',
 ]

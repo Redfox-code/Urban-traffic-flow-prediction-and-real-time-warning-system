@@ -1,16 +1,15 @@
-# 任务看板 — 实时仿真
+# 任务看板 — 仿真系统重构
 
 ## 📋 Todo
 
-| ID | 任务 | Agent | 预估 |
-|----|------|-------|------|
-| FEAT-RT-01 | TraCI实时仿真脚本: SUMO逐步运行,每步读取检测器数据写入DB | agent-algorithm | 2h |
-| FEAT-RT-02 | 后端实时路况推送: /traffic/current改为实时读取最新DB记录 | agent-lead | 1h |
-| FEAT-RT-03 | 前端实时刷新: TrafficMonitor每5秒自动刷新路况 | agent-frontend-main | 0.5h |
+| ID | 任务 | Agent |
+|----|------|-------|
+| FEAT-SIM-01 | 后端: Simulation模型(文件记录)+提交/历史/读取API | agent-lead |
+| FEAT-SIM-02 | 后端: 实时仿真start/stop控制端点 | agent-lead |
+| FEAT-SIM-03 | 算法: 实时仿真支持stop信号(file-based) | agent-algorithm |
+| FEAT-SIM-04 | 前端: Dashboard仿真提交界面(离线+实时两个Tab) | agent-frontend-main |
+| FEAT-SIM-05 | 前端: TrafficMonitor加开始/停止仿真按钮 | agent-frontend-main |
 
 ## 🔄 InProgress
 
-FEAT-RT-01 (agent-algorithm)
-
-## ✅ 已修复
-全部BUG
+FEAT-SIM-01 (agent-lead)

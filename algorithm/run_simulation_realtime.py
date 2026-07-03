@@ -14,6 +14,7 @@ except ImportError:
     sys.exit(1)
 
 BASE_DIR = os.path.dirname(__file__)
+STOP_FILE = os.path.join(BASE_DIR, '.stop_realtime')
 CONFIG = os.path.join(BASE_DIR, 'sumo', 'config.sumocfg')
 DB_PATH = os.path.join(BASE_DIR, '..', 'backend', 'instance', 'dev.db')
 
@@ -37,7 +38,14 @@ def run_realtime(duration=3600, interval=100):
     records = 0
 
     try:
+        # 清理stop文件
+        if os.path.exists(STOP_FILE):
+            os.remove(STOP_FILE)
+
         while step < duration * 10:  # step-length=0.1 → 10步/秒
+            if os.path.exists(STOP_FILE):
+                print('\n[RT-SUMO] 收到停止信号')
+                break
             traci.simulationStep()
             step += 1
 
