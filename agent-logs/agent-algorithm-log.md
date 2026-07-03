@@ -55,6 +55,13 @@
 **使用**：`cd algorithm && python run_simulation.py all` 生成e2_output.xml → `python import_sumo_data.py` 导入数据库 → 前端立即显示真实路况(source: 'db')。
 **✅验证**：导入后traffic.py/current端点返回`source:'db'`标记的数据。
 
+### FEAT-RT-01 TraCI实时仿真脚本
+
+**🎯任务**：Agent-Lead分配。实现SUMO实时仿真→数据持续写入DB→前端实时刷新。
+**💭设计**：使用TraCI(Python API)逐步运行SUMO，每100步(~10秒)读取所有laneAreaDetector实时数据，直接sqlite3写入traffic_records表。WAL模式确保Flask同时可读。
+**关键决策**：用subprocess.Popen在后台运行(不阻塞Flask)，前端通过Dashboard「启动实时仿真」按钮触发。运行中状态通过/sumo/status查询。
+**产出**：algorithm/run_simulation_realtime.py
+
 ### BUG-SUMO-03 SQLite WAL模式修复DB锁
 
 **🎯Bug接收**：Agent-Lead分析。前端一键仿真500，终端直接运行却正常。根因：Flask进程持有dev.db读锁，子进程import_sumo_data.py无法写入。

@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { sectionsApi } from '@/api/sections'
 import { trafficApi } from '@/api/traffic'
 import TrafficMap from '@/components/map/TrafficMap.vue'
@@ -74,10 +74,16 @@ const onSectionClick = async (section) => {
   }
 }
 
+let refreshTimer = null
+
 onMounted(async () => {
   try { const res = await sectionsApi.getList(); sections.value = res.data?.items || res?.items || [] } catch {}
   loadAllTraffic()
+  // 每5秒自动刷新路况数据
+  refreshTimer = setInterval(loadAllTraffic, 5000)
 })
+
+onUnmounted(() => { clearInterval(refreshTimer) })
 </script>
 
 <style scoped>

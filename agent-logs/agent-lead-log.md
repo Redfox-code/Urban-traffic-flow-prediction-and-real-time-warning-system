@@ -80,6 +80,12 @@
 **决策**：同步执行而非Celery异步——课程项目并发量低，1-2分钟等待可接受，前端显示加载状态即可。
 **关键**：必须用`sys.executable`而非`python`，确保使用当前虚拟环境的Python。
 
+### FEAT-RT-02/03 实时仿真端点+前端刷新
+
+**🎯任务**：配合Agent-Algorithm的TraCI脚本，实现后端实时仿真控制+前端自动刷新。
+**📝修复**：(1)sumo.py新增/run_realtime端点(Popen后台启动)和/status端点；(2)TrafficMonitor每5秒setInterval调用loadAllTraffic()；(3)Dashboard加「启动实时仿真」按钮。
+**决策**：复用traffic/current端点+DB——TraCI写入→traffic_records→traffic/current读取→前端5秒刷新→完整闭环。
+
 ### BUG-SUMO-02 sumo端点错误信息增强
 
 **🎯分析**：前端报500但无具体错误信息，无法定位根因。

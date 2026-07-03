@@ -19,6 +19,9 @@
         <el-button type="primary" @click="runSumo" :loading="sumoRunning" :disabled="sumoRunning">
           {{ sumoRunning ? '仿真运行中...' : '▶ 一键运行仿真' }}
         </el-button>
+        <el-button type="success" @click="runRealtime" :loading="rtRunning" :disabled="rtRunning">
+          {{ rtRunning ? '实时仿真运行中...' : '🔴 启动实时仿真' }}
+        </el-button>
         <span v-if="sumoResult" :style="{color: sumoResult.includes('成功') ? '#00e676' : '#f44336'}">{{ sumoResult }}</span>
         <span v-if="sumoRunning" style="color:var(--text-secondary);font-size:13px">正在生成路网→运行仿真→导入数据库，约需1-2分钟...</span>
       </div>
@@ -34,6 +37,19 @@ import request from '@/api/request'
 
 const sumoRunning = ref(false)
 const sumoResult = ref('')
+const rtRunning = ref(false)
+
+const runRealtime = async () => {
+  rtRunning.value = true; sumoResult.value = ''
+  try {
+    const res = await request.post('/sumo/run_realtime', null, { timeout: 10000 })
+    sumoResult.value = '✅ 实时仿真已启动，数据持续写入DB，请切换到实时路况页面查看'
+    rtRunning.value = true  // 保持按钮禁用
+  } catch (e) {
+    sumoResult.value = `❌ 启动失败: ${e?.message || ''}`
+    rtRunning.value = false
+  }
+}
 
 const runSumo = async () => {
   sumoRunning.value = true; sumoResult.value = ''

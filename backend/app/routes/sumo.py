@@ -7,6 +7,37 @@ from flask_jwt_extended import jwt_required
 
 sumo_bp = Blueprint('sumo', __name__)
 
+# 实时仿真进程状态（简单全局变量）
+_realtime_process = None
+
+
+@sumo_bp.route('/run_realtime', methods=['POST'])
+@jwt_required()
+def run_realtime():
+    """启动实时仿真（后台进程，数据持续写入DB）"""
+    global _realtime_process
+    if _realtime_process and _realtime_process.poll() is None:
+        return jsonify({'code': 200, 'data': {'status': 'already_running'}, 'message': '实时仿真已在运行中'})
+
+    import subprocess as sp
+    try:
+        _realtime_process = sp.Popen(
+            [sys.executable, 'run_simulation_realtime.py', '--duration', '3600', '--interval', '100'],
+            cwd=ALGORITHM_DIR, stdout=sp.PIPE, stderr=sp.PIPE, text=True
+        )
+        return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真已启动'})
+    except Exception as e:
+        return jsonify({'code': 500, 'data': None, 'message': str(e)}), 500
+
+
+@sumo_bp.route('/status', methods=['GET'])
+@jwt_required()
+def realtime_status():
+    """查询实时仿真状态"""
+    global _realtime_process
+    running = _realtime_process and _realtime_process.poll() is None
+    return jsonify({'code': 200, 'data': {'running': running}, 'message': 'ok'})
+
 ALGORITHM_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
 
 
