@@ -15,6 +15,7 @@ except ImportError:
 
 BASE_DIR = os.path.dirname(__file__)
 STOP_FILE = os.path.join(BASE_DIR, '.stop_realtime')
+PROGRESS_FILE = os.path.join(BASE_DIR, '.sim_progress')
 CONFIG = os.path.join(BASE_DIR, 'sumo', 'config.sumocfg')
 DB_PATH = os.path.join(BASE_DIR, '..', 'backend', 'instance', 'dev.db')
 
@@ -70,15 +71,19 @@ def run_realtime(duration=3600, interval=100):
                 sim_time = step * 0.1  # step-length=0.1s
                 print(f'\r[RT-SUMO] t={sim_time:.0f}s 已导入{records}条记录', end='')
 
-            if step % 10 == 0:
+            if step % 50 == 0:
                 conn.commit()
+                # 写进度文件
+                progress = int(step / (duration * 10) * 100)
+                with open(PROGRESS_FILE, 'w') as pf:
+                    pf.write(str(min(progress, 99)))
 
     except KeyboardInterrupt:
         print('\n[RT-SUMO] 用户中断')
     finally:
-        conn.commit()
-        conn.close()
-        traci.close()
+        conn.commit(); conn.close(); traci.close()
+        if os.path.exists(PROGRESS_FILE): os.remove(PROGRESS_FILE)
+        if os.path.exists(STOP_FILE): os.remove(STOP_FILE)
         print(f'\n[RT-SUMO] 完成: {records}条记录已写入数据库')
 
 

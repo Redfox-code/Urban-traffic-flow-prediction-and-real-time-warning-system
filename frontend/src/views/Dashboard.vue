@@ -38,6 +38,7 @@
         <el-button type="primary" @click="simStore.runBatch()" :loading="simStore.batchRunning" :disabled="simStore.batchRunning">
           {{ simStore.batchRunning ? '运行中...' : '▶ 一键自动仿真' }}
         </el-button>
+        <el-button type="danger" size="small" @click="simStore.stopBatch()" :disabled="!simStore.batchRunning">⏹ 停止</el-button>
         <el-button size="small" @click="loadHistory">📋 提交记录</el-button>
         <span v-if="simStore.message && simStore.message.includes('完成')" :style="{color: simStore.message.includes('✅')?'#00e676':'#f44336',fontSize:'13px'}">{{ simStore.message }}</span>
       </div>

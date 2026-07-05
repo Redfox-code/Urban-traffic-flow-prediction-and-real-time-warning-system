@@ -12,6 +12,8 @@
           <el-button size="small" type="danger" @click="simStore.stopRealtime()" :disabled="!simStore.realtimeRunning">⏹ 停止仿真</el-button>
           <span v-if="simStore.realtimeRunning" style="font-size:12px;color:#00e676">🟢 运行中</span>
         </div>
+        <el-progress v-if="simStore.realtimeRunning" :percentage="simStore.progress" :stroke-width="6"
+                     style="margin-top:8px" :color="'#00d4ff'" />
       </el-card>
       <el-card shadow="never">
         <template #header><span style="font-weight:bold;color:var(--text-primary)">📍 路段列表</span></template>
@@ -69,6 +71,8 @@ onMounted(async () => {
   try { const res = await sectionsApi.getList(); sections.value = res.data?.items || res?.items || [] } catch {}
   loadAllTraffic()
   refreshTimer = setInterval(loadAllTraffic, 5000)
+  // 每2秒轮询进度
+  setInterval(() => { simStore.checkStatus() }, 2000)
 })
 onUnmounted(() => { clearInterval(refreshTimer) })
 </script>
