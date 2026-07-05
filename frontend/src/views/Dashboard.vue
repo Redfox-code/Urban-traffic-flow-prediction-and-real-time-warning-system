@@ -10,75 +10,45 @@
       </el-col>
     </el-row>
 
-    <!-- 双列仿真面板 -->
-    <el-row :gutter="20" style="margin-top:20px">
-      <!-- 实时仿真 -->
-      <el-col :span="12">
-        <el-card shadow="never" style="background:var(--bg-panel);height:100%">
-          <template #header><div style="font-weight:bold;color:var(--text-primary)">🔴 实时仿真</div></template>
-          <div style="min-height:160px">
-            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">
-              启动后 SUMO 将实时运行，数据持续写入数据库，路况监控页面每5秒自动刷新。
-            </p>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
-              <el-button type="success" @click="simStore.startRealtime()" :loading="starting" :disabled="simStore.realtimeRunning">
-                {{ simStore.realtimeRunning ? '🟢 运行中' : '▶ 启动实时仿真' }}
-              </el-button>
-              <el-button type="danger" @click="simStore.stopRealtime()" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
-            </div>
-            <p v-if="simStore.message" :style="{color: simStore.message.includes('✅')||simStore.message.includes('启动') ? '#00e676' : '#f44336', fontSize:'13px'}">
-              {{ simStore.message }}
-            </p>
-          </div>
-        </el-card>
-      </el-col>
+    <!-- 仿真面板：实时在上，离线在下 -->
+    <el-card shadow="never" style="background:var(--bg-panel);margin-top:20px">
+      <template #header><div style="font-weight:bold;color:var(--text-primary)">🔴 实时仿真</div></template>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">启动后 SUMO 将实时运行，数据持续写入数据库，路况监控页面每5秒自动刷新。</p>
+      <div style="display:flex;gap:10px;align-items:center">
+        <el-button type="success" @click="simStore.startRealtime()" :disabled="simStore.realtimeRunning">
+          {{ simStore.realtimeRunning ? '🟢 运行中' : '▶ 启动实时仿真' }}
+        </el-button>
+        <el-button type="danger" @click="simStore.stopRealtime()" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
+        <span v-if="simStore.message && (simStore.message.includes('启动')||simStore.message.includes('停止'))"
+              :style="{color: simStore.message.includes('✅')||simStore.message.includes('启动') ? '#00e676' : '#f44336', fontSize:'13px'}">{{ simStore.message }}</span>
+      </div>
+    </el-card>
 
-      <!-- 离线仿真 -->
-      <el-col :span="12">
-        <el-card shadow="never" style="background:var(--bg-panel);height:100%">
-          <template #header><div style="font-weight:bold;color:var(--text-primary)">📁 离线仿真</div></template>
-          <div style="min-height:160px">
-            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">
-              上传 SUMO 输出文件（e2_output.xml），系统将解析并导入数据库进行静态分析。
-            </p>
-
-            <!-- 拖拽上传区 -->
-            <el-upload
-              drag
-              :action="uploadUrl"
-              :headers="authHeader"
-              :on-success="onUploadOk"
-              :on-error="onUploadErr"
-              accept=".xml"
-              style="margin-bottom:12px"
-            >
-              <div style="padding:20px 0">
-                <div style="font-size:28px;margin-bottom:8px">📂</div>
-                <div style="color:var(--text-primary);font-size:14px">拖拽文件到此处或<em style="color:var(--accent-blue)">点击上传</em></div>
-                <div style="color:var(--text-secondary);font-size:12px;margin-top:4px">支持 .xml 格式的 SUMO 输出文件</div>
-              </div>
-            </el-upload>
-
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
-              <el-button type="primary" @click="simStore.runBatch()" :loading="simStore.batchRunning" :disabled="simStore.batchRunning">
-                {{ simStore.batchRunning ? '运行中...' : '▶ 一键自动仿真' }}
-              </el-button>
-              <el-button size="small" @click="loadHistory">📋 提交记录</el-button>
-            </div>
-            <p v-if="simStore.message" :style="{color: simStore.message.includes('✅') ? '#00e676' : '#f44336', fontSize:'13px'}">{{ simStore.message }}</p>
-
-            <!-- 提交历史 -->
-            <el-table v-if="history.length" :data="history" size="small" style="margin-top:8px;background:transparent" max-height="200px">
-              <el-table-column prop="id" label="#" width="50" />
-              <el-table-column prop="name" label="名称" min-width="120" />
-              <el-table-column prop="status" label="状态" width="80"><template #default="{row}"><el-tag :type="row.status==='completed'?'success':'info'" size="small">{{ row.status }}</el-tag></template></el-table-column>
-              <el-table-column prop="records" label="条数" width="60" />
-              <el-table-column label="" width="60"><template #default="{row}"><el-button size="small" @click="loadSim(row.id)">读取</el-button></template></el-table-column>
-            </el-table>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <el-card shadow="never" style="background:var(--bg-panel);margin-top:16px">
+      <template #header><div style="font-weight:bold;color:var(--text-primary)">📁 离线仿真</div></template>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">上传 SUMO 输出文件（e2_output.xml），系统将解析并导入数据库进行静态分析。</p>
+      <el-upload drag :action="uploadUrl" :headers="authHeader" :on-success="onUploadOk" :on-error="onUploadErr" accept=".xml" style="margin-bottom:12px">
+        <div style="padding:20px 0">
+          <div style="font-size:28px;margin-bottom:8px">📂</div>
+          <div style="color:var(--text-primary);font-size:14px">拖拽文件到此处或<em style="color:var(--accent-blue)">点击上传</em></div>
+          <div style="color:var(--text-secondary);font-size:12px;margin-top:4px">支持 .xml 格式的 SUMO 输出文件</div>
+        </div>
+      </el-upload>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <el-button type="primary" @click="simStore.runBatch()" :loading="simStore.batchRunning" :disabled="simStore.batchRunning">
+          {{ simStore.batchRunning ? '运行中...' : '▶ 一键自动仿真' }}
+        </el-button>
+        <el-button size="small" @click="loadHistory">📋 提交记录</el-button>
+        <span v-if="simStore.message && simStore.message.includes('完成')" :style="{color: simStore.message.includes('✅')?'#00e676':'#f44336',fontSize:'13px'}">{{ simStore.message }}</span>
+      </div>
+      <el-table v-if="history.length" :data="history" size="small" style="background:transparent" max-height="200px">
+        <el-table-column prop="id" label="#" width="50" />
+        <el-table-column prop="name" label="名称" min-width="120" />
+        <el-table-column prop="status" label="状态" width="80"><template #default="{row}"><el-tag :type="row.status==='completed'?'success':'info'" size="small">{{ row.status }}</el-tag></template></el-table-column>
+        <el-table-column prop="records" label="条数" width="60" />
+        <el-table-column label="" width="60"><template #default="{row}"><el-button size="small" @click="loadSim(row.id)">读取</el-button></template></el-table-column>
+      </el-table>
+    </el-card>
   </div>
 </template>
 
