@@ -10,47 +10,75 @@
       </el-col>
     </el-row>
 
-    <el-card style="background:var(--bg-panel);margin-top:20px">
-      <template #header><span style="font-weight:bold;color:var(--text-primary)">🔬 仿真控制</span></template>
-      <el-tabs v-model="simTab">
-        <el-tab-pane label="实时仿真" name="realtime">
-          <div style="display:flex;align-items:center;gap:12px">
-            <el-button type="success" @click="runRealtime" :loading="rtStarting" :disabled="rtRunning">
-              {{ rtRunning ? '🟢 运行中...' : '▶ 启动实时仿真' }}
-            </el-button>
-            <el-button type="danger" @click="stopRealtime" :disabled="!rtRunning">⏹ 停止仿真</el-button>
-            <span v-if="sumoResult" :style="{color: sumoResult.includes('✅')||sumoResult.includes('启动') ? '#00e676' : '#f44336'}">{{ sumoResult }}</span>
+    <!-- 双列仿真面板 -->
+    <el-row :gutter="20" style="margin-top:20px">
+      <!-- 实时仿真 -->
+      <el-col :span="12">
+        <el-card shadow="never" style="background:var(--bg-panel);height:100%">
+          <template #header><div style="font-weight:bold;color:var(--text-primary)">🔴 实时仿真</div></template>
+          <div style="min-height:160px">
+            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">
+              启动后 SUMO 将实时运行，数据持续写入数据库，路况监控页面每5秒自动刷新。
+            </p>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+              <el-button type="success" @click="simStore.startRealtime()" :loading="starting" :disabled="simStore.realtimeRunning">
+                {{ simStore.realtimeRunning ? '🟢 运行中' : '▶ 启动实时仿真' }}
+              </el-button>
+              <el-button type="danger" @click="simStore.stopRealtime()" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
+            </div>
+            <p v-if="simStore.message" :style="{color: simStore.message.includes('✅')||simStore.message.includes('启动') ? '#00e676' : '#f44336', fontSize:'13px'}">
+              {{ simStore.message }}
+            </p>
           </div>
-        </el-tab-pane>
+        </el-card>
+      </el-col>
 
-        <el-tab-pane label="离线仿真" name="batch">
-          <div style="margin-bottom:12px;color:var(--text-secondary);font-size:13px">
-            提交 SUMO 输出文件（e2_output.xml）进行批量导入分析。可查看历史提交记录。
+      <!-- 离线仿真 -->
+      <el-col :span="12">
+        <el-card shadow="never" style="background:var(--bg-panel);height:100%">
+          <template #header><div style="font-weight:bold;color:var(--text-primary)">📁 离线仿真</div></template>
+          <div style="min-height:160px">
+            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">
+              上传 SUMO 输出文件（e2_output.xml），系统将解析并导入数据库进行静态分析。
+            </p>
+
+            <!-- 拖拽上传区 -->
+            <el-upload
+              drag
+              :action="uploadUrl"
+              :headers="authHeader"
+              :on-success="onUploadOk"
+              :on-error="onUploadErr"
+              accept=".xml"
+              style="margin-bottom:12px"
+            >
+              <div style="padding:20px 0">
+                <div style="font-size:28px;margin-bottom:8px">📂</div>
+                <div style="color:var(--text-primary);font-size:14px">拖拽文件到此处或<em style="color:var(--accent-blue)">点击上传</em></div>
+                <div style="color:var(--text-secondary);font-size:12px;margin-top:4px">支持 .xml 格式的 SUMO 输出文件</div>
+              </div>
+            </el-upload>
+
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+              <el-button type="primary" @click="simStore.runBatch()" :loading="simStore.batchRunning" :disabled="simStore.batchRunning">
+                {{ simStore.batchRunning ? '运行中...' : '▶ 一键自动仿真' }}
+              </el-button>
+              <el-button size="small" @click="loadHistory">📋 提交记录</el-button>
+            </div>
+            <p v-if="simStore.message" :style="{color: simStore.message.includes('✅') ? '#00e676' : '#f44336', fontSize:'13px'}">{{ simStore.message }}</p>
+
+            <!-- 提交历史 -->
+            <el-table v-if="history.length" :data="history" size="small" style="margin-top:8px;background:transparent" max-height="200px">
+              <el-table-column prop="id" label="#" width="50" />
+              <el-table-column prop="name" label="名称" min-width="120" />
+              <el-table-column prop="status" label="状态" width="80"><template #default="{row}"><el-tag :type="row.status==='completed'?'success':'info'" size="small">{{ row.status }}</el-tag></template></el-table-column>
+              <el-table-column prop="records" label="条数" width="60" />
+              <el-table-column label="" width="60"><template #default="{row}"><el-button size="small" @click="loadSim(row.id)">读取</el-button></template></el-table-column>
+            </el-table>
           </div>
-          <el-upload :action="uploadUrl" :headers="authHeader" :on-success="onUploadOk" :on-error="onUploadErr"
-                     accept=".xml" :limit="1" style="display:inline-block;margin-right:12px">
-            <el-button type="primary">📁 选择文件上传</el-button>
-          </el-upload>
-          <el-button @click="loadHistory" style="margin-left:8px">📋 提交历史</el-button>
-
-          <el-table v-if="history.length" :data="history" style="margin-top:16px;background:var(--bg-panel)" size="small">
-            <el-table-column prop="id" label="ID" width="60" />
-            <el-table-column prop="name" label="名称" />
-            <el-table-column prop="type" label="类型" width="80" />
-            <el-table-column prop="status" label="状态" width="90"><template #default="{row}"><el-tag :type="row.status==='completed'?'success':row.status==='failed'?'danger':'info'">{{ row.status }}</el-tag></template></el-table-column>
-            <el-table-column prop="records" label="记录数" width="80" />
-            <el-table-column label="操作" width="120"><template #default="{row}">
-              <el-button size="small" type="primary" @click="loadSim(row.id)" :disabled="row.status==='running'">读取</el-button>
-            </template></el-table-column>
-          </el-table>
-
-          <el-button type="primary" @click="runSumo" :loading="sumoRunning" :disabled="sumoRunning" style="margin-top:12px">
-            {{ sumoRunning ? '仿真运行中...' : '▶ 一键运行仿真(自动)' }}
-          </el-button>
-          <span style="margin-left:8px;font-size:12px;color:var(--text-secondary)">自动生成路网→运行SUMO→导入数据</span>
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -59,45 +87,25 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { statsApi } from '@/api/stats'
 import { useUserStore } from '@/store/user'
+import { useSimulationStore } from '@/store/simulation'
 import request from '@/api/request'
 
 const userStore = useUserStore()
-const simTab = ref('realtime')
-const sumoRunning = ref(false); const sumoResult = ref('')
-const rtRunning = ref(false); const rtStarting = ref(false)
+const simStore = useSimulationStore()
+const starting = ref(false)
 const history = ref([])
 
-const uploadUrl = import.meta.env.VITE_API_BASE_URL + '/simulation/upload'
+const uploadUrl = (import.meta.env.VITE_API_BASE_URL || '') + '/simulation/upload'
 const authHeader = computed(() => ({ Authorization: `Bearer ${userStore.token}` }))
 
-const runRealtime = async () => {
-  rtStarting.value = true; sumoResult.value = ''
-  try { const res = await request.post('/sumo/run_realtime', null, { timeout: 10000 }); sumoResult.value = '✅ 实时仿真已启动'; rtRunning.value = true; ElMessage.success('已启动') }
-  catch (e) { sumoResult.value = '❌ ' + (e?.message || '失败') }
-  finally { rtStarting.value = false }
-}
-const stopRealtime = async () => {
-  try { await request.post('/sumo/stop'); rtRunning.value = false; sumoResult.value = '⏹ 已停止'; ElMessage.success('已停止') }
-  catch { rtRunning.value = false }
-}
-
-const runSumo = async () => {
-  sumoRunning.value = true; sumoResult.value = ''
-  try { const res = await request.post('/sumo/run', null, { timeout: 180000 }); const d = res.data || res; sumoResult.value = `✅ 完成 (${d.records_imported || 0}条)` }
-  catch (e) { sumoResult.value = '❌ ' + (e?.message || '失败') }
-  finally { sumoRunning.value = false }
-}
-
-const loadHistory = async () => {
-  try { const res = await request.get('/simulation/list', { params: { type: simTab.value } }); history.value = res.data?.items || res?.items || [] }
-  catch {}
-}
-const loadSim = async (id) => {
-  try { const res = await request.post(`/simulation/${id}/load`); ElMessage.success(`导入${res.data?.records_imported || 0}条`) }
-  catch (e) { ElMessage.error(e?.message || '失败') }
-}
 const onUploadOk = () => { ElMessage.success('上传成功'); loadHistory() }
 const onUploadErr = () => ElMessage.error('上传失败')
+const loadHistory = async () => {
+  try { const res = await request.get('/simulation/list', { params: { type: 'batch' } }); history.value = res.data?.items || res?.items || [] } catch {}
+}
+const loadSim = async (id) => {
+  try { const res = await request.post(`/simulation/${id}/load`); ElMessage.success(`导入${res.data?.records_imported || 0}条`) } catch (e) { ElMessage.error(e?.message || '失败') }
+}
 
 const statsCards = ref([
   { icon:'🛣️', title:'路段总数', value:0, color:'linear-gradient(135deg,#00d4ff,#0099cc)' },
@@ -106,9 +114,8 @@ const statsCards = ref([
   { icon:'📈', title:'预测精度(RF)', value:'--', color:'linear-gradient(135deg,#ab47bc,#7b1fa2)' },
 ])
 onMounted(async () => {
-  try { const res = await statsApi.getDashboard(); const d = res.data || res; statsCards.value[0].value = d.total_sections || 0; statsCards.value[1].value = d.active_detectors || 0; statsCards.value[2].value = d.today_warnings || 0; statsCards.value[3].value = (d.avg_prediction_accuracy || 0) + '%' } catch {}
-  // 检查实时仿真状态
-  try { const s = await request.get('/sumo/status'); rtRunning.value = s.data?.running || s?.running || false } catch {}
+  simStore.checkStatus()
+  try { const d = (await statsApi.getDashboard()).data || {}; statsCards.value[0].value = d.total_sections || 0; statsCards.value[1].value = d.active_detectors || 0; statsCards.value[2].value = d.today_warnings || 0; statsCards.value[3].value = (d.avg_prediction_accuracy || 0) + '%' } catch {}
 })
 </script>
 

@@ -8,9 +8,9 @@
     <div style="width:360px;display:flex;flex-direction:column;gap:16px">
       <el-card shadow="never">
         <div style="display:flex;gap:8px;align-items:center">
-          <el-button size="small" type="success" @click="startSim" :disabled="rtRunning">▶ 开始仿真</el-button>
-          <el-button size="small" type="danger" @click="stopSim" :disabled="!rtRunning">⏹ 停止仿真</el-button>
-          <span v-if="rtRunning" style="font-size:12px;color:#00e676">🟢 运行中</span>
+          <el-button size="small" type="success" @click="simStore.startRealtime()" :disabled="simStore.realtimeRunning">▶ 开始仿真</el-button>
+          <el-button size="small" type="danger" @click="simStore.stopRealtime()" :disabled="!simStore.realtimeRunning">⏹ 停止仿真</el-button>
+          <span v-if="simStore.realtimeRunning" style="font-size:12px;color:#00e676">🟢 运行中</span>
         </div>
       </el-card>
       <el-card shadow="never">
@@ -40,22 +40,13 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { sectionsApi } from '@/api/sections'
 import { trafficApi } from '@/api/traffic'
-import request from '@/api/request'
+import { useSimulationStore } from '@/store/simulation'
 import TrafficMap from '@/components/map/TrafficMap.vue'
 import TrafficBadge from '@/components/common/TrafficBadge.vue'
 
-const rtRunning = ref(false)
-const startSim = async () => {
-  try { await request.post('/sumo/run_realtime', null, { timeout: 10000 }); rtRunning.value = true; ElMessage.success('实时仿真已启动') }
-  catch (e) { ElMessage.error('启动失败') }
-}
-const stopSim = async () => {
-  try { await request.post('/sumo/stop'); rtRunning.value = false; ElMessage.success('已停止') }
-  catch { rtRunning.value = false }
-}
+const simStore = useSimulationStore()
 
 const sections = ref([]); const selectedId = ref(null); const selectedSection = ref(null)
 const trafficData = reactive({}); const loadingAll = ref(false)
@@ -74,7 +65,7 @@ const onSectionClick = async (section) => {
 
 let refreshTimer = null
 onMounted(async () => {
-  try { const s = await request.get('/sumo/status'); rtRunning.value = s.data?.running || s?.running || false } catch {}
+  simStore.checkStatus()
   try { const res = await sectionsApi.getList(); sections.value = res.data?.items || res?.items || [] } catch {}
   loadAllTraffic()
   refreshTimer = setInterval(loadAllTraffic, 5000)

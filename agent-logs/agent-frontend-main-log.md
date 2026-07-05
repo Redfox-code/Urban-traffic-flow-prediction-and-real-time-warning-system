@@ -74,6 +74,15 @@
 **📝修复**：Dashboard.vue中sumo/run请求单独设置`{ timeout: 180000 }`(3分钟)，覆盖全局15秒超时。
 **✅验证**：重启前端后再点按钮不再超时。
 
+### UI-SIM-01~03 仿真双框布局+全局状态同步
+
+**🎯任务**：Agent-Lead分析。实现首页双列布局(实时+离线并排)、拖拽上传、全局状态同步(切换页不断)。
+**📝实现**：
+1. simulation.js Store — `realtimeRunning`/`batchRunning`全局状态，`checkStatus()`/`startRealtime()`/`stopRealtime()`/`runBatch()` actions。Pinia ensure跨页面共享。
+2. Dashboard — 双列el-row(各50%)。实时侧:启动/停止按钮+状态。离线侧:el-upload drag拖拽上传+提交历史+一键仿真。
+3. TrafficMonitor — 读写同一simStore，按钮和状态与Dashboard完全同步。切换页面不断(Store存在Pinia中)。
+**决策**：用Pinia Store而非组件间emit/props——仿真状态是全局的，两个页面独立渲染但共享同一个store实例。
+
 ### UI-06 Dashboard一键仿真按钮
 
 **🎯任务**：前端添加一键运行SUMO仿真+导入的按钮。
