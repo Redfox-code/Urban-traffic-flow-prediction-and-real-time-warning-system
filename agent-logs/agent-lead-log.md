@@ -86,6 +86,13 @@
 **📝修复**：(1)sumo.py新增/run_realtime端点(Popen后台启动)和/status端点；(2)TrafficMonitor每5秒setInterval调用loadAllTraffic()；(3)Dashboard加「启动实时仿真」按钮。
 **决策**：复用traffic/current端点+DB——TraCI写入→traffic_records→traffic/current读取→前端5秒刷新→完整闭环。
 
+### BUG-PROG-01 进度条卡21%
+
+**🎯Bug接收**：进度条一直显示21%，即使仿真未运行。
+**💭分析**：`.sim_progress`文件在上次测试时被git提交(值21)，拉取后文件一直存在。status端点不检查仿真是否运行就读取进度。
+**📝修复**：(1).gitignore加*.sim_progress等临时文件+从git删除旧文件；(2)启动仿真时重置进度为0；(3)status端点只在rt_running时返回进度。
+**✅验证**：未启动仿真时进度=0，启动后从0%开始增长。
+
 ### FEAT-PAUSE-01 暂停/继续端点
 
 **🎯任务**：用户需要暂停和恢复实时仿真。

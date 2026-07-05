@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2026-07-05 16:34:47 by Eclipse SUMO sumo Version 1.24.0
+<!-- generated on 2026-07-05 16:48:39 by Eclipse SUMO sumo Version 1.24.0
 <sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
@@ -24,7 +24,7 @@
     </processing>
 
     <traci_server>
-        <remote-port value="53868"/>
+        <remote-port value="64196"/>
     </traci_server>
 
 </sumoConfiguration>
@@ -218,4 +218,3 @@
     <tripinfo id="sim_ns.16" depart="42.40" departLane="bottom0A0_0" departPos="5.10" departSpeed="0.00" departDelay="15.74" arrival="589.00" arrivalLane="bottom1B0_0" arrivalPos="186.40" arrivalSpeed="15.95" duration="546.60" routeLength="849.63" waitingTime="271.60" waitingCount="34" stopTime="0.00" timeLoss="491.55" rerouteNo="1" devices="tripinfo_sim_ns.16 routing_sim_ns.16" vType="passenger" speedFactor="1.15" vaporized=""/>
     <tripinfo id="sim_ns.70" depart="184.60" departLane="bottom0A0_0" departPos="5.10" departSpeed="0.00" departDelay="67.98" arrival="593.80" arrivalLane="bottom1B0_0" arrivalPos="186.40" arrivalSpeed="13.97" duration="409.20" routeLength="849.63" waitingTime="230.00" waitingCount="207" stopTime="0.00" timeLoss="346.32" rerouteNo="1" devices="tripinfo_sim_ns.70 routing_sim_ns.70" vType="passenger" speedFactor="1.01" vaporized=""/>
     <tripinfo id="sim_ns.69" depart="181.90" departLane="bottom0A0_0" departPos="5.10" departSpeed="0.00" departDelay="66.95" arrival="597.50" arrivalLane="bottom1B0_0" arrivalPos="186.40" arrivalSpeed="14.31" duration="415.60" routeLength="849.63" waitingTime="223.30" waitingCount="130" stopTime="0.00" timeLoss="354.32" rerouteNo="1" devices="tripinfo_sim_ns.69 routing_sim_ns.69" vType="passenger" speedFactor="1.04" vaporized=""/>
-    <tripinfo id="sim_ns.17" depart="45.10" departLane="bottom0A0_0" departPos="5.10" departSpeed="0.00" departDelay="16.78" arrival="608.10" arrivalLane="bottom1B0_0" arrivalPos="186.40" arrivalSpeed="13.13" duration="563.00" routeLength="849.63" waitingTime="280.70" waitingCount="28" stopTime="0.00" timeLoss="508.72" rerouteNo="1" devices="tripinfo_sim_ns.17 routing_sim_ns.17" vType="passenger" speedFactor="1.17" vaporized=""/>

@@ -10,5 +10,9 @@ dist/
 instance/
 .claude/scheduled_tasks.lock
 *.log
+algorithm/.sim_progress
+algorithm/.stop_realtime
+algorithm/.pause_realtime
+algorithm/uploads/
 .DS_Store
 Thumbs.db

@@ -19,9 +19,10 @@ def run_realtime():
     global _realtime_process
     if _realtime_process and _realtime_process.poll() is None:
         return jsonify({'code': 200, 'data': {'status': 'already_running'}, 'message': '实时仿真已在运行中'})
-    # 清理旧文件
+    # 清理旧文件+重置进度
     for f in [STOP_FILE, PAUSE_FILE, PROGRESS_FILE]:
         if os.path.exists(f): os.remove(f)
+    with open(PROGRESS_FILE, 'w') as f: f.write('0')
     try:
         _realtime_process = subprocess.Popen(
             [sys.executable, 'run_simulation_realtime.py', '--duration', '3600', '--interval', '100'],
@@ -66,7 +67,7 @@ def realtime_status():
     rt_running = _realtime_process and _realtime_process.poll() is None
     batch_running = _batch_process and _batch_process.poll() is None
     progress = 0
-    if os.path.exists(PROGRESS_FILE):
+    if rt_running and os.path.exists(PROGRESS_FILE):
         try:
             with open(PROGRESS_FILE) as f: progress = int(f.read().strip() or 0)
         except: pass
