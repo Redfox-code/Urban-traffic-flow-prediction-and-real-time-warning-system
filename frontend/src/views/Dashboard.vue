@@ -16,8 +16,10 @@
       <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">启动后 SUMO 将实时运行，数据持续写入数据库，路况监控页面每5秒自动刷新。</p>
       <div style="display:flex;gap:10px;align-items:center">
         <el-button type="success" @click="simStore.startRealtime()" :disabled="simStore.realtimeRunning">
-          {{ simStore.realtimeRunning ? '🟢 运行中' : '▶ 启动实时仿真' }}
+          {{ simStore.realtimeRunning ? (simStore.realtimePaused ? '⏸ 已暂停' : '🟢 运行中') : '▶ 启动实时仿真' }}
         </el-button>
+        <el-button v-if="simStore.realtimeRunning && !simStore.realtimePaused" type="warning" @click="simStore.pauseRealtime()">⏸ 暂停</el-button>
+        <el-button v-if="simStore.realtimePaused" type="success" @click="simStore.resumeRealtime()">▶ 继续</el-button>
         <el-button type="danger" @click="simStore.stopRealtime()" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
         <span v-if="simStore.message && (simStore.message.includes('启动')||simStore.message.includes('停止'))"
               :style="{color: simStore.message.includes('✅')||simStore.message.includes('启动') ? '#00e676' : '#f44336', fontSize:'13px'}">{{ simStore.message }}</span>

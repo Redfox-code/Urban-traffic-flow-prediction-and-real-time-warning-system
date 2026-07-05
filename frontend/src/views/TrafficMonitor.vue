@@ -8,10 +8,12 @@
     <div style="width:360px;display:flex;flex-direction:column;gap:16px">
       <el-card shadow="never">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <el-button size="small" type="success" @click="startSim" :disabled="simStore.realtimeRunning">▶ 开始仿真</el-button>
-          <el-button size="small" type="danger" @click="stopSim" :disabled="!simStore.realtimeRunning">⏹ 停止仿真</el-button>
+          <el-button size="small" type="success" @click="startSim" :disabled="simStore.realtimeRunning">▶ 开始</el-button>
+          <el-button v-if="simStore.realtimeRunning && !simStore.realtimePaused" size="small" type="warning" @click="simStore.pauseRealtime()">⏸ 暂停</el-button>
+          <el-button v-if="simStore.realtimePaused" size="small" type="success" @click="simStore.resumeRealtime()">▶ 继续</el-button>
+          <el-button size="small" type="danger" @click="stopSim" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
           <span v-if="simStore.realtimeRunning" style="font-size:12px;color:#00e676">🟢 运行中</span>
-          <span class="update-timer">刷新 {{ timer }}s 前</span>
+          <span class="update-timer">数据更新于 {{ timer }}s 前</span>
         </div>
         <el-progress v-if="simStore.realtimeRunning" :percentage="simStore.progress" :stroke-width="4" style="margin-top:8px" :color="'#00d4ff'" />
       </el-card>

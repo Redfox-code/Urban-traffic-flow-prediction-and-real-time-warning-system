@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required
 sumo_bp = Blueprint('sumo', __name__)
 ALGORITHM_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
 STOP_FILE = os.path.join(ALGORITHM_DIR, '.stop_realtime')
+PAUSE_FILE = os.path.join(ALGORITHM_DIR, '.pause_realtime')
 PROGRESS_FILE = os.path.join(ALGORITHM_DIR, '.sim_progress')
 
 _realtime_process = None
@@ -18,6 +19,9 @@ def run_realtime():
     global _realtime_process
     if _realtime_process and _realtime_process.poll() is None:
         return jsonify({'code': 200, 'data': {'status': 'already_running'}, 'message': '实时仿真已在运行中'})
+    # 清理旧文件
+    for f in [STOP_FILE, PAUSE_FILE, PROGRESS_FILE]:
+        if os.path.exists(f): os.remove(f)
     try:
         _realtime_process = subprocess.Popen(
             [sys.executable, 'run_simulation_realtime.py', '--duration', '3600', '--interval', '100'],
@@ -39,6 +43,20 @@ def stop_realtime():
     if _batch_process and _batch_process.poll() is None:
         _batch_process.terminate(); _batch_process = None
     return jsonify({'code': 200, 'data': {'status': 'stopped'}, 'message': '已停止'})
+
+
+@sumo_bp.route('/pause', methods=['POST'])
+@jwt_required()
+def pause_realtime():
+    with open(PAUSE_FILE, 'w') as f: f.write('pause')
+    return jsonify({'code': 200, 'data': {'status': 'paused'}, 'message': '已暂停'})
+
+
+@sumo_bp.route('/resume', methods=['POST'])
+@jwt_required()
+def resume_realtime():
+    if os.path.exists(PAUSE_FILE): os.remove(PAUSE_FILE)
+    return jsonify({'code': 200, 'data': {'status': 'resumed'}, 'message': '已继续'})
 
 
 @sumo_bp.route('/status', methods=['GET'])

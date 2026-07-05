@@ -4,6 +4,7 @@ import request from '@/api/request'
 export const useSimulationStore = defineStore('simulation', {
   state: () => ({
     realtimeRunning: false,
+    realtimePaused: false,
     batchRunning: false,
     progress: 0,
     message: '',
@@ -27,8 +28,18 @@ export const useSimulationStore = defineStore('simulation', {
     },
 
     async stopRealtime() {
-      try { await request.post('/sumo/stop'); this.realtimeRunning = false; this.message = '⏹ 已停止' }
+      try { await request.post('/sumo/stop'); this.realtimeRunning = false; this.realtimePaused = false; this.message = '⏹ 已停止' }
       catch { this.realtimeRunning = false }
+    },
+
+    async pauseRealtime() {
+      try { await request.post('/sumo/pause'); this.realtimePaused = true; this.message = '⏸ 已暂停' }
+      catch {}
+    },
+
+    async resumeRealtime() {
+      try { await request.post('/sumo/resume'); this.realtimePaused = false; this.message = '▶ 已继续' }
+      catch {}
     },
 
     async stopBatch() {

@@ -15,6 +15,7 @@ except ImportError:
 
 BASE_DIR = os.path.dirname(__file__)
 STOP_FILE = os.path.join(BASE_DIR, '.stop_realtime')
+PAUSE_FILE = os.path.join(BASE_DIR, '.pause_realtime')
 PROGRESS_FILE = os.path.join(BASE_DIR, '.sim_progress')
 CONFIG = os.path.join(BASE_DIR, 'sumo', 'config.sumocfg')
 DB_PATH = os.path.join(BASE_DIR, '..', 'backend', 'instance', 'dev.db')
@@ -45,8 +46,9 @@ def run_realtime(duration=3600, interval=100):
 
         while step < duration * 10:  # step-length=0.1 → 10步/秒
             if os.path.exists(STOP_FILE):
-                print('\n[RT-SUMO] 收到停止信号')
-                break
+                print('\n[RT-SUMO] 收到停止信号'); break
+            while os.path.exists(PAUSE_FILE) and not os.path.exists(STOP_FILE):
+                time.sleep(0.5)  # 暂停中，每0.5秒检查一次
             traci.simulationStep()
             step += 1
 

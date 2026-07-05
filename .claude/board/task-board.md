@@ -1,9 +1,9 @@
-# 任务看板 — 仿真可视化
+# 任务看板
 
 ## 🔄 InProgress
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| FEAT-VIZ-01 | 路段列表: 数据变化时闪烁动画+最后更新倒计时 | agent-frontend-main |
-| FEAT-VIZ-02 | 地图: 路段标注按拥堵等级变色(marker颜色跟随occupancy) | agent-frontend-map |
-| FEAT-VIZ-03 | 后端: 为每个路段返回更真实的变化数据(模拟波动) | agent-algorithm |
+| FEAT-PAUSE-01 | 后端: 暂停/继续端点 + 进度文件清理 | agent-lead |
+| FEAT-PAUSE-02 | 算法: TraCI脚本支持暂停信号 | agent-algorithm |
+| FEAT-PAUSE-03 | 前端: 暂停/继续按钮 | agent-frontend-main |
