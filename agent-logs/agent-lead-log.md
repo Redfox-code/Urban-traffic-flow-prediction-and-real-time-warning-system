@@ -86,6 +86,12 @@
 **📝修复**：(1)sumo.py新增/run_realtime端点(Popen后台启动)和/status端点；(2)TrafficMonitor每5秒setInterval调用loadAllTraffic()；(3)Dashboard加「启动实时仿真」按钮。
 **决策**：复用traffic/current端点+DB——TraCI写入→traffic_records→traffic/current读取→前端5秒刷新→完整闭环。
 
+### FEAT-PAUSE-01 暂停/继续端点
+
+**🎯任务**：用户需要暂停和恢复实时仿真。
+**📝修复**：sumo.py新增/sumo/pause(写.pause文件)+/sumo/resume(删.pause文件)+启动时清理旧文件(解决进度条卡21%)。status端点返回realtime_running+batch_running+progress。
+**决策**：用文件信号(.pause_realtime)而非进程信号——TraCI脚本每步循环检测文件，简单可靠。
+
 ### BUG-SUMO-SYNTAX sumo.py global声明顺序
 
 **🎯Bug接收**：用户报告后端启动报错 `SyntaxError: name '_batch_process' is used prior to global declaration`。

@@ -55,6 +55,11 @@
 **使用**：`cd algorithm && python run_simulation.py all` 生成e2_output.xml → `python import_sumo_data.py` 导入数据库 → 前端立即显示真实路况(source: 'db')。
 **✅验证**：导入后traffic.py/current端点返回`source:'db'`标记的数据。
 
+### FEAT-PAUSE-02 TraCI暂停信号
+
+**🎯任务**：Agent-Lead分配。实时仿真需要支持暂停/继续。
+**📝修复**：run_simulation_realtime.py主循环增加`while os.path.exists(PAUSE_FILE)`等待——暂停时每0.5秒检查一次，stop文件优先于pause。
+
 ### FEAT-VIZ-03 traffic.py数据波动
 
 **🎯任务**：实时路况数据一直不变，需要模拟真实波动。

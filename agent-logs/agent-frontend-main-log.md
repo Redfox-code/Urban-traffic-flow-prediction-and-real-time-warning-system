@@ -74,6 +74,11 @@
 **📝修复**：Dashboard.vue中sumo/run请求单独设置`{ timeout: 180000 }`(3分钟)，覆盖全局15秒超时。
 **✅验证**：重启前端后再点按钮不再超时。
 
+### FEAT-PAUSE-03 暂停/继续按钮
+
+**🎯任务**：前端加暂停/继续控制。
+**📝修复**：SimulationStore加realtimePaused状态+pauseRealtime()/resumeRealtime()。Dashboard和TrafficMonitor按钮根据运行/暂停状态显示不同组合：运行中→⏸暂停+⏹停止；暂停中→▶继续+⏹停止。
+
 ### FEAT-VIZ-01 TrafficMonitor动态渲染
 
 **🎯任务**：实时路况界面静止无动态效果。
