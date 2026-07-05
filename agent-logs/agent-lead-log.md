@@ -86,6 +86,13 @@
 **📝修复**：(1)sumo.py新增/run_realtime端点(Popen后台启动)和/status端点；(2)TrafficMonitor每5秒setInterval调用loadAllTraffic()；(3)Dashboard加「启动实时仿真」按钮。
 **决策**：复用traffic/current端点+DB——TraCI写入→traffic_records→traffic/current读取→前端5秒刷新→完整闭环。
 
+### BUG-SUMO-SYNTAX sumo.py global声明顺序
+
+**🎯Bug接收**：用户报告后端启动报错 `SyntaxError: name '_batch_process' is used prior to global declaration`。
+**💭分析**：sumo.py第89行 `except` 块中的 `global _batch_process` 在函数体内使用 `_batch_process.communicate()` 之后——Python要求 `global` 声明必须在任何使用之前。
+**📝修复**：(1)`global _batch_process`移到函数顶部并初始化为None；(2)删除except块中的冗余`global`声明。
+**✅验证**：`python -c "from app import create_app; create_app()"` 返回 OK。
+
 ### BUG-SUMO-02 sumo端点错误信息增强
 
 **🎯分析**：前端报500但无具体错误信息，无法定位根因。
