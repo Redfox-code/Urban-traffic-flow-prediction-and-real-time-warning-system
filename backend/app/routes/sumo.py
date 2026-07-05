@@ -63,6 +63,7 @@ def realtime_status():
 @jwt_required()
 def run_simulation():
     global _batch_process
+    _batch_process = None
     try:
         _batch_process = subprocess.Popen(
             [sys.executable, 'run_simulation.py', 'all'],
@@ -86,7 +87,7 @@ def run_simulation():
                 count = int(line.split('成功导入')[1].split('条')[0].strip() or 0)
         return jsonify({'code': 200, 'data': {'records_imported': count, 'status': '完成'}, 'message': 'ok'})
     except subprocess.TimeoutExpired:
-        global _batch_process; _batch_process = None
+        _batch_process = None
         return jsonify({'code': 500, 'message': '仿真超时(120秒)'}), 500
     except Exception as e:
         return jsonify({'code': 500, 'message': str(e)}), 500
