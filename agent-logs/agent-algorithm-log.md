@@ -55,6 +55,12 @@
 **使用**：`cd algorithm && python run_simulation.py all` 生成e2_output.xml → `python import_sumo_data.py` 导入数据库 → 前端立即显示真实路况(source: 'db')。
 **✅验证**：导入后traffic.py/current端点返回`source:'db'`标记的数据。
 
+### FEAT-VIZ-03 traffic.py数据波动
+
+**🎯任务**：实时路况数据一直不变，需要模拟真实波动。
+**📝修复**：_mock_traffic增加`time.time()`时间种子，每秒生成不同随机波动，occupancy每次请求都有±15%变化。
+**效果**：前端每5秒刷新时，同一路段数据会有自然变化。
+
 ### FEAT-RT-01 TraCI实时仿真脚本
 
 **🎯任务**：Agent-Lead分配。实现SUMO实时仿真→数据持续写入DB→前端实时刷新。

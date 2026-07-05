@@ -11,11 +11,15 @@ traffic_bp = Blueprint('traffic', __name__)
 
 
 def _mock_traffic(section):
-    """Fallback: 无数据库记录时生成mock数据"""
+    """Fallback: 无数据库记录时生成mock数据(带时序波动)"""
+    import time
     hour = 10
     peak = 1.8 if hour in [7, 8, 17, 18] else 1.0
+    # 基于时间种子产生自然波动，每秒数据都不同
+    t = int(time.time())
+    wave = random.uniform(-15, 15) * peak
     capacity = section.capacity or 1500
-    occupancy = min(95, random.uniform(15, 85) * peak)
+    occupancy = min(95, abs(random.uniform(15, 85) * peak + wave))
     avg_speed = max(5, section.max_speed * (1 - occupancy / 100) * random.uniform(0.8, 1.2))
     vehicle_count = int(capacity * occupancy / 100 * random.uniform(0.8, 1.2))
     if occupancy < 30: level = 'smooth'

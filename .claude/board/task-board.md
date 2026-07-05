@@ -1,9 +1,9 @@
-# 任务看板
+# 任务看板 — 仿真可视化
 
 ## 🔄 InProgress
 
 | ID | 任务 | Agent |
 |----|------|-------|
-| FEAT-STOP-01 | 后端: 离线仿真stop端点+进程管理 | agent-lead |
-| FEAT-PROG-01 | 后端: 实时仿真进度API | agent-lead |
-| FEAT-PROG-02 | 前端: 离线仿真停止按钮+实时路况进度条 | agent-frontend-main |
+| FEAT-VIZ-01 | 路段列表: 数据变化时闪烁动画+最后更新倒计时 | agent-frontend-main |
+| FEAT-VIZ-02 | 地图: 路段标注按拥堵等级变色(marker颜色跟随occupancy) | agent-frontend-map |
+| FEAT-VIZ-03 | 后端: 为每个路段返回更真实的变化数据(模拟波动) | agent-algorithm |
