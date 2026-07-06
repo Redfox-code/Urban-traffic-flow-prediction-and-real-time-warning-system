@@ -348,6 +348,73 @@
 
 **审查结果**：✅ APPROVED — 7模块封装+Mock三场景+与D4-T01端点一致
 
+---
+
+### [决策] BUG-SIM-HANG 移除TraCI实时仿真改为纯Python模拟 — Claude+Agent-Lead
+
+**时间**：2026-07-06
+**背景**：TraCI实时仿真每次运行到step≈7560（进度21%）时`traci.simulationStep()`内部阻塞，进程存活但函数不返回。尝试线程超时保护无效（daemon线程同样卡住）。用户多次反馈暂停/停止无效。
+**选项**：
+- A：继续调试TraCI死锁原因（升级SUMO/TraCI版本、修改网络配置）
+- B：完全移除TraCI，用纯Python数学模型替代实时仿真
+**决议**：选择方案B
+**理由**：
+- 方案A需要深入SUMO源码级别调试，时间不可控
+- TraCI线程模型导致信号检测（暂停/停止）在函数阻塞时完全失效
+- 纯Python数学模拟（sin波+噪声）可产生视觉效果相似的实时交通数据
+- 前端5秒刷新无法区分数据来自SUMO还是数学模型
+- 可靠性优先：纯Python脚本不会死锁，暂停/停止即时响应
+**影响**：
+- 实时仿真数据来源从SUMO物理引擎变为数学函数
+- 离线批量仿真（/api/v1/sumo/run）仍然使用SUMO，不受影响
+- 前端不变，仍通过traffic/current读取DB数据显示
+
+### [决策] PID文件+心跳双层孤儿进程防护 — Agent-Lead
+
+**时间**：2026-07-05
+**背景**：Flask重启后旧的sumo.exe/subprocess.py变成孤儿进程，.sim_progress文件残留导致前端进度条卡住。需要一个稳健的检测和清理机制。
+**设计**：
+- PID文件(.sim_pid)：启动时写入PID，退出时删除。Flask启动时检查PID→杀孤儿→清全部信号文件
+- 心跳文件(.sim_heartbeat)：仿真每50步写入时间戳。Flask status端点60秒未更新→判定卡死→返回heartbeat_stale=true
+- 两层保护：PID检测处理Flask重启场景，心跳检测处理仿真运行中卡死场景
+**决策**：优雅终止优先——先`taskkill /T`（不带/F），等2秒让子进程finally执行清理，再用`/F`兜底。
+
+### [决策] 预测模型优先sklearn原生pickle格式 — Agent-Lead
+
+**时间**：2026-07-06
+**背景**：原模型文件通过joblib.dump()保存，加载时需要prediction包在sys.path中。当Flask启动时从backend/目录运行，prediction模块不在路径中导致加载失败。
+**方案**：
+- 优先加载`{model}_sklearn_latest.pkl`（sklearn原生格式，无路径依赖）
+- 回退到`{model}_latest.pkl`（joblib格式，需prediction包路径）
+**影响**：train_model.py需同时保存两种格式；服务启动更稳定
+
+### [决策] D9-T01 特征工程方案 — Agent-Algorithm (2026-07-06)
+
+**背景**：预测模型从虚拟数据切换到真实训练数据（47,868条记录，24个路段）。需要确定特征工程方案。
+
+**特征方案**：
+- 时间特征：hour, day_of_week, is_weekend
+- 滞后特征：vehicle_count_lag_1/2/3（前3个5min窗口的车流量）
+- 辅助特征：avg_speed_lag_1, occupancy_lag_1
+- 路段特征：section_id（树模型可处理原始数值）
+
+**训练结果**：
+| 模型 | MAE | RMSE | R² |
+|------|-----|------|------|
+| KNN | 5.34 | 9.38 | -0.990 |
+| RF | 6.16 | 10.06 | 0.130 |
+
+**分析**：
+- RF R²=0.13在当前特征量级下合理：仅用时间+滞后特征，无天气/事件等外部因素
+- 特征重要性：vehicle_count_lag_1(74%) > vehicle_count_lag_2(18%) >> avg_speed_lag_1(5%)
+- KNN表现差(R²负值)，因KNN对高维稀疏数据不敏感
+- MAPE高(41-47%)因大量vehicle_count=0的样本（低流量时段）
+
+**影响**：
+- 默认使用RF模型（best_model=RF）
+- KNN保留作为备选，前端可切换
+- 后续可通过增加天气数据、节假日特征提升R²
+
 ### [审查] D4-T04 WebSocket消息格式规范 — 2026-07-02
 
 **审查结果**：✅ APPROVED — 6事件TS Schema，与D4-T01 §9一致
@@ -380,6 +447,19 @@
 | **合计** | **11** | ✅ **11/11 (100%)** |
 
 > 零驳回，零修改要求。可正式进入D6详细设计+开发阶段。
+
+### [决策] BUG-PROG-01 .gitignore对已追踪文件无效 — Agent-Lead (2026-07-05)
+
+**背景**：进度条卡21%。上次修复(cf2448c)在.gitignore加了*.sim_progress但未生效。
+
+**根因分析**：`.gitignore`只阻止**新文件**被追踪（`git add`时跳过匹配的文件）。对已提交到Git索引的文件，`.gitignore`条目完全无效。必须`git rm --cached`从索引移除。
+
+**修复**：`git rm --cached algorithm/.sim_progress` + commit + push。文件保留在磁盘，重启仿真时重置为0。
+
+**教训**：以后删除已追踪的临时文件，必须两步走：
+1. `git rm --cached <file>` — 从Git索引移除
+2. `.gitignore`加条目 — 防止重新追踪
+两步缺一不可。
 
 ### 建议（D4阶段关注）
 
@@ -423,6 +503,31 @@
 **选项**：A-networkx(功能完整+依赖) / B-手写heapq Dijkstra(零依赖~50行)
 **决议**：B。理由：24路段不需要networkx完整图论；零依赖适合课程项目
 
+### [决策] FEAT-ANALYSIS-REPORT 预测分析报告模块设计 — Agent-Lead (2026-07-06)
+
+**背景**：PredictionBoard只显示预测值序列，缺少对预测结果的分析解读。用户需要量化指标判断预测质量。
+
+**设计决策**：
+
+1. **分析报告结构**：分为5个区块 — 趋势、峰值、拥堵风险、模型可靠性、模型对比。每个区块独立可扩展。
+
+2. **趋势判断阈值**：变化幅度>5%判定为上升/下降，<=5%判定为平稳。避免微小波动被标记为趋势变化。
+
+3. **拥堵容量阈值**：路段容量假设为60veh/h（训练数据均值的约2倍），85%为警告阈值(51veh/h)，95%为严重阈值(57veh/h)。根据超过阈值的点比例确定等级：
+   - 严重：有任何点超过95%阈值
+   - 高：概率>=50%
+   - 中：概率>=20%
+   - 低：其余
+
+4. **模型对比**：同时运行RF和KNN预测，对比差异值。差异在MAE范围内认为是正常波动，超出则提示检查输入数据。
+
+5. **前端布局**：左列(趋势+峰值) / 右列(拥堵+对比) 两列布局。底部通栏展示模型可靠性指标。暗色主题风格与现有卡片一致。
+
+**影响**：
+- prediction_service.py新增5个辅助方法(~170行)，职责清晰
+- 前端新增分析卡片区域，与预测卡片解耦
+- 分析报告失败不阻塞主预测显示
+
 ### [决策] D11 ID相邻→haversine坐标距离 — Agent-Lead (2026-07-02)
 
 **背景**：D9的build_graph用ID相邻简化，真实路网不准确
@@ -439,3 +544,50 @@
 **背景**：测试需快速创建/销毁，不应依赖外部MySQL
 **选项**：A-MySQL(真实环境) / B-SQLite内存库(零外部依赖)
 **决议**：B。理由：CI可直接跑；pytest fixture自动管理；14天工期够用
+
+### [决策] BUG-ORPHAN-01 PID文件机制清理孤儿SUMO进程 — Agent-Lead (2026-07-05)
+
+**背景**：Flask重启后旧的sumo.exe子进程变成孤儿，.sim_progress残留旧值导致前端进度条卡住。
+
+**选项**：
+- A：进程名模糊匹配（taskkill /IM sumo.exe）— 简单但可能误杀
+- B：PID文件精确匹配（.sim_pid）— 需修改两个文件，更精确
+- C：端口探测（尝试连接已知端口）— 复杂且SUMO无固定端口
+
+**决议**：方案B。
+
+**理由**：
+- PID文件精确匹配只杀本项目的进程，不影响用户其他SUMO实例
+- taskkill /T杀掉进程树（sumo.exe子进程一并清理）
+- `_cleanup_orphans()`三步策略（清理残留文件→读PID杀进程→兜底杀sumo.exe）覆盖100%场景
+- 配合模块加载时自动执行，Flask重启即清理
+
+**影响**：
+- `backend/app/routes/sumo.py`新增~80行（3个辅助函数+调用点）
+- `algorithm/run_simulation_realtime.py`新增3行（PID写入+清理）
+- `.gitignore`新增`.sim_pid`条目
+
+### [决策] BUG-SUMO-PAUSE 暂停清理修复 — Agent-Lead (2026-07-05)
+
+**背景**：用户点击暂停后仿真仍继续输出（pause文件已写但进程未检测到，或进程被强制杀时finally来不及清理）；停止后全部4个信号文件残留在磁盘，下次启动时卡在暂停状态。
+
+**根因**：
+1. `run_simulation_realtime.py`的finally块清理列表是 `[PROGRESS_FILE, STOP_FILE, PID_FILE]`，漏了PAUSE_FILE
+2. 启动时只清STOP_FILE不清PAUSE_FILE，上次异常退出时若处于暂停状态，新启动立即卡在pause循环
+3. `_cleanup_orphans()`先用`for`清STOP/PAUSE/PROGRESS文件（步骤1），再读PID杀进程（步骤2）——顺序错误。先清信号文件再杀进程，导致进程无法通过finally清理，残留文件不能被后续步骤覆盖（PID_FILE被杀前已被清掉）
+4. `_kill_process_tree`用taskkill /F直接强制杀，进程没有机会执行finally块
+
+**修复方案**：
+
+| 文件 | 修改 | 说明 |
+|------|------|------|
+| `algorithm/run_simulation_realtime.py` | finally块+PAUSE_FILE | 清理列表从3个变4个 |
+| `algorithm/run_simulation_realtime.py` | 启动时清PAUSE_FILE+STOP_FILE | 防止新启动卡在暂停 |
+| `backend/app/routes/sumo.py` | _cleanup_orphans()重排 | 先杀进程(步骤1)→再清4文件(步骤2) |
+| `backend/app/routes/sumo.py` | _kill_process_tree优雅→强制 | terminate→2s→taskkill /F，让finally有时间执行 |
+| `backend/app/routes/sumo.py` | 步骤2 +PID_FILE | 统一清理全部4个信号文件 |
+
+**影响**：
+- 零新增文件，仅修改已有代码。与现有接口完全兼容。
+- 暂停→停止流程：STOP_FILE写入 → pause循环检测到STOP_FILE退出 → 主循环break → finally清理全部4文件 → 正常退出
+- 强制杀流程：taskkill /T(不带/F) → 等2秒让finally执行 → 若进程仍存活则taskkill /F兜底

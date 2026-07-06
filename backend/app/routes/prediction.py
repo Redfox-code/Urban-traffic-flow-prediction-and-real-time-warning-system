@@ -27,9 +27,19 @@ def forecast():
 @jwt_required()
 def accuracy():
     section_id = request.args.get('section_id', type=int)
-    # TODO D9: 接入真实评估数据
-    return jsonify({'code': 200, 'data': {
-        'section_id': section_id, 'best_model': 'RF',
-        'models': {'KNN': {'mae': 12.3, 'rmse': 18.5, 'mape': 15.2, 'r2': 0.78},
-                   'RF': {'mae': 8.7, 'rmse': 13.2, 'mape': 10.8, 'r2': 0.85}},
-    }, 'message': 'ok'})
+    result = service.get_accuracy(section_id)
+    return jsonify({'code': 200, 'data': result, 'message': 'ok'})
+
+
+@prediction_bp.route('/analysis', methods=['GET'])
+@jwt_required()
+def analysis():
+    """预测分析报告 — 趋势/峰值/拥堵风险/模型可靠性/模型对比"""
+    section_id = request.args.get('section_id', type=int)
+    horizon = request.args.get('horizon', 15, type=int)
+    if not section_id:
+        return jsonify({'code': 400, 'data': None, 'message': '缺少section_id参数'}), 400
+    result = service.analyze(section_id, horizon)
+    if 'error' in result:
+        return jsonify({'code': result['code'], 'data': None, 'message': result['error']}), result['code']
+    return jsonify({'code': 200, 'data': result, 'message': 'ok'})

@@ -1,7 +1,7 @@
 """KNN回归预测器 — Agent-Algorithm"""
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import GridSearchCV
-from algorithm.prediction.base_model import BaseTrafficPredictor
+from prediction.base_model import BaseTrafficPredictor
 import joblib
 
 

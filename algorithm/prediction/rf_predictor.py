@@ -1,7 +1,7 @@
 """随机森林预测器 — Agent-Algorithm"""
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
-from algorithm.prediction.base_model import BaseTrafficPredictor
+from prediction.base_model import BaseTrafficPredictor
 
 
 class RFPredictor(BaseTrafficPredictor):

@@ -13,6 +13,8 @@ instance/
 algorithm/.sim_progress
 algorithm/.stop_realtime
 algorithm/.pause_realtime
+algorithm/.sim_pid
+algorithm/.sim_heartbeat
 algorithm/uploads/
 .DS_Store
 Thumbs.db

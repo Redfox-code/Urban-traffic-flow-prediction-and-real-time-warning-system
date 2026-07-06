@@ -87,6 +87,14 @@
 | 7/02 | Lead → FE-Main | D9-T02完成。Dijkstra路径规划(route_service+route_plan API) |
 | 7/02 | FE-Main → Lead | D9-T03完成。RoutePlanner(起终点选择+路径时间线)。对接route/plan API |
 
+## 仿真重构+预测填充 (2026-07-06)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/06 | Lead → Algorithm | FEAT-SIM-REWRITE: run_simulation_realtime.py完全重写，移除TraCI换纯Python数学模型。Algorithm后续如需恢复TraCI，从git历史取回旧版本 |
+| 7/06 | Lead → FE-Main | FEAT-PREDICTION-REAL: prediction_service.py已使用真实训练模型(using_trained_model:true)。前端PredictionBoard无需修改，API契约不变 |
+| 7/06 | Lead → Test-Docs | BUG-SIM-HANG修复验证: 仿真3秒测试108条记录正常退出。预测服务48K条数据训练模型，MAE≈6, R²≈0.13。需补充预测模型验收测试 |
+
 ## D10 联调收尾 (2026-07-02)
 
 | 时间 | 交付方 → 接收方 | 说明 |
@@ -103,8 +111,28 @@
 | 7/02 | Lead → Algorithm | D11-T01完成。Dijkstra从ID相邻→haversine坐标距离改进。1km阈值 |
 | 7/02 | FE-Map → FE-Main | D11-T04完成。SectionHeatmap组件骨架。D11热力图实现预留 |
 
+## BUG修复 — 2026-07-05
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/05 | Lead → all | BUG-PROG-01修复。git rm --cached .sim_progress。教训：.gitignore对已追踪文件无效，必须两步走 |
+
+## 预测分析报告模块 (2026-07-06)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/06 | Lead → FE-Main | FEAT-ANALYSIS-REPORT: 预测看板新增「预测分析报告」模块。backend: GET /api/v1/predict/analysis (趋势/峰值/拥堵风险/模型可靠性/模型对比); frontend: PredictionBoard.vue新增分析报告卡片+api/prediction.js新增getAnalysis。分析报告在主预测成功时自动加载，失败不阻塞。卡片位置在预测序列下方，两列布局。审核点: 前端样式/数据绑定/暗色主题一致性 |
+
 ## D13 报告整合 (2026-07-02)
 
 | 时间 | 交付方 → 接收方 | 说明 |
 |------|----------------|------|
 | 7/02 | Test-Docs → all | D13-T01完成。详细设计报告(7章节)。三份报告全部就绪 |
+
+## 预测模型真实化 (2026-07-06)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/06 | Algorithm → Lead | FEAT-PREDICTION-REAL: train_model.py用47,868条真实数据训练KNN+RF。模型保存于backend/saved_models/(knn_sklearn_latest.pkl + rf_sklearn_latest.pkl)。评估指标写入metrics.json |
+| 7/06 | Lead → FE-Main | FEAT-PREDICTION-REAL: prediction_service.py已使用真实模型(using_trained_model:true)。API契约不变。Accuracy端点返回真实评估指标 |
+| 7/06 | Lead → Test-Docs | FEAT-PREDICTION-REAL验证: RF MAE=6.16, R²=0.13。3个预测端点均返回using_trained_model=true |

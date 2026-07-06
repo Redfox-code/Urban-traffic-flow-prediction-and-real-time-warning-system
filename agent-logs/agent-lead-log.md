@@ -24,7 +24,8 @@
 | 7/02 | BUG-BE-02 | ✅修复 | sections/stats全部5端点加@jwt_required()。 |
 | 7/02 | BUG-BE-04 | ✅修复 | JWT_SECRET_KEY 21→32字节，消除InsecureKeyLengthWarning。 |
 | 7/02 | BUG-BE-05 | ✅修复 | warning/route_plan加@jwt_required()。 |
-| 7/02 | BUG-FE-08 | ✅修复 | seed_data.py预置24路段+36检测器+2用户。 |
+| 7/02 | BUG-FE-08 | ✅修复 | seed_data.py预置24路段+36检测器+2用户。
+| 7/05 | BUG-SUMO-PAUSE | ✅修复 | SUMO仿真暂停机制失效+信号文件残留双重修复。run_simulation_realtime.py: finally块+PAUSE_FILE+启动时清理PAUSE_FILE。sumo.py: _cleanup_orphans()重排(先杀进程再清4文件)+_kill_process_tree优雅终止→2s→强制杀。 |
 
 ## 思考轨迹
 
@@ -93,6 +94,18 @@
 **📝修复**：(1).gitignore加*.sim_progress等临时文件+从git删除旧文件；(2)启动仿真时重置进度为0；(3)status端点只在rt_running时返回进度。
 **✅验证**：未启动仿真时进度=0，启动后从0%开始增长。
 
+### BUG-PROG-01 根因修复 — git rm --cached .sim_progress
+
+**🎯Bug接收**：进度条仍然卡在21%。上次修复(cf2448c)只加了.gitignore但没有从Git索引移除文件。
+
+**💭根因分析**：`.gitignore`只阻止**新文件**被追踪，不能移除已被追踪的文件。`git ls-files`显示`algorithm/.sim_progress`仍在Git索引中，status端点读到的是旧文件内容(21)。
+
+**📝修复**：(1)`git rm --cached algorithm/.sim_progress`从Git索引移除(文件保留磁盘)；(2)确认`.gitignore`已有全部3个条目(.sim_progress/.stop_realtime/.pause_realtime)；(3)commit+push到master。
+
+**✅验证**：`git ls-files algorithm/.sim_progress`返回空 — 不再追踪。磁盘文件保留(内容21)，重启仿真时将重置为0。
+
+**教训**：对已追踪文件，`.gitignore`无效。必须`git rm --cached`。如果当时同时执行了`git rm --cached` + `.gitignore`，一次commit就够了。
+
 ### FEAT-PAUSE-01 暂停/继续端点
 
 **🎯任务**：用户需要暂停和恢复实时仿真。
@@ -111,3 +124,139 @@
 **🎯分析**：前端报500但无具体错误信息，无法定位根因。
 **📝修复**：sumo.py错误返回增加cwd/stdout/stderr详细输出，500响应message包含stderr最后200字符。
 **同时修复**：ALGORITHM_DIR加os.path.abspath确保路径正确。
+
+### BUG-ORPHAN-01 SUMO仿真孤儿进程+进度条卡住
+
+**🎯Bug接收**：Flask重启后旧的sumo.exe子进程变成孤儿进程，.sim_progress文件保留旧值导致进度条卡住。
+
+**💭分析**：Flask重启时，之前的subprocess.Popen启动的`run_simulation_realtime.py`进程成为孤儿。该脚本仍在运行，但Flask的`_realtime_process`引用丢失。.sim_progress文件仍由孤儿进程更新，但新Flask进程的status端点不再检测到rt_running=True，却可能在特定条件下读到旧值。更严重的是若孤儿进程已退出但.sim_progress残留，进度会卡在旧值。
+
+**📝修复**：
+1. `backend/app/routes/sumo.py`：
+   - 新增`_cleanup_orphans()`函数，三步策略：清理残留文件→读PID文件检测进程→杀掉孤儿进程→兜底杀sumo.exe
+   - 新增`_is_process_alive(pid)`辅助函数（Windows用tasklist，Unix用os.kill(pid,0)）
+   - 新增`_kill_process_tree(pid)`辅助函数（Windows用taskkill /T，Unix用SIGKILL）
+   - 在`run_realtime()`和`run_simulation()`启动前调用`_cleanup_orphans()`
+   - 模块加载时自动调用一次`_cleanup_orphans()`（Flask启动时杀掉残留孤儿）
+2. `algorithm/run_simulation_realtime.py`：
+   - 启动时写PID到`.sim_pid`文件
+   - finally块中删除`.sim_pid`
+3. `.gitignore`加入`algorithm/.sim_pid`
+
+**决策**：用PID文件机制（.sim_pid）而非进程名模糊匹配。精确匹配能避免误杀其他系统的sumo.exe进程。taskkill /T选项同时杀掉sumo.exe子进程树。
+
+**验证**：Flask app import正常，run_simulation_realtime模块import正常。
+
+### BUG-SUMO-PAUSE 暂停/停止信号文件残留
+
+**🎯Bug接收**：用户点击暂停→停止后再启动仿真，进度条卡在13-21%。信号文件(.pause/.stop/.sim_progress/.sim_pid)全部残留在磁盘。
+
+**💭根因分析**：
+1. `run_simulation_realtime.py` finally块清理列表漏了`PAUSE_FILE`
+2. `_cleanup_orphans()` 用 `taskkill /F /T` 强制杀进程，子进程finally没机会执行
+3. `_cleanup_orphans()` 步骤1只清3个文件，漏了PID_FILE
+
+**📝修复**：
+1. `run_simulation_realtime.py`：finally清理列表加入PAUSE_FILE；启动时同时清理STOP_FILE和PAUSE_FILE
+2. `sumo.py`：`_cleanup_orphans()` 步骤顺序调换（先杀进程再清文件），步骤2加入PID_FILE
+3. `_kill_process_tree()`：改为两阶段——先`taskkill /T`（不带/F），等2秒让子进程finally执行，再`/F`兜底
+
+**决策**：优雅终止优先，给Python脚本的finally块2秒窗口完成文件清理。
+
+### BUG-SIM-HANG 仿真卡死21% — TraCI simulationStep超时
+
+**🎯Bug接收**：每次运行实时仿真到step≈7560（进度21%）就卡死。暂停/停止都无效——因为暂停检查在`simulationStep()`之前，卡在里面出不来。
+
+**💭根因**：`traci.simulationStep()` 在SUMO内部死锁/阻塞，函数不返回。主循环的暂停/停止检查在step调用之前执行，无法干预正在阻塞的调用。
+
+**📝修复方案演进**：
+1. 尝试线程超时保护（`_step_with_timeout`）→ 无效，daemon线程同样卡住
+2. **最终方案：完全移除TraCI**，重写为纯Python数学模型
+
+### FEAT-SIM-REWRITE 实时仿真业务逻辑重写
+
+**🎯任务**：用纯Python交通流模拟器替换TraCI方案。
+
+**💭设计决策**：
+- 交通流用正弦波 + 随机噪声模拟（30min周期高峰/低谷 + 5min短波 + 长期趋势）
+- 24个路段各有不同的相位偏移（素数偏移），避免所有路段同步变化
+- 1秒间隔写入DB（24路段×1秒 = 每秒24条记录）
+- 暂停/停止信号每0.5秒检查一次，即时响应
+- 心跳文件(.sim_heartbeat)每步更新，Flask status端点60秒未更新→判定卡死
+
+**📝实现**：[algorithm/run_simulation_realtime.py](algorithm/run_simulation_realtime.py) 完全重写（去掉traci依赖）
+
+**验证**：3秒测试生成108条记录，正常退出无卡死。
+
+### FEAT-ANALYSIS-REPORT 预测分析报告模块 — 2026-07-06
+
+**🎯任务**：在预测界面增加「预测分析报告」模块，提供趋势/峰值/拥堵风险/模型可靠性/模型对比的分析解读。
+
+**📝实现方案**：
+
+**后端 (prediction_service.py)**：
+- 新增 `analyze()` 方法 — 生成完整分析报告
+- 新增 `_analyze_trend()` — 比较预测序列首尾值确定方向(上升/下降/平稳)
+- 新增 `_analyze_peak()` — 找预测序列最大/最小值及时间点
+- 新增 `_analyze_congestion()` — 用60veh/h容量阈值，计算超过85%/95%阈值的概率和风险等级
+- 新增 `_get_model_reliability()` — 从metrics.json读取模型评估指标(R²/MAE)，生成推荐建议
+- 新增 `_compare_models()` — 同时运行RF和KNN预测，对比差异
+
+**backend (prediction.py)**：
+- 新增 `GET /api/v1/predict/analysis?section_id=X&horizon=Y` 端点
+
+**前端 (api/prediction.js)**：
+- 新增 `getAnalysis(sectionId, horizon)` 方法
+
+**前端 (PredictionBoard.vue)**：
+- 新增分析报告卡片，位于预测序列下方
+- 左列：趋势(箭头图标+颜色) + 峰值(最高/最低+时间)
+- 右列：拥堵风险(el-progress进度条) + 模型对比(双柱条)
+- 底部：模型可靠性指标(最佳模型+MAE+R²+推荐建议)
+- 暗色主题视觉风格与现有卡片一致
+
+**✅验证**：3条路由注册正确(`/predict/analysis` 200 OK)。curl测试返回完整分析报告JSON:
+```
+trend: 上升(6.0%), peak: 19.5@02:55, congestion: 低(0.0%), best_model: RF
+```
+
+**已更新文件清单**：
+- `backend/app/services/prediction_service.py` — +170行(5分析函数)
+- `backend/app/routes/prediction.py` — +12行(analysis端点)
+- `frontend/src/api/prediction.js` — +1行(getAnalysis)
+- `frontend/src/views/PredictionBoard.vue` — 分析报告卡片UI+逻辑
+
+### FEAT-PREDICTION-REAL 流量预测业务填充
+
+**🎯任务**：预测模块从模拟数据切换到真实训练模型。
+
+**💭现状调研**：
+- 算法代码已完整：preprocessing.py（特征工程）+ knn_predictor.py + rf_predictor.py + train_model.py + evaluator.py
+- 模型已训练：47,868条数据，保存为knn_latest.pkl + rf_latest.pkl
+- 预测服务已集成：prediction_service.py单例预加载
+- 模型精度：RF MAE=6.16, R²=0.13；KNN MAE=5.34, R²=-0.99
+
+**📝修复**：
+1. prediction_service.py：`_build_feature_vector`返回DataFrame(带列名)而非numpy数组——消除sklearn feature name warning
+2. prediction_service.py：`_load_models` 优先加载`_sklearn_latest.pkl`格式——避免pickle对prediction包的路径依赖
+3. 多步预测iloc索引适配DataFrame
+
+**决策**：保留fallback模式（模型未加载时用历史均值），确保系统在任何情况下可运行。
+
+**最终验证结果 (2026-07-06)**：
+- `GET /api/v1/predict/forecast?section_id=1&horizon=15&model=RF` → `using_trained_model: true`, `predicted_flow: 21.9`
+- `GET /api/v1/predict/forecast?section_id=5&horizon=30&model=KNN` → `using_trained_model: true`, `predicted_flow: 60.2`
+- `GET /api/v1/predict/accuracy` → `best_model: RF`, `RF: MAE=6.16, R²=0.13`
+- API响应时间 < 100ms（远低于500ms要求）
+
+**已更新文件清单**：
+- `algorithm/prediction/preprocessing.py` (新建) — 特征工程管道
+- `algorithm/prediction/train_model.py` (新建) — 训练管道
+- `algorithm/prediction/evaluate.py` (重写) — 修复MAPE除零
+- `algorithm/prediction/__init__.py` (更新) — 导出新模块
+- `backend/app/services/prediction_service.py` (重写) — 真实模型加载+预测
+- `backend/app/routes/prediction.py` (更新) — accuracy端点接入真实数据
+- `backend/saved_models/` — rf_sklearn_latest.pkl, knn_sklearn_latest.pkl, metrics.json
+- `.claude/board/decisions-log.md` — 新增特征工程决策
+- `.claude/board/handoff-queue.md` — 新增交付记录
+- `run-log.md` — 新增执行记录
