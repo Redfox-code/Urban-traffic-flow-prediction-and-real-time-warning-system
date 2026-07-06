@@ -130,7 +130,7 @@ def run_realtime():
     with open(PROGRESS_FILE, 'w') as f: f.write('0')
     try:
         _realtime_process = subprocess.Popen(
-            [sys.executable, 'run_simulation_realtime.py', '--duration', '3600', '--interval', '1'],
+            [sys.executable, 'run_simulation_realtime.py', '--duration', '3600', '--interval', '50'],
             cwd=ALGORITHM_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真已启动'})
     except Exception as e:

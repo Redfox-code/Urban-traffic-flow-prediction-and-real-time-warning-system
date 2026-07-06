@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+
+    <!-- ===== 北京国贸CBD区域真实路段 =====
+         命名规则:
+           he_{row}_{c1}_{c2} = 东西向 eastbound
+           hw_{row}_{c2}_{c1} = 东西向 westbound
+           vn_{col}_{r1}_{r2} = 南北向 northbound
+           vs_{col}_{r2}_{r1} = 南北向 southbound
+         主干道(建国路R3, 东三环C2): 3车道, 60km/h限速
+         次干道: 2车道, 40km/h限速
+    ===== -->
+
+    <!-- ========================================== -->
+    <!-- R0: 通惠河北路主路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="he_0_0_1" from="N00" to="N01" numLanes="2" speed="11.11"/>
+    <edge id="he_0_1_2" from="N01" to="N02" numLanes="2" speed="11.11"/>
+    <edge id="he_0_2_3" from="N02" to="N03" numLanes="2" speed="11.11"/>
+    <edge id="he_0_3_4" from="N03" to="N04" numLanes="2" speed="11.11"/>
+    <edge id="hw_0_1_0" from="N01" to="N00" numLanes="2" speed="11.11"/>
+    <edge id="hw_0_2_1" from="N02" to="N01" numLanes="2" speed="11.11"/>
+    <edge id="hw_0_3_2" from="N03" to="N02" numLanes="2" speed="11.11"/>
+    <edge id="hw_0_4_3" from="N04" to="N03" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- R1: 通惠河北路辅路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="he_1_0_1" from="N10" to="N11" numLanes="2" speed="11.11"/>
+    <edge id="he_1_1_2" from="N11" to="N12" numLanes="2" speed="11.11"/>
+    <edge id="he_1_2_3" from="N12" to="N13" numLanes="2" speed="11.11"/>
+    <edge id="he_1_3_4" from="N13" to="N14" numLanes="2" speed="11.11"/>
+    <edge id="hw_1_1_0" from="N11" to="N10" numLanes="2" speed="11.11"/>
+    <edge id="hw_1_2_1" from="N12" to="N11" numLanes="2" speed="11.11"/>
+    <edge id="hw_1_3_2" from="N13" to="N12" numLanes="2" speed="11.11"/>
+    <edge id="hw_1_4_3" from="N14" to="N13" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- R2: 景辉街 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="he_2_0_1" from="N20" to="N21" numLanes="2" speed="11.11"/>
+    <edge id="he_2_1_2" from="N21" to="N22" numLanes="2" speed="11.11"/>
+    <edge id="he_2_2_3" from="N22" to="N23" numLanes="2" speed="11.11"/>
+    <edge id="he_2_3_4" from="N23" to="N24" numLanes="2" speed="11.11"/>
+    <edge id="hw_2_1_0" from="N21" to="N20" numLanes="2" speed="11.11"/>
+    <edge id="hw_2_2_1" from="N22" to="N21" numLanes="2" speed="11.11"/>
+    <edge id="hw_2_3_2" from="N23" to="N22" numLanes="2" speed="11.11"/>
+    <edge id="hw_2_4_3" from="N24" to="N23" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- R3: 建国路 (60km/h, 3车道, 主干道) -->
+    <!-- ========================================== -->
+    <edge id="he_3_0_1" from="N30" to="N31" numLanes="3" speed="16.67"/>
+    <edge id="he_3_1_2" from="N31" to="N32" numLanes="3" speed="16.67"/>
+    <edge id="he_3_2_3" from="N32" to="N33" numLanes="3" speed="16.67"/>
+    <edge id="he_3_3_4" from="N33" to="N34" numLanes="3" speed="16.67"/>
+    <edge id="hw_3_1_0" from="N31" to="N30" numLanes="3" speed="16.67"/>
+    <edge id="hw_3_2_1" from="N32" to="N31" numLanes="3" speed="16.67"/>
+    <edge id="hw_3_3_2" from="N33" to="N32" numLanes="3" speed="16.67"/>
+    <edge id="hw_3_4_3" from="N34" to="N33" numLanes="3" speed="16.67"/>
+
+    <!-- ========================================== -->
+    <!-- R4: 景华街 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="he_4_0_1" from="N40" to="N41" numLanes="2" speed="11.11"/>
+    <edge id="he_4_1_2" from="N41" to="N42" numLanes="2" speed="11.11"/>
+    <edge id="he_4_2_3" from="N42" to="N43" numLanes="2" speed="11.11"/>
+    <edge id="he_4_3_4" from="N43" to="N44" numLanes="2" speed="11.11"/>
+    <edge id="hw_4_1_0" from="N41" to="N40" numLanes="2" speed="11.11"/>
+    <edge id="hw_4_2_1" from="N42" to="N41" numLanes="2" speed="11.11"/>
+    <edge id="hw_4_3_2" from="N43" to="N42" numLanes="2" speed="11.11"/>
+    <edge id="hw_4_4_3" from="N44" to="N43" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- R5: 光华路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="he_5_0_1" from="N50" to="N51" numLanes="2" speed="11.11"/>
+    <edge id="he_5_1_2" from="N51" to="N52" numLanes="2" speed="11.11"/>
+    <edge id="he_5_2_3" from="N52" to="N53" numLanes="2" speed="11.11"/>
+    <edge id="he_5_3_4" from="N53" to="N54" numLanes="2" speed="11.11"/>
+    <edge id="hw_5_1_0" from="N51" to="N50" numLanes="2" speed="11.11"/>
+    <edge id="hw_5_2_1" from="N52" to="N51" numLanes="2" speed="11.11"/>
+    <edge id="hw_5_3_2" from="N53" to="N52" numLanes="2" speed="11.11"/>
+    <edge id="hw_5_4_3" from="N54" to="N53" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- R6: 光华北路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="he_6_0_1" from="N60" to="N61" numLanes="2" speed="11.11"/>
+    <edge id="he_6_1_2" from="N61" to="N62" numLanes="2" speed="11.11"/>
+    <edge id="he_6_2_3" from="N62" to="N63" numLanes="2" speed="11.11"/>
+    <edge id="he_6_3_4" from="N63" to="N64" numLanes="2" speed="11.11"/>
+    <edge id="hw_6_1_0" from="N61" to="N60" numLanes="2" speed="11.11"/>
+    <edge id="hw_6_2_1" from="N62" to="N61" numLanes="2" speed="11.11"/>
+    <edge id="hw_6_3_2" from="N63" to="N62" numLanes="2" speed="11.11"/>
+    <edge id="hw_6_4_3" from="N64" to="N63" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- C0: 东大桥路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="vn_0_0_1" from="N00" to="N10" numLanes="2" speed="11.11"/>
+    <edge id="vn_0_1_2" from="N10" to="N20" numLanes="2" speed="11.11"/>
+    <edge id="vn_0_2_3" from="N20" to="N30" numLanes="2" speed="11.11"/>
+    <edge id="vn_0_3_4" from="N30" to="N40" numLanes="2" speed="11.11"/>
+    <edge id="vn_0_4_5" from="N40" to="N50" numLanes="2" speed="11.11"/>
+    <edge id="vn_0_5_6" from="N50" to="N60" numLanes="2" speed="11.11"/>
+    <edge id="vs_0_1_0" from="N10" to="N00" numLanes="2" speed="11.11"/>
+    <edge id="vs_0_2_1" from="N20" to="N10" numLanes="2" speed="11.11"/>
+    <edge id="vs_0_3_2" from="N30" to="N20" numLanes="2" speed="11.11"/>
+    <edge id="vs_0_4_3" from="N40" to="N30" numLanes="2" speed="11.11"/>
+    <edge id="vs_0_5_4" from="N50" to="N40" numLanes="2" speed="11.11"/>
+    <edge id="vs_0_6_5" from="N60" to="N50" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- C1: 金桐西路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="vn_1_0_1" from="N01" to="N11" numLanes="2" speed="11.11"/>
+    <edge id="vn_1_1_2" from="N11" to="N21" numLanes="2" speed="11.11"/>
+    <edge id="vn_1_2_3" from="N21" to="N31" numLanes="2" speed="11.11"/>
+    <edge id="vn_1_3_4" from="N31" to="N41" numLanes="2" speed="11.11"/>
+    <edge id="vn_1_4_5" from="N41" to="N51" numLanes="2" speed="11.11"/>
+    <edge id="vn_1_5_6" from="N51" to="N61" numLanes="2" speed="11.11"/>
+    <edge id="vs_1_1_0" from="N11" to="N01" numLanes="2" speed="11.11"/>
+    <edge id="vs_1_2_1" from="N21" to="N11" numLanes="2" speed="11.11"/>
+    <edge id="vs_1_3_2" from="N31" to="N21" numLanes="2" speed="11.11"/>
+    <edge id="vs_1_4_3" from="N41" to="N31" numLanes="2" speed="11.11"/>
+    <edge id="vs_1_5_4" from="N51" to="N41" numLanes="2" speed="11.11"/>
+    <edge id="vs_1_6_5" from="N61" to="N51" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- C2: 东三环中路 (60km/h, 3车道, 主干道) -->
+    <!-- ========================================== -->
+    <edge id="vn_2_0_1" from="N02" to="N12" numLanes="3" speed="16.67"/>
+    <edge id="vn_2_1_2" from="N12" to="N22" numLanes="3" speed="16.67"/>
+    <edge id="vn_2_2_3" from="N22" to="N32" numLanes="3" speed="16.67"/>
+    <edge id="vn_2_3_4" from="N32" to="N42" numLanes="3" speed="16.67"/>
+    <edge id="vn_2_4_5" from="N42" to="N52" numLanes="3" speed="16.67"/>
+    <edge id="vn_2_5_6" from="N52" to="N62" numLanes="3" speed="16.67"/>
+    <edge id="vs_2_1_0" from="N12" to="N02" numLanes="3" speed="16.67"/>
+    <edge id="vs_2_2_1" from="N22" to="N12" numLanes="3" speed="16.67"/>
+    <edge id="vs_2_3_2" from="N32" to="N22" numLanes="3" speed="16.67"/>
+    <edge id="vs_2_4_3" from="N42" to="N32" numLanes="3" speed="16.67"/>
+    <edge id="vs_2_5_4" from="N52" to="N42" numLanes="3" speed="16.67"/>
+    <edge id="vs_2_6_5" from="N62" to="N52" numLanes="3" speed="16.67"/>
+
+    <!-- ========================================== -->
+    <!-- C3: 针织路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="vn_3_0_1" from="N03" to="N13" numLanes="2" speed="11.11"/>
+    <edge id="vn_3_1_2" from="N13" to="N23" numLanes="2" speed="11.11"/>
+    <edge id="vn_3_2_3" from="N23" to="N33" numLanes="2" speed="11.11"/>
+    <edge id="vn_3_3_4" from="N33" to="N43" numLanes="2" speed="11.11"/>
+    <edge id="vn_3_4_5" from="N43" to="N53" numLanes="2" speed="11.11"/>
+    <edge id="vn_3_5_6" from="N53" to="N63" numLanes="2" speed="11.11"/>
+    <edge id="vs_3_1_0" from="N13" to="N03" numLanes="2" speed="11.11"/>
+    <edge id="vs_3_2_1" from="N23" to="N13" numLanes="2" speed="11.11"/>
+    <edge id="vs_3_3_2" from="N33" to="N23" numLanes="2" speed="11.11"/>
+    <edge id="vs_3_4_3" from="N43" to="N33" numLanes="2" speed="11.11"/>
+    <edge id="vs_3_5_4" from="N53" to="N43" numLanes="2" speed="11.11"/>
+    <edge id="vs_3_6_5" from="N63" to="N53" numLanes="2" speed="11.11"/>
+
+    <!-- ========================================== -->
+    <!-- C4: 西大望路 (40km/h, 2车道) -->
+    <!-- ========================================== -->
+    <edge id="vn_4_0_1" from="N04" to="N14" numLanes="2" speed="11.11"/>
+    <edge id="vn_4_1_2" from="N14" to="N24" numLanes="2" speed="11.11"/>
+    <edge id="vn_4_2_3" from="N24" to="N34" numLanes="2" speed="11.11"/>
+    <edge id="vn_4_3_4" from="N34" to="N44" numLanes="2" speed="11.11"/>
+    <edge id="vn_4_4_5" from="N44" to="N54" numLanes="2" speed="11.11"/>
+    <edge id="vn_4_5_6" from="N54" to="N64" numLanes="2" speed="11.11"/>
+    <edge id="vs_4_1_0" from="N14" to="N04" numLanes="2" speed="11.11"/>
+    <edge id="vs_4_2_1" from="N24" to="N14" numLanes="2" speed="11.11"/>
+    <edge id="vs_4_3_2" from="N34" to="N24" numLanes="2" speed="11.11"/>
+    <edge id="vs_4_4_3" from="N44" to="N34" numLanes="2" speed="11.11"/>
+    <edge id="vs_4_5_4" from="N54" to="N44" numLanes="2" speed="11.11"/>
+    <edge id="vs_4_6_5" from="N64" to="N54" numLanes="2" speed="11.11"/>
+
+</edges>

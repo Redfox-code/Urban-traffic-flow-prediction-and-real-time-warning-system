@@ -1,0 +1,16 @@
+{
+  "best_model": "RF",
+  "training_date": "2026-07-06T10:00:47.598209",
+  "total_records": 47868,
+  "train_samples": 38217,
+  "test_samples": 9555,
+  "feature_count": 9,
+  "KNN_mae": 5.34,
+  "KNN_rmse": 9.38,
+  "KNN_mape": 46.99,
+  "KNN_r2": -0.989,
+  "RF_mae": 6.16,
+  "RF_rmse": 10.06,
+  "RF_mape": 41.45,
+  "RF_r2": 0.129
+}

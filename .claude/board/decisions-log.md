@@ -7,6 +7,28 @@
 
 ## 决策记录
 
+### [决策] FEAT-REAL-NETWORK 国贸CBD真实路网替换6x4网格 — Agent-Lead
+
+**时间**：2026-07-06
+**背景**：之前使用netgenerate生成的6×4网格路网坐标是凭空编造的，与高德地图底图道路完全不重合。
+**方案**：
+- 选择北京国贸CBD区域（约1.4km×1.2km），基于高德地图真实道路坐标重建路网
+- 7条东西向道路（通惠河北路主路/辅路、景辉街、建国路、景华街、光华路、光华北路）× 5条南北向道路（东大桥路、金桐西路、东三环中路、针织路、西大望路）= 35个交叉口
+- SUMO使用netconvert生成路网（116条路段），前端Polyline坐标与SUMO节点坐标完全一致
+- 坐标使用GCJ-02（高德坐标系），确保Polyline与AMap底图道路对齐
+- 保持24路段架构不变（7×2+5×2），section ID映射兼容
+- 保留旧网格路网作为fallback（city_network.net.xml）
+**影响**：seed_data.py需要重新运行清除旧路段；run_simulation.py改为使用netconvert；前端地图中心调整到新区域中心[116.4603, 39.9084]
+**文件**：
+- 新建: algorithm/sumo/real_network.nod.xml (35节点)
+- 新建: algorithm/sumo/real_network.edg.xml (116路段)
+- 修改: algorithm/run_simulation.py (netconvert替换netgenerate)
+- 修改: algorithm/sumo/config.sumocfg (指向real_network.net.xml)
+- 重写: frontend/src/data/roadNetwork.js (真实坐标)
+- 重写: backend/seed_data.py (真实道路名称+坐标)
+
+---
+
 ### [决策] D3-T01 总体架构采用MVC三层 + 前后端分离 — Agent-Lead
 
 **时间**：2026-07-01

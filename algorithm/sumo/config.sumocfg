@@ -3,7 +3,9 @@
                xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="city_network.net.xml"/>
+        <!-- 使用基于高德地图真实道路的国贸CBD路网 -->
+        <!-- 切换到 city_network.net.xml 可还原为网格路网 -->
+        <net-file value="real_network.net.xml"/>
         <route-files value="city_flows.rou.xml"/>
         <additional-files value="detectors.add.xml"/>
     </input>

@@ -126,6 +126,12 @@
 | 7/06 | 🤖Lead | ✅ | FEAT-PREDICTION-REAL: 流量预测业务填充。prediction_service.py修复DataFrame列名warnings+sklearn模型加载。KNN+RF模型已训练(47,868条数据)，using_trained_model=true |
 | 7/06 | 🤖Lead | 🔧 | sumo.py: /status端新增heartbeat_stale字段(心跳>60s→卡死); _cleanup_orphans()支持5信号文件; .gitignore新增.sim_heartbeat |
 
+## 国贸CBD真实路网重建 — 2026-07-06
+
+| 时间 | 来源 | 类型 | 摘要 |
+|------|------|------|------|
+| 7/06 | 🤖Lead | 🎉 | FEAT-REAL-NETWORK完成! 基于高德地图真实道路重建国贸CBD路网。35交叉口, 116 SUMO路段, 24前端/后端路段。坐标对齐AMap底图。 |
+
 ## 预测分析报告模块 — 2026-07-06
 
 | 时间 | 来源 | 类型 | 摘要 |

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2026-07-05 16:48:39 by Eclipse SUMO sumo Version 1.24.0
+<!-- generated on 2026-07-06 11:47:23 by Eclipse SUMO sumo Version 1.24.0
 <sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="C:\Users\24924\Desktop\智能运输系统设计与集成综合实验\algorithm\sumo\city_network.net.xml"/>
-        <route-files value="C:\Users\24924\Desktop\智能运输系统设计与集成综合实验\algorithm\sumo\city_flows.rou.xml"/>
-        <additional-files value="C:\Users\24924\Desktop\智能运输系统设计与集成综合实验\algorithm\sumo\detectors.add.xml"/>
+        <net-file value="sumo/real_network.net.xml"/>
+        <route-files value="sumo/city_flows.rou.xml"/>
+        <additional-files value="sumo/detectors.add.xml"/>
     </input>
 
     <output>
-        <tripinfo-output value="C:\Users\24924\Desktop\智能运输系统设计与集成综合实验\algorithm\sumo\../data/raw/tripinfo.xml"/>
+        <tripinfo-output value="sumo/../data/raw/tripinfo.xml"/>
     </output>
 
     <time>
@@ -23,8 +23,12 @@
         <eager-insert value="true"/>
     </processing>
 
-    <traci_server>
-        <remote-port value="64196"/>
-    </traci_server>
+    <report>
+        <no-warnings value="true"/>
+        <no-step-log value="true"/>
+    </report>
 
 </sumoConfiguration>
+-->
+
+<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/det_e2_file.xsd">

@@ -26,6 +26,7 @@
 | 7/02 | BUG-BE-05 | ✅修复 | warning/route_plan加@jwt_required()。 |
 | 7/02 | BUG-FE-08 | ✅修复 | seed_data.py预置24路段+36检测器+2用户。
 | 7/05 | BUG-SUMO-PAUSE | ✅修复 | SUMO仿真暂停机制失效+信号文件残留双重修复。run_simulation_realtime.py: finally块+PAUSE_FILE+启动时清理PAUSE_FILE。sumo.py: _cleanup_orphans()重排(先杀进程再清4文件)+_kill_process_tree优雅终止→2s→强制杀。 |
+| 7/06 | FEAT-REAL-NETWORK | ✅ | 基于高德地图的国贸CBD真实路网重建。35个真实交叉口节点(7×5)，116条路段，坐标与AMap底图对齐。24条路段数据(前端/后端/SUMO三端一致)。 |
 
 ## 思考轨迹
 

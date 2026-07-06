@@ -4,6 +4,8 @@
     <vType id="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5.0" maxSpeed="60"/>
     <vType id="bus" accel="1.5" decel="3.5" sigma="0.5" length="12.0" maxSpeed="40"/>
     <vType id="truck" accel="1.0" decel="3.0" sigma="0.5" length="10.0" maxSpeed="30"/>
-    <flow id="sim_ns" begin="0" end="3600" from="bottom0A0" to="bottom1B0" number="2160" type="passenger"/>
-    <flow id="sim_sn" begin="0" end="3600" from="bottom1B0" to="bottom0A0" number="1980" type="passenger"/>
+    <flow id="ns" begin="0" end="3600" from="vn_2_0_1" to="vn_2_5_6" number="2400" type="passenger"/>
+    <flow id="sn" begin="0" end="3600" from="vs_2_1_0" to="vs_2_6_5" number="2200" type="passenger"/>
+    <flow id="we" begin="0" end="3600" from="he_3_0_1" to="he_3_3_4" number="2600" type="passenger"/>
+    <flow id="ew" begin="0" end="3600" from="hw_3_1_0" to="hw_3_4_3" number="2400" type="passenger"/>
 </routes>
