@@ -1,4 +1,4 @@
-import os
+import os, sys, subprocess, threading
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
@@ -7,6 +7,25 @@ from config import config_map
 
 db = SQLAlchemy()
 jwt = JWTManager()
+
+_sync_process = None
+
+
+def _start_amap_sync():
+    """后台启动高德数据同步（Flask启动时自动运行）"""
+    global _sync_process
+    sync_script = os.path.join(os.path.dirname(__file__), '..', '..', 'algorithm', 'sync_amap_traffic.py')
+    if not os.path.exists(sync_script):
+        print('[AmapSync] 同步脚本未找到，跳过')
+        return
+    try:
+        _sync_process = subprocess.Popen(
+            [sys.executable, sync_script, '--continuous', '--interval', '120'],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
+        print(f'[AmapSync] 后台同步已启动 (PID={_sync_process.pid})')
+    except Exception as e:
+        print(f'[AmapSync] 启动失败: {e}')
 
 
 def create_app(config_name=None):
@@ -21,6 +40,13 @@ def create_app(config_name=None):
     db.init_app(app)
     jwt.init_app(app)
     CORS(app)
+
+    # 后台启动高德数据同步（仅在Flask reloader子进程中启动一次，避免双进程冲突）
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or os.environ.get('FLASK_ENV') == 'production':
+        import time
+        time.sleep(3)  # 等Flask完全就绪后再启动同步
+        sync_thread = threading.Thread(target=_start_amap_sync, daemon=True)
+        sync_thread.start()
 
     # 注册蓝图（Agent-Lead 负责的 5 个 Blueprint）
     from app.routes.auth import auth_bp

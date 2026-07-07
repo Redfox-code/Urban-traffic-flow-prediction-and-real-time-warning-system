@@ -142,3 +142,10 @@
 | 时间 | 交付方 → 接收方 | 说明 |
 |------|----------------|------|
 | 7/06 | Lead → Algorithm | BUG-OSM-POLYLINE: extract_network_coords.py双修复。_merge_named_edges完全重写(投影+中心线平均v7), generate_segments重写(相似路名合并)。roadNetwork.json重新生成(50段无重复)。 |
+
+## 高德API主数据源 — 2026-07-07
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/07 | Lead → FE-Main | FEAT-AMAP-SYNC: 高德交通态势API切换完成。新建sync_amap_traffic.py(独立脚本调用高德API); traffic.py source字段改为'amap'; TrafficMonitor.vue数据源标签改为「高德实时」(绿)/「模拟」(黄); seed_data.py扩展至21条国贸CBD道路。验证: sync脚本直接运行写入DB, /traffic/current返回source='amap'。|
+| 7/07 | Lead → Algorithm | FEAT-AMAP-RETRAIN: sync_amap_traffic.py修复语法错误(return→sys.exit(0))。用高德数据(463条,17路段)重新训练KNN+RF。RF R²=-0.457, KNN R²=-0.591。新模型覆盖sklearn_latest.pkl。预测API返回using_trained_model:True。旧模型文件保留(7/6时间戳版本)。|

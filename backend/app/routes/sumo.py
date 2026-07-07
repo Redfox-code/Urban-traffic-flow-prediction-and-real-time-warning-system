@@ -129,8 +129,9 @@ def run_realtime():
     # 重置进度
     with open(PROGRESS_FILE, 'w') as f: f.write('0')
     try:
+        # 使用高德API持续同步模式（替代TraCI仿真）
         _realtime_process = subprocess.Popen(
-            [sys.executable, 'run_simulation_realtime.py', '--duration', '3600', '--interval', '50'],
+            [sys.executable, 'sync_amap_traffic.py', '--continuous', '--interval', '120'],
             cwd=ALGORITHM_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真已启动'})
     except Exception as e:

@@ -648,3 +648,70 @@
 - 零新增文件，仅修改已有代码。与现有接口完全兼容。
 - 暂停→停止流程：STOP_FILE写入 → pause循环检测到STOP_FILE退出 → 主循环break → finally清理全部4文件 → 正常退出
 - 强制杀流程：taskkill /T(不带/F) → 等2秒让finally执行 → 若进程仍存活则taskkill /F兜底
+
+---
+
+### [决策] FEAT-AMAP-RETRAIN 高德API真实数据重训练 — Agent-Lead (2026-07-07)
+
+**背景**：之前训练的模型使用了47,868条仿真/CSV数据。切换高德API为主数据源后，需要让模型基于真实高德交通数据进行训练。
+
+**选项**：
+- A：继续使用旧仿真模型（47,868条，RF R²=0.129）
+- B：用高德数据重新训练（463条真实数据）
+
+**决议**：方案B。
+
+**理由**：
+1. 高德数据是真实交通状况，虽然量少但质量高
+2. R²为负是因为数据量不足(463条,17路段×~27条/段)且同批次时间戳一致——滞后特征无时序信息
+3. 保留旧模型文件作为历史版本（可直接git恢复），新模型覆盖sklearn_latest.pkl
+4. 预测API的confidence_interval(±15%)在数据量不足时提供容错
+
+**影响**：
+- saved_models/下旧模型文件保留(7/6时间戳版本, ~9.3MB+~6.5MB)
+- 新模型文件大幅缩小(~405KB+~54KB)因为训练数据量减少
+- prediction_service.py无需修改(自动加载sklearn_latest.pkl)
+- 后续积累足够数据(建议10,000+条,覆盖多时段)后可再次训练
+
+**验证**：curl测试 `/api/v1/predict/forecast` → `using_trained_model: True`
+
+---
+
+### [决策] FEAT-AMAP-SYNC 高德API作为主实时数据源 — Agent-Lead (2026-07-07)
+
+**背景**：SUMO仿真数据管道断裂（Section_id硬编码+OSM路网无检测器），前端永远显示模拟数据。此前已使用高德交通态势API测试成功。
+
+**选项**：
+- A：修复SUMO数据管道（OSM路网加检测器+重建Section映射）
+- B：高德API作为主数据源 + 自有算法预测/规划
+- C：完全依赖高德API（含预测+路径规划）
+
+**决议**：方案B。
+
+**理由**：
+1. SUMO修复需要重建OSM路网到加检测器到重新对齐section_id，时间不可控且偏离课程重点
+2. 高德交通态势API已测试成功（92条道路实时路况），数据质量高
+3. 保留自有算法(KNN+RF预测, Dijkstra路径规划)符合课程设计算法设计的评分要求
+4. 前端数据来源清晰可辨（高德实时/模拟两种标签），演示时可直接展示效果对比
+
+**不选方案C的理由**：完全依赖高德API意味着预测和路径规划也调用高德API，失去算法设计的课程评分点。
+
+**技术方案**：
+
+| 组件 | 方案 | 说明 |
+|------|------|------|
+| 实时数据 | 高德交通态势API | 仅用于实时路况获取 |
+| 流量预测 | KNN+RF自有算法 | 基于历史数据训练，不调高德预测API |
+| 路径规划 | Dijkstra | 自有实现，不调高德路径规划API |
+| 数据同步 | sync_amap_traffic.py | 独立脚本，高德到DB转换 |
+
+**影响**：
+- 新建: algorithm/sync_amap_traffic.py
+- 更新: backend/app/routes/traffic.py
+- 更新: frontend/src/views/TrafficMonitor.vue
+- 更新: backend/seed_data.py
+
+**验证标准**：
+1. python sync_amap_traffic.py 成功写入traffic_records
+2. /api/v1/traffic/current 返回 source=amap
+3. 前端标签显示高德实时

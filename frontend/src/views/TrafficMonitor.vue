@@ -13,8 +13,8 @@
           <el-button v-if="simStore.realtimePaused" size="small" type="success" @click="simStore.resumeRealtime()">▶ 继续</el-button>
           <el-button size="small" type="danger" @click="stopSim" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
           <span v-if="simStore.realtimeRunning" style="font-size:12px;color:#00e676">🟢 运行中</span>
-          <el-tag size="small" :type="dataSource === 'db' ? 'success' : 'warning'" effect="dark">
-            {{ dataSource === 'db' ? '📡 仿真数据' : '🎲 模拟数据' }}
+          <el-tag size="small" :type="dataSource === 'amap' ? 'success' : 'warning'" effect="dark">
+            {{ dataSource === 'amap' ? '📡 高德实时' : '🎲 模拟' }}
           </el-tag>
           <span class="update-timer">数据更新于 {{ timer }}s 前</span>
         </div>
@@ -36,7 +36,7 @@
       <el-card shadow="never" v-if="selectedSection">
         <template #header><span style="font-weight:bold;color:var(--accent-blue)">📊 {{ selectedSection.name }}</span></template>
         <div v-if="trafficData[selectedId]" class="realtime-data">
-          <div class="data-row"><span>数据来源</span><el-tag size="small" :type="trafficData[selectedId].source === 'db' ? 'success' : 'warning'" effect="dark">{{ trafficData[selectedId].source === 'db' ? '📡 仿真' : '🎲 模拟' }}</el-tag></div>
+          <div class="data-row"><span>数据来源</span><el-tag size="small" :type="trafficData[selectedId].source === 'amap' ? 'success' : 'warning'" effect="dark">{{ trafficData[selectedId].source === 'amap' ? '📡 高德实时' : '🎲 模拟' }}</el-tag></div>
           <div class="data-row"><span>车流量</span><b class="val">{{ trafficData[selectedId].vehicle_count || '--' }} <small>veh</small></b></div>
           <div class="data-row"><span>平均速度</span><b class="val">{{ trafficData[selectedId].avg_speed || '--' }} <small>km/h</small></b></div>
           <div class="data-row"><span>占有率</span><b class="val">{{ trafficData[selectedId].occupancy || '--' }}<small>%</small></b></div>
@@ -63,7 +63,7 @@ const stopSim = () => simStore.stopRealtime()
 
 const sections = ref([]); const selectedId = ref(null); const selectedSection = ref(null)
 const trafficData = reactive({}); const flashes = reactive({})
-const dataSource = ref('mock')  // 'db'=仿真数据, 'mock'=模拟数据
+const dataSource = ref('mock')  // 'amap'=高德实时数据, 'mock'=模拟数据(fallback)
 const timer = ref(0); const lastUpdate = ref(0); let timerInterval = null
 
 const loadAllTraffic = async () => {

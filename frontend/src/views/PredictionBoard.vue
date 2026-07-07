@@ -21,8 +21,13 @@
           <div style="font-size:20px;color:var(--text-primary)">{{ result.confidence_interval?.lower }} ~ {{ result.confidence_interval?.upper }}</div>
         </div>
         <div style="flex:1;min-width:120px">
-          <div style="font-size:13px;color:var(--text-secondary)">模型</div>
-          <div style="font-size:20px;color:var(--text-primary)">{{ result.model }} <el-tag v-if="!result.using_trained_model" size="small" type="warning">模拟</el-tag></div>
+          <div style="font-size:13px;color:var(--text-secondary)">模型 / 数据</div>
+          <div style="font-size:18px;color:var(--text-primary)">
+            {{ result.model }}
+            <el-tag v-if="result.data_source === 'amap'" size="small" type="success" effect="dark">📡 高德</el-tag>
+            <el-tag v-else-if="!result.using_trained_model" size="small" type="warning">模拟</el-tag>
+            <el-tag v-else size="small" type="info">默认值</el-tag>
+          </div>
         </div>
       </div>
     </el-card>

@@ -13,6 +13,21 @@
 | FEAT-REAL-NETWORK | 国贸CBD真实路网重建(SUMO+前端+后端三端对齐) | agent-lead |
 | BUG-OSM-POLYLINE | OSM路网Polyline双修复(去重+贯穿) | agent-lead |
 
+## ✅ Done (2026-07-07)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| FEAT-AMAP-SYNC | 创建高德数据同步脚本(sync_amap_traffic.py) | agent-lead |
+| FEAT-AMAP-BACKEND | 更新traffic API source字段为'amap' | agent-lead |
+| FEAT-AMAP-FRONTEND | 更新前端数据源标签(高德实时/模拟) | agent-lead |
+| FEAT-AMAP-SEED | 更新seed_data.py国贸CBD道路列表 | agent-lead |
+
+## ✅ Done (2026-07-07)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| FEAT-AMAP-RETRAIN | 高德API真实数据重新训练KNN+RF(463条,17路段) | agent-lead |
+
 ## 📋 Backlog
 
 | ID | 任务 | 优先级 | Agent |

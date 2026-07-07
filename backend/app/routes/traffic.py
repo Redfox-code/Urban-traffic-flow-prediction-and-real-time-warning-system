@@ -50,7 +50,7 @@ def _real_traffic(section):
             'avg_speed': float(record.avg_speed),
             'occupancy': occ, 'level': level,
             'timestamp': record.timestamp.isoformat(),
-            'source': 'db'}
+            'source': 'amap'}
 
 
 @traffic_bp.route('/current', methods=['GET'])

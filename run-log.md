@@ -144,6 +144,21 @@
 |------|------|------|------|
 | 7/06 | 🤖Lead | ✅ | FEAT-ANALYSIS-REPORT: 预测看板新增「预测分析报告」模块。后端analyze()方法(趋势+峰值+拥堵风险+模型可靠性+模型对比)；前端分析报告卡片(双列布局+箭头图标+进度条+柱对比)。3端路由OK: /predict/analysis 200。交付: backend(2文件)+frontend(2文件)|
 
+## 高德API主数据源切换 — 2026-07-07
+
+| 时间 | 来源 | 类型 | 摘要 |
+|------|------|------|------|
+| 7/07 | 🤖Lead | 🎉 | 高德API切换完成! SUMO仿真数据管道断裂 → 高德交通态势API作为主实时数据源。新建 sync_amap_traffic.py, 更新traffic.py source→'amap', 更新前端标签为「高德实时」, 更新seed_data.py至21条国贸CBD道路。预测(KNN+RF)+路径规划(Dijkstra)保持自有算法。|
+
+## 高德数据重训练 — 2026-07-07
+
+| 时间 | 来源 | 类型 | 摘要 |
+|------|------|------|------|
+| 7/07 | 🤖Lead | ✅ | sync_amap_traffic.py语法修复: return→sys.exit(0)。连续运行6次, 同步396条高德数据至traffic_records(累计463条,17路段) |
+| 7/07 | 🤖Lead | ✅ | 用高德数据重新训练KNN+RF。特征:9列(时间+滞后+辅助), 395样本。KNN(manhattan,distance,15n) R²=-0.591; RF(max_depth=15,100树) R²=-0.457。最佳模型:RF |
+| 7/07 | 🤖Lead | ✅ | curl验证: /api/v1/predict/forecast?section_id=1&model=RF → using_trained_model:True, predicted_flow:83.5 |
+| 7/07 | 🤖Lead | 🎯 | 注意:高德数据仅463条(同期批量同步),滞后特征价值有限,R²为负。需积累更多不同时段数据才能改善。|
+
 ## 系统机制迭代
 
 | 时间 | 来源 | 类型 | 摘要 |

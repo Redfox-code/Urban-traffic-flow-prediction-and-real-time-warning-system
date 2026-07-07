@@ -122,10 +122,12 @@ class PredictionService:
     def _build_feature_vector(self, section_id, timestamp):
         """为指定路段和时间点构建特征向量
 
-        如果数据库中无滞后数据，使用路段近期的平均车流量填充
+        Returns:
+            (features_DataFrame, has_real_data): 特征矩阵 + 是否有真实DB数据
         """
         obs = self._get_latest_observation(section_id)
         now = timestamp or datetime.utcnow()
+        has_real_data = obs is not None  # True=高德真实数据, False=默认值
 
         # 默认值（当数据库不可用时）
         lag_1 = 50
@@ -153,7 +155,7 @@ class PredictionService:
             'vehicle_count_lag_3': lag_3,
         }
 
-        return pd.DataFrame([[features[col] for col in self._feature_cols]], columns=self._feature_cols)
+        return pd.DataFrame([[features[col] for col in self._feature_cols]], columns=self._feature_cols), has_real_data
 
     def predict(self, section_id, model_type='RF', horizon=15):
         """执行预测
@@ -176,8 +178,8 @@ class PredictionService:
         try:
             section_name = self._get_section_name(section_id)
 
-            # 构建特征并预测
-            features = self._build_feature_vector(section_id, now)
+            # 构建特征并预测 (has_real_data=True表示使用了高德真实数据)
+            features, has_real_data = self._build_feature_vector(section_id, now)
             predicted = float(model.predict(features)[0])
             predicted = max(0, predicted)  # 流量不能为负
 
@@ -209,6 +211,7 @@ class PredictionService:
                 'model': model_type,
                 'horizon': horizon,
                 'using_trained_model': True,
+                'data_source': 'amap' if has_real_data else 'default',
                 'predicted_flow': round(predicted, 1),
                 'confidence_interval': {
                     'lower': round(predicted * 0.85, 1),
@@ -259,6 +262,7 @@ class PredictionService:
             'model': model_type,
             'horizon': horizon,
             'using_trained_model': False,
+            'data_source': 'fallback',
             'predicted_flow': round(avg_flow, 1),
             'confidence_interval': {
                 'lower': round(avg_flow * 0.85, 1),

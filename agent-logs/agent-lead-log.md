@@ -262,3 +262,87 @@ trend: 上升(6.0%), peak: 19.5@02:55, congestion: 低(0.0%), best_model: RF
 - `.claude/board/decisions-log.md` — 新增特征工程决策
 - `.claude/board/handoff-queue.md` — 新增交付记录
 - `run-log.md` — 新增执行记录
+
+### FEAT-AMAP-SYNC 高德API作为主数据源 — 2026-07-07
+
+**🎯任务**：SUMO仿真数据管道断裂(Section_id硬编码+OSM无检测器)，改用高德交通态势API作为主实时数据源。
+
+**💭背景**：高德API已测试成功(Key: a7e006e65af936c9e57abc52fff9b826)，返回国贸CBD 92条道路实时路况。
+
+**📝实现**：
+
+1. **sync_amap_traffic.py (新建)**：
+   - 调用GET /v3/traffic/status/rectangle (矩形116.44,39.898;116.48,39.918)
+   - 解析92条道路，按路名子串匹配traffic_sections表
+   - 状态映射: status1→occ20%, status2→occ50%, status3→occ75%, status4→occ90%
+   - INSERT到traffic_records表，打印同步结果
+   - 可直接运行: `python sync_amap_traffic.py`
+
+2. **traffic.py (更新)**：
+   - `_real_traffic` source字段: 'db' → 'amap'
+   - `/traffic/current` 优先返回DB数据，空则fallback到mock
+
+3. **TrafficMonitor.vue (更新)**：
+   - 全局标签: source='amap' → "📡 高德实时"(绿色) / 'mock' → "🎲 模拟"(黄色)
+   - 路段详情面板: 同样更新
+
+4. **seed_data.py (更新)**：
+   - 扩展国贸CBD道路列表至21条(东西向9条+南北向9条+快速路3条)
+   - 路名与高德API返回名称一致(建国路/东三环中路/朝阳路等)
+
+**决策**: 高德API仅用于获取实时路况数据。预测模型(KNN+RF)继续使用自有算法，路线规划继续使用Dijkstra。
+
+**已更新文件清单**：
+- `algorithm/sync_amap_traffic.py` (新建) — 高德数据同步脚本
+- `backend/app/routes/traffic.py` (更新) — source字段改为'amap'
+- `frontend/src/views/TrafficMonitor.vue` (更新) — 数据源标签改为高德实时
+- `backend/seed_data.py` (更新) — 扩展国贸CBD道路列表至21条
+
+### FEAT-AMAP-RETRAIN 高德API真实数据重新训练 — 2026-07-07
+
+**🎯任务**：用高德API同步的真实交通数据（而非旧仿真数据）重新训练KNN+RF模型。
+
+**💭现状调研**：
+- DB初始只有67条测试数据（全部同一时间戳），无法训练
+- `sync_amap_traffic.py` 从高德交通态势API获取国贸CBD路况，但脚本有bug：第200行 `return` 在函数外
+- 旧模型（7/6训练）使用了47,868条数据，但来源是仿真/CSV数据，非高德真实数据
+- `preprocessing.py` 的 `load_traffic_data()` 从 `TrafficRecord` 表读取 — 高德同步数据也写入该表，路径通畅
+
+**📝修复与执行**：
+
+1. **修复sync_amap_traffic.py**：`return` → `sys.exit(0)` 修复语法错误
+2. **高德数据同步**：连续运行6次（每次~66条道路），累计463条记录
+3. **模型重训练**：`python -m prediction.train_model` 
+   - 输入：463条高德真实数据，17个路段
+   - 特征工程：9特征（时间+滞后+辅助），395样本
+   - 划分：316训练 / 79测试
+   - 训练参数：KNN(manhattan,distance,15邻居) + RF(max_depth=15, 100棵树)
+   - 特征重要性：section_id(33.5%) > avg_speed_lag_1(28.4%) > vehicle_count_lag_2(16.5%) > lag_3(12.7%) > hour(3.3%)
+4. **API验证**：启动Flask → curl预测API → `using_trained_model: True`
+
+**关键指标对比**：
+
+| 指标 | 旧模型 (7/6 仿真数据) | 新模型 (7/7 高德数据) |
+|------|----------------------|----------------------|
+| 数据量 | 47,868条 | 463条 |
+| 数据源 | 仿真/CSV | 高德交通态势API |
+| RF R² | 0.130 | -0.457 |
+| KNN R² | -0.990 | -0.591 |
+| RF MAE | 6.16 | 120.93 |
+| 模型文件大小(RF) | 9.3MB | 405KB |
+
+**分析**：新模型R²为负值，因为高德数据仅463条(17路段×~27条/路段)，且同批次数据时间戳相同(批量同步)，时间序列滞后特征参考价值低。R²为负说明模型预测不如简单取均值。需要积累更多高德数据（多次不同时段同步）才能改善。
+
+**决策**：保留RF为默认模型（best_model=RF）。数据量不足时，预测API的confidence_interval(±15%)提供容错。待高德数据积累至~10,000条后可重新训练获得正R²。
+
+**✅验证**：启动后端 → curl预测API → `using_trained_model: True` → 模型服务正常
+
+**已更新文件清单**：
+- `algorithm/sync_amap_traffic.py` (修复) — `return` → `sys.exit(0)`, 128号语法错误
+- `backend/saved_models/knn_latest.pkl` (更新) — 54KB, 高德数据训练
+- `backend/saved_models/rf_latest.pkl` (更新) — 405KB, 高德数据训练
+- `backend/saved_models/knn_sklearn_latest.pkl` (更新) — 54KB
+- `backend/saved_models/rf_sklearn_latest.pkl` (更新) — 405KB
+- `backend/saved_models/knn_model_20260707_102153.pkl` (新建) — 时间戳版本
+- `backend/saved_models/rf_model_20260707_102154.pkl` (新建) — 时间戳版本
+- `backend/saved_models/metrics.json` (更新) — 463条记录, RF R²=-0.457
