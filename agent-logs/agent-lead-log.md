@@ -27,6 +27,7 @@
 | 7/02 | BUG-FE-08 | ✅修复 | seed_data.py预置24路段+36检测器+2用户。
 | 7/05 | BUG-SUMO-PAUSE | ✅修复 | SUMO仿真暂停机制失效+信号文件残留双重修复。run_simulation_realtime.py: finally块+PAUSE_FILE+启动时清理PAUSE_FILE。sumo.py: _cleanup_orphans()重排(先杀进程再清4文件)+_kill_process_tree优雅终止→2s→强制杀。 |
 | 7/06 | FEAT-REAL-NETWORK | ✅ | 基于高德地图的国贸CBD真实路网重建。35个真实交叉口节点(7×5)，116条路段，坐标与AMap底图对齐。24条路段数据(前端/后端/SUMO三端一致)。 |
+| 7/06 | BUG-OSM-POLYLINE | ✅ | OSM路网Polyline双修复: (1) generate_segments去重: 相似路名(子串匹配)合并, 东三环+东三环中路+东三环北路合并为1条5213m路段；(2) _merge_named_edges贯穿修复: 投影+中心线平均(v7)取代中心点排序, 6m粒度合并平行车道点, 弯曲道路形状保留, 缺口500m跳过。验证: 全部50路段ratio<2.5, 9条主要道路span>1km, 无重复路名。 |
 
 ## 思考轨迹
 

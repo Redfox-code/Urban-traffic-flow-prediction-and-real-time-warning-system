@@ -1,122 +1,34 @@
-/** 北京国贸CBD区域路网坐标数据 — 基于高德地图真实道路
+/** 北京国贸CBD路网 — 高德交通态势API (GCJ-02)
  *
- * 坐标来源: 高德地图北京国贸CBD区域真实路口经纬度 (GCJ-02)
- * 范围: 约1.4km × 1.2km
- * 路网: 7条东西向 × 5条南北向道路 = 35个交叉口, 24条路段(12双向)
- *
- * 东西向道路 (从南到北):
- *   通惠河北路主路(39.9028), 通惠河北路辅路(39.9048),
- *   景辉街(39.9065), 建国路(39.9080), 景华街(39.9095),
- *   光华路(39.9113), 光华北路(39.9140)
- *
- * 南北向道路 (从西到东):
- *   东大桥路(116.4520), 金桐西路(116.4565),
- *   东三环中路(116.4615), 针织路(116.4650), 西大望路(116.4685)
+ * 数据来源: 高德地图 REST API /v3/traffic/status/rectangle
+ * 坐标系: GCJ-02，与高德底图完美对齐，无需转换
+ * 自动生成: algorithm/fetch_amap_network.py
  */
+import roadData from './roadNetwork.json'
 
-// 35个交叉口节点坐标 [lng, lat] — 与SUMO路网的real_network.nod.xml完全对应
-const N = {}
+const rawSegments = roadData.segments || []
 
-// R0: 通惠河北路主路 (39.9028)
-N['N00'] = [116.4520, 39.9028]
-N['N01'] = [116.4565, 39.9028]
-N['N02'] = [116.4615, 39.9028]
-N['N03'] = [116.4650, 39.9028]
-N['N04'] = [116.4685, 39.9028]
+export const ROAD_SEGMENTS = rawSegments.map(seg => ({
+  id: seg.id,
+  name: seg.name,
+  path: seg.path,  // GCJ-02，可直接用于AMap.Polyline
+  direction: seg.direction || '',
+  speed: seg.speed || 0,
+  status: seg.status || 0,
+  source: seg.source || 'amap',
+}))
 
-// R1: 通惠河北路辅路 (39.9048)
-N['N10'] = [116.4520, 39.9048]
-N['N11'] = [116.4565, 39.9048]
-N['N12'] = [116.4615, 39.9048]
-N['N13'] = [116.4650, 39.9048]
-N['N14'] = [116.4685, 39.9048]
+console.log(`[roadNetwork] ${ROAD_SEGMENTS.length} Amap roads loaded (GCJ-02)`)
 
-// R2: 景辉街 (39.9065)
-N['N20'] = [116.4520, 39.9065]
-N['N21'] = [116.4565, 39.9065]
-N['N22'] = [116.4615, 39.9065]
-N['N23'] = [116.4650, 39.9065]
-N['N24'] = [116.4685, 39.9065]
-
-// R3: 建国路 (39.9080, 主干道)
-N['N30'] = [116.4520, 39.9080]
-N['N31'] = [116.4565, 39.9080]
-N['N32'] = [116.4615, 39.9080]
-N['N33'] = [116.4650, 39.9080]
-N['N34'] = [116.4685, 39.9080]
-
-// R4: 景华街 (39.9095)
-N['N40'] = [116.4520, 39.9095]
-N['N41'] = [116.4565, 39.9095]
-N['N42'] = [116.4615, 39.9095]
-N['N43'] = [116.4650, 39.9095]
-N['N44'] = [116.4685, 39.9095]
-
-// R5: 光华路 (39.9113)
-N['N50'] = [116.4520, 39.9113]
-N['N51'] = [116.4565, 39.9113]
-N['N52'] = [116.4615, 39.9113]
-N['N53'] = [116.4650, 39.9113]
-N['N54'] = [116.4685, 39.9113]
-
-// R6: 光华北路 (39.9140)
-N['N60'] = [116.4520, 39.9140]
-N['N61'] = [116.4565, 39.9140]
-N['N62'] = [116.4615, 39.9140]
-N['N63'] = [116.4650, 39.9140]
-N['N64'] = [116.4685, 39.9140]
-
-/**
- * 24条路段定义: { id, name, path: [[lon,lat], ...], direction }
- * path: 经过真实交叉口的Polyline路径，与高德地图底图道路重合
- * 编号规则:
- *   1-14  东西向 (通惠河北路主路→光华北路, 双方向)
- *   15-24 南北向 (东大桥路→西大望路, 双方向)
- */
-export const ROAD_SEGMENTS = [
-  // ===== 东西向 (W→E) 1-7 =====
-  { id: 1,  name: '通惠河北路主路西向东',   path: [N['N00'], N['N01'], N['N02'], N['N03'], N['N04']], dir: 'E' },
-  { id: 2,  name: '通惠河北路辅路西向东',   path: [N['N10'], N['N11'], N['N12'], N['N13'], N['N14']], dir: 'E' },
-  { id: 3,  name: '景辉街西向东',           path: [N['N20'], N['N21'], N['N22'], N['N23'], N['N24']], dir: 'E' },
-  { id: 4,  name: '建国路西向东',           path: [N['N30'], N['N31'], N['N32'], N['N33'], N['N34']], dir: 'E' },
-  { id: 5,  name: '景华街西向东',           path: [N['N40'], N['N41'], N['N42'], N['N43'], N['N44']], dir: 'E' },
-  { id: 6,  name: '光华路西向东',           path: [N['N50'], N['N51'], N['N52'], N['N53'], N['N54']], dir: 'E' },
-  { id: 7,  name: '光华北路西向东',         path: [N['N60'], N['N61'], N['N62'], N['N63'], N['N64']], dir: 'E' },
-
-  // ===== 东西向 (E→W) 8-14 =====
-  { id: 8,  name: '通惠河北路主路东向西',   path: [N['N04'], N['N03'], N['N02'], N['N01'], N['N00']], dir: 'W' },
-  { id: 9,  name: '通惠河北路辅路东向西',   path: [N['N14'], N['N13'], N['N12'], N['N11'], N['N10']], dir: 'W' },
-  { id: 10, name: '景辉街东向西',           path: [N['N24'], N['N23'], N['N22'], N['N21'], N['N20']], dir: 'W' },
-  { id: 11, name: '建国路东向西',           path: [N['N34'], N['N33'], N['N32'], N['N31'], N['N30']], dir: 'W' },
-  { id: 12, name: '景华街东向西',           path: [N['N44'], N['N43'], N['N42'], N['N41'], N['N40']], dir: 'W' },
-  { id: 13, name: '光华路东向西',           path: [N['N54'], N['N53'], N['N52'], N['N51'], N['N50']], dir: 'W' },
-  { id: 14, name: '光华北路东向西',         path: [N['N64'], N['N63'], N['N62'], N['N61'], N['N60']], dir: 'W' },
-
-  // ===== 南北向 (S→N) 15-19 =====
-  { id: 15, name: '东大桥路南向北',         path: [N['N00'], N['N10'], N['N20'], N['N30'], N['N40'], N['N50'], N['N60']], dir: 'N' },
-  { id: 16, name: '金桐西路南向北',         path: [N['N01'], N['N11'], N['N21'], N['N31'], N['N41'], N['N51'], N['N61']], dir: 'N' },
-  { id: 17, name: '东三环中路南向北',       path: [N['N02'], N['N12'], N['N22'], N['N32'], N['N42'], N['N52'], N['N62']], dir: 'N' },
-  { id: 18, name: '针织路南向北',           path: [N['N03'], N['N13'], N['N23'], N['N33'], N['N43'], N['N53'], N['N63']], dir: 'N' },
-  { id: 19, name: '西大望路南向北',         path: [N['N04'], N['N14'], N['N24'], N['N34'], N['N44'], N['N54'], N['N64']], dir: 'N' },
-
-  // ===== 南北向 (N→S) 20-24 =====
-  { id: 20, name: '东大桥路北向南',         path: [N['N60'], N['N50'], N['N40'], N['N30'], N['N20'], N['N10'], N['N00']], dir: 'S' },
-  { id: 21, name: '金桐西路北向南',         path: [N['N61'], N['N51'], N['N41'], N['N31'], N['N21'], N['N11'], N['N01']], dir: 'S' },
-  { id: 22, name: '东三环中路北向南',       path: [N['N62'], N['N52'], N['N42'], N['N32'], N['N22'], N['N12'], N['N02']], dir: 'S' },
-  { id: 23, name: '针织路北向南',           path: [N['N63'], N['N53'], N['N43'], N['N33'], N['N23'], N['N13'], N['N03']], dir: 'S' },
-  { id: 24, name: '西大望路北向南',         path: [N['N64'], N['N54'], N['N44'], N['N34'], N['N24'], N['N14'], N['N04']], dir: 'S' },
-]
-
-/** 根据occupancy返回颜色 — 与TrafficBadge四级一致 */
+/** 根据occupancy返回颜色 */
 export function getCongestionColor(occupancy) {
-  if (occupancy == null || occupancy < 0) return '#444444'  // 无数据灰色
-  if (occupancy < 30) return '#52c41a'   // 畅通 绿
-  if (occupancy < 60) return '#fadb14'   // 缓行 黄
-  if (occupancy < 85) return '#fa8c16'   // 拥堵 橙
-  return '#f5222d'                        // 严重拥堵 红
+  if (occupancy == null || occupancy < 0) return '#444444'
+  if (occupancy < 30) return '#52c41a'
+  if (occupancy < 60) return '#fadb14'
+  if (occupancy < 85) return '#fa8c16'
+  return '#f5222d'
 }
 
-/** 根据occupancy返回线条宽度 */
 export function getCongestionWidth(occupancy) {
   if (occupancy == null) return 3
   if (occupancy < 30) return 4
@@ -125,8 +37,7 @@ export function getCongestionWidth(occupancy) {
   return 10
 }
 
-/** 根据occupancy返回透明度 */
 export function getCongestionOpacity(occupancy) {
   if (occupancy == null) return 0.3
-  return 0.6 + (occupancy / 100) * 0.35  // 0.6~0.95，越堵越明显
+  return 0.6 + (occupancy / 100) * 0.35
 }

@@ -587,6 +587,41 @@
 **影响**：
 - `backend/app/routes/sumo.py`新增~80行（3个辅助函数+调用点）
 - `algorithm/run_simulation_realtime.py`新增3行（PID写入+清理）
+
+### [决策] BUG-OSM-POLYLINE OSM路网Polyline双修复 — Agent-Lead (2026-07-06)
+
+**背景**：用户反馈OSM路网Polyline两个问题：(1)相同道路有重复路段 — 东三环/东三环中路/东三环北路在同一路网上出现3条独立条目；(2)路段没有贯穿整条道路 — 朝阳门外大街span=38m但路径914m(头尾重叠)。
+
+**根因分析**：
+
+问题1：相似路名(子串匹配)未被合并。东三环中路是东三环的子串，但原有`generate_segments()`按精确路名分组。
+
+问题2：`_merge_named_edges()`使用中心点排序+正向拼接。对于两端点近但中间曲折的路径（平行车道Z字形），排序错位导致头尾重叠。
+
+**修复方案**：
+
+| 组件 | 方法 | 说明 |
+|------|------|------|
+| `_build_similarity_groups()` | 图论连通分量 | name1 in name2或name2 in name1视为相似，BFS找连通分量 |
+| `_merge_named_edges()` v7 | 投影+中心线平均 | 所有点投影到道路主轴→6m内分组取平均(合并平行车道)→过滤近距离点→跳过500m缺口 |
+| `generate_segments()` | 先合并相似组再合并 | 相似路名edge组先合并为一个大组，再统一调用_merge_named_edges |
+
+**为何不选其他方案**：
+- 中心点排序(原版)：平行车道Z字形无法解决
+- 端点贪心连接(v4)：左右横跳更严重
+- 图论最长路径(v6)：网格路网中会找最长的Z字形路径
+- 粗粒度投影(v3前)：弯曲道路形状被压扁(朝阳路从3368m压到2点)
+
+**最终方案(v7)**：细粒度投影(按轴长度动态计算6m等价投影步长)+同投影位置取平均。平行车道(沿轴5-10m内)自动合并为中心线，弯曲道路(沿轴>6m)形状保留。
+
+**验证结果**：全部50路段ratio<2.5, 9条主要道路span>1km, 无重复路名。
+- 东三环中路: span=3563m (修复前14m), 18段合并
+- 朝阳门外大街: span=2299m (修复前38m), 17段合并
+- 建国门南大街: span=1183m ratio=2.2 (最弯道路, 合理)
+
+**影响**：
+- `algorithm/extract_network_coords.py`: `_merge_named_edges`完全重写, `generate_segments`重写, 新增`_build_similarity_groups`
+- `frontend/src/data/roadNetwork.json`: 重新生成(50段, 路名唯一)
 - `.gitignore`新增`.sim_pid`条目
 
 ### [决策] BUG-SUMO-PAUSE 暂停清理修复 — Agent-Lead (2026-07-05)

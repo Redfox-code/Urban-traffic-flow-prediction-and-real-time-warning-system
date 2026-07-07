@@ -13,6 +13,9 @@
           <el-button v-if="simStore.realtimePaused" size="small" type="success" @click="simStore.resumeRealtime()">▶ 继续</el-button>
           <el-button size="small" type="danger" @click="stopSim" :disabled="!simStore.realtimeRunning">⏹ 停止</el-button>
           <span v-if="simStore.realtimeRunning" style="font-size:12px;color:#00e676">🟢 运行中</span>
+          <el-tag size="small" :type="dataSource === 'db' ? 'success' : 'warning'" effect="dark">
+            {{ dataSource === 'db' ? '📡 仿真数据' : '🎲 模拟数据' }}
+          </el-tag>
           <span class="update-timer">数据更新于 {{ timer }}s 前</span>
         </div>
         <el-progress v-if="simStore.realtimeRunning" :percentage="simStore.progress" :stroke-width="4" style="margin-top:8px" :color="'#00d4ff'" />
@@ -33,6 +36,7 @@
       <el-card shadow="never" v-if="selectedSection">
         <template #header><span style="font-weight:bold;color:var(--accent-blue)">📊 {{ selectedSection.name }}</span></template>
         <div v-if="trafficData[selectedId]" class="realtime-data">
+          <div class="data-row"><span>数据来源</span><el-tag size="small" :type="trafficData[selectedId].source === 'db' ? 'success' : 'warning'" effect="dark">{{ trafficData[selectedId].source === 'db' ? '📡 仿真' : '🎲 模拟' }}</el-tag></div>
           <div class="data-row"><span>车流量</span><b class="val">{{ trafficData[selectedId].vehicle_count || '--' }} <small>veh</small></b></div>
           <div class="data-row"><span>平均速度</span><b class="val">{{ trafficData[selectedId].avg_speed || '--' }} <small>km/h</small></b></div>
           <div class="data-row"><span>占有率</span><b class="val">{{ trafficData[selectedId].occupancy || '--' }}<small>%</small></b></div>
@@ -59,6 +63,7 @@ const stopSim = () => simStore.stopRealtime()
 
 const sections = ref([]); const selectedId = ref(null); const selectedSection = ref(null)
 const trafficData = reactive({}); const flashes = reactive({})
+const dataSource = ref('mock')  // 'db'=仿真数据, 'mock'=模拟数据
 const timer = ref(0); const lastUpdate = ref(0); let timerInterval = null
 
 const loadAllTraffic = async () => {
@@ -72,6 +77,8 @@ const loadAllTraffic = async () => {
         }
         trafficData[d.section_id] = d
       })
+      // 取第一条数据的source字段判断数据来源
+      if (data.length > 0) dataSource.value = data[0].source || 'mock'
     }
     lastUpdate.value = Date.now(); timer.value = 0
   } catch {}

@@ -58,30 +58,36 @@ const loadAMapScript = () => {
   })
 }
 
-// ===== 绘制路网 =====
+// ===== Amap状态→颜色 =====
+const amapStatusColor = (status) => {
+  // 高德status: 0=未知 1=畅通 2=缓行 3=拥堵 4=严重拥堵
+  const map = { 1: '#52c41a', 2: '#fadb14', 3: '#fa8c16', 4: '#f5222d' }
+  return map[status] || '#4488aa'  // 未知用蓝色
+}
+
+// ===== 绘制路网 (用Amap实时路况作为初始颜色) =====
 const drawRoadNetwork = () => {
   if (!mapInstance.value) return
-  // 清除旧线
   polylines.value.forEach(p => mapInstance.value.remove(p))
   polylines.value = []
 
   ROAD_SEGMENTS.forEach(seg => {
+    // 用Amap返回的status作为初始颜色（已有实时路况数据）
+    const strokeColor = amapStatusColor(seg.status)
     const polyline = new AMap.Polyline({
       path: seg.path,
-      strokeColor: '#444444',    // 默认灰色
-      strokeWeight: 4,
-      strokeOpacity: 0.5,
+      strokeColor: strokeColor,
+      strokeWeight: 5,
+      strokeOpacity: 0.65,
       lineJoin: 'round',
       lineCap: 'round',
       zIndex: 10,
-      extData: { sectionId: seg.id, sectionName: seg.name },
+      extData: { sectionName: seg.name },
     })
-    // 点击事件
     polyline.on('click', (e) => {
-      const sid = e.target.getExtData().sectionId
       const sname = e.target.getExtData().sectionName
-      const td = trafficData.value[sid]
-      emit('section-click', { id: sid, name: sname, ...td })
+      const td = trafficData.value[sname]
+      emit('section-click', { id: seg.id, name: sname, speed: seg.speed, status: seg.status, ...td })
     })
     mapInstance.value.add(polyline)
     polylines.value.push(polyline)
@@ -92,8 +98,8 @@ const drawRoadNetwork = () => {
 const updateTrafficColors = () => {
   if (!mapInstance.value || polylines.value.length === 0) return
   polylines.value.forEach(p => {
-    const sid = p.getExtData().sectionId
-    const td = trafficData.value[sid]
+    const sname = p.getExtData().sectionName
+    const td = trafficData.value[sname]  // 按道路名匹配
     const occ = td?.occupancy
     p.setOptions({
       strokeColor: getCongestionColor(occ),
@@ -110,12 +116,16 @@ const fetchTrafficData = async () => {
     const items = res.data?.items || res?.items || res.data
     if (Array.isArray(items)) {
       const map = {}
-      items.forEach(item => { map[item.section_id] = item })
+      // 按道路名建立映射 (section_name → traffic_data)
+      items.forEach(item => {
+        const name = item.section_name || item.name || ''
+        if (name) map[name] = item
+      })
       trafficData.value = map
       updateTrafficColors()
     }
   } catch (e) {
-    // 静默失败，路况数据暂不可用
+    // 静默失败
   }
 }
 

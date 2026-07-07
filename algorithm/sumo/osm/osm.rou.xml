@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <vType id="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5.0" maxSpeed="60"/>
+    <vType id="bus" accel="1.5" decel="3.5" sigma="0.5" length="12.0" maxSpeed="40"/>
+    <flow id="flow_0" begin="0" end="3600" from="-11315378#5" to="-24476417#4" number="398" type="passenger"/>
+    <flow id="flow_1" begin="0" end="3600" from="-164913736#0" to="-298030843#2" number="423" type="passenger"/>
+    <flow id="flow_2" begin="0" end="3600" from="-173224958#0" to="-42372634#1" number="341" type="passenger"/>
+    <flow id="flow_3" begin="0" end="3600" from="-175598151#1" to="-42709595" number="519" type="passenger"/>
+    <flow id="flow_4" begin="0" end="3600" from="-186974826#5" to="-528599356" number="361" type="passenger"/>
+    <flow id="flow_5" begin="0" end="3600" from="-239092015#2" to="-59174469#2" number="387" type="passenger"/>
+    <flow id="flow_6" begin="0" end="3600" from="-24476184#5" to="-60121474#4" number="431" type="passenger"/>
+    <flow id="flow_7" begin="0" end="3600" from="-24476195#0" to="-60121477#1" number="486" type="passenger"/>
+    <flow id="flow_8" begin="0" end="3600" from="-24476195#4" to="-60121481#3" number="375" type="passenger"/>
+    <flow id="flow_9" begin="0" end="3600" from="-24476207#1" to="-63530615#6" number="719" type="passenger"/>
+    <flow id="flow_10" begin="0" end="3600" from="-24476417#4" to="-764431801" number="752" type="passenger"/>
+    <flow id="flow_11" begin="0" end="3600" from="-298030843#2" to="-962163762" number="592" type="passenger"/>
+    <flow id="flow_12" begin="0" end="3600" from="-42372634#1" to="-979800321#0" number="320" type="passenger"/>
+    <flow id="flow_13" begin="0" end="3600" from="-42709595" to="103255971#0" number="358" type="passenger"/>
+    <flow id="flow_14" begin="0" end="3600" from="-528599356" to="103255971#1" number="494" type="passenger"/>
+    <flow id="flow_15" begin="0" end="3600" from="-59174469#2" to="103255993#0" number="609" type="passenger"/>
+    <flow id="flow_16" begin="0" end="3600" from="-60121474#4" to="1037338908#1" number="365" type="passenger"/>
+    <flow id="flow_17" begin="0" end="3600" from="-60121477#1" to="104129571#0" number="576" type="passenger"/>
+    <flow id="flow_18" begin="0" end="3600" from="-60121481#3" to="104129571#1" number="720" type="passenger"/>
+    <flow id="flow_19" begin="0" end="3600" from="-63530615#6" to="104129622" number="379" type="passenger"/>
+</routes>

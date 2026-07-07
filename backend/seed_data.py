@@ -1,4 +1,5 @@
-"""数据库Seed脚本 — 预置24条路段(国贸CBD真实道路)+检测器"""
+"""数据库Seed脚本 — 从OSM路网数据生成路段(国贸CBD真实道路)"""
+import json, os, sys
 from app import create_app, db
 from app.models.user import User
 from app.models.traffic_section import TrafficSection
@@ -10,7 +11,7 @@ app = create_app()
 with app.app_context():
     db.create_all()
 
-    # 清除旧数据（从依赖表开始）
+    # 清除旧数据
     from app.models.traffic_detector import TrafficDetector
     from app.models.traffic_record import TrafficRecord
     from app.models.prediction_result import PredictionResult
@@ -21,106 +22,51 @@ with app.app_context():
     TrafficDetector.query.delete()
     TrafficSection.query.delete()
     db.session.commit()
-    print('已清除旧路段数据和检测器')
+    print('已清除旧数据')
 
     # 预置用户
     if not User.query.first():
         db.session.add(User(username='admin', password_hash=generate_password_hash('admin123'), role='admin'))
         db.session.add(User(username='analyst', password_hash=generate_password_hash('analyst123'), role='analyst'))
 
-    # 预置24条路段 — 北京国贸CBD区域真实道路
-    # 坐标基于高德地图(GCJ-02), 与frontend roadNetwork.js + SUMO路网一致
-    sections_data = [
-        # === 东西向 (W→E) 7条 ===
-        {'name': '通惠河北路主路西向东',   'capacity': 1200, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9028], 'end': [116.4685, 39.9028],
-                         'waypoints': [[116.4565, 39.9028], [116.4615, 39.9028], [116.4650, 39.9028]]}},
-        {'name': '通惠河北路辅路西向东',   'capacity': 1200, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9048], 'end': [116.4685, 39.9048],
-                         'waypoints': [[116.4565, 39.9048], [116.4615, 39.9048], [116.4650, 39.9048]]}},
-        {'name': '景辉街西向东',           'capacity': 1000, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9065], 'end': [116.4685, 39.9065],
-                         'waypoints': [[116.4565, 39.9065], [116.4615, 39.9065], [116.4650, 39.9065]]}},
-        {'name': '建国路西向东',           'capacity': 2000, 'length': 1.4, 'max_speed': 60,
-         'coordinates': {'start': [116.4520, 39.9080], 'end': [116.4685, 39.9080],
-                         'waypoints': [[116.4565, 39.9080], [116.4615, 39.9080], [116.4650, 39.9080]]}},
-        {'name': '景华街西向东',           'capacity': 1000, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9095], 'end': [116.4685, 39.9095],
-                         'waypoints': [[116.4565, 39.9095], [116.4615, 39.9095], [116.4650, 39.9095]]}},
-        {'name': '光华路西向东',           'capacity': 1200, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9113], 'end': [116.4685, 39.9113],
-                         'waypoints': [[116.4565, 39.9113], [116.4615, 39.9113], [116.4650, 39.9113]]}},
-        {'name': '光华北路西向东',         'capacity': 1000, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9140], 'end': [116.4685, 39.9140],
-                         'waypoints': [[116.4565, 39.9140], [116.4615, 39.9140], [116.4650, 39.9140]]}},
+    # 从OSM路网JSON加载路段数据
+    json_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'data', 'roadNetwork.json')
+    sections_data = []
 
-        # === 东西向 (E→W) 7条 ===
-        {'name': '通惠河北路主路东向西',   'capacity': 1200, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9028], 'end': [116.4520, 39.9028],
-                         'waypoints': [[116.4650, 39.9028], [116.4615, 39.9028], [116.4565, 39.9028]]}},
-        {'name': '通惠河北路辅路东向西',   'capacity': 1200, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9048], 'end': [116.4520, 39.9048],
-                         'waypoints': [[116.4650, 39.9048], [116.4615, 39.9048], [116.4565, 39.9048]]}},
-        {'name': '景辉街东向西',           'capacity': 1000, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9065], 'end': [116.4520, 39.9065],
-                         'waypoints': [[116.4650, 39.9065], [116.4615, 39.9065], [116.4565, 39.9065]]}},
-        {'name': '建国路东向西',           'capacity': 2000, 'length': 1.4, 'max_speed': 60,
-         'coordinates': {'start': [116.4685, 39.9080], 'end': [116.4520, 39.9080],
-                         'waypoints': [[116.4650, 39.9080], [116.4615, 39.9080], [116.4565, 39.9080]]}},
-        {'name': '景华街东向西',           'capacity': 1000, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9095], 'end': [116.4520, 39.9095],
-                         'waypoints': [[116.4650, 39.9095], [116.4615, 39.9095], [116.4565, 39.9095]]}},
-        {'name': '光华路东向西',           'capacity': 1200, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9113], 'end': [116.4520, 39.9113],
-                         'waypoints': [[116.4650, 39.9113], [116.4615, 39.9113], [116.4565, 39.9113]]}},
-        {'name': '光华北路东向西',         'capacity': 1000, 'length': 1.4, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9140], 'end': [116.4520, 39.9140],
-                         'waypoints': [[116.4650, 39.9140], [116.4615, 39.9140], [116.4565, 39.9140]]}},
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            road_data = json.load(f)
+        segments = road_data.get('segments', [])
+        print(f'[seed] 从OSM路网加载 {len(segments)} 条路段')
 
-        # === 南北向 (S→N) 5条 ===
-        {'name': '东大桥路南向北',         'capacity': 1000, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9028], 'end': [116.4520, 39.9140],
-                         'waypoints': [[116.4520, 39.9048], [116.4520, 39.9065], [116.4520, 39.9080],
-                                       [116.4520, 39.9095], [116.4520, 39.9113]]}},
-        {'name': '金桐西路南向北',         'capacity': 1000, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4565, 39.9028], 'end': [116.4565, 39.9140],
-                         'waypoints': [[116.4565, 39.9048], [116.4565, 39.9065], [116.4565, 39.9080],
-                                       [116.4565, 39.9095], [116.4565, 39.9113]]}},
-        {'name': '东三环中路南向北',       'capacity': 2000, 'length': 1.2, 'max_speed': 60,
-         'coordinates': {'start': [116.4615, 39.9028], 'end': [116.4615, 39.9140],
-                         'waypoints': [[116.4615, 39.9048], [116.4615, 39.9065], [116.4615, 39.9080],
-                                       [116.4615, 39.9095], [116.4615, 39.9113]]}},
-        {'name': '针织路南向北',           'capacity': 1000, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4650, 39.9028], 'end': [116.4650, 39.9140],
-                         'waypoints': [[116.4650, 39.9048], [116.4650, 39.9065], [116.4650, 39.9080],
-                                       [116.4650, 39.9095], [116.4650, 39.9113]]}},
-        {'name': '西大望路南向北',         'capacity': 1200, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9028], 'end': [116.4685, 39.9140],
-                         'waypoints': [[116.4685, 39.9048], [116.4685, 39.9065], [116.4685, 39.9080],
-                                       [116.4685, 39.9095], [116.4685, 39.9113]]}},
+        # 取前30条最长的路段（按长度降序已排好）
+        import_segments = segments[:30]
+        for seg in import_segments:
+            path = seg.get('path', [])
+            sections_data.append({
+                'name': seg['name'],
+                'capacity': 1200 if seg.get('length', 0) > 500 else 800,  # 长路段高容量
+                'length': round(seg.get('length', 200) / 1000, 2),  # 转为km
+                'max_speed': 60 if 'trunk' in str(seg.get('type', '')).lower() or
+                                   'motorway' in str(seg.get('type', '')).lower() else 40,
+                'coordinates': {
+                    'start': path[0] if len(path) > 0 else [0, 0],
+                    'end': path[-1] if len(path) > 1 else path[0] if path else [0, 0],
+                    'waypoints': path[1:-1] if len(path) > 2 else [],
+                },
+            })
+    else:
+        print('[seed] OSM路网JSON未找到，使用fallback路段')
 
-        # === 南北向 (N→S) 5条 ===
-        {'name': '东大桥路北向南',         'capacity': 1000, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4520, 39.9140], 'end': [116.4520, 39.9028],
-                         'waypoints': [[116.4520, 39.9113], [116.4520, 39.9095], [116.4520, 39.9080],
-                                       [116.4520, 39.9065], [116.4520, 39.9048]]}},
-        {'name': '金桐西路北向南',         'capacity': 1000, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4565, 39.9140], 'end': [116.4565, 39.9028],
-                         'waypoints': [[116.4565, 39.9113], [116.4565, 39.9095], [116.4565, 39.9080],
-                                       [116.4565, 39.9065], [116.4565, 39.9048]]}},
-        {'name': '东三环中路北向南',       'capacity': 2000, 'length': 1.2, 'max_speed': 60,
-         'coordinates': {'start': [116.4615, 39.9140], 'end': [116.4615, 39.9028],
-                         'waypoints': [[116.4615, 39.9113], [116.4615, 39.9095], [116.4615, 39.9080],
-                                       [116.4615, 39.9065], [116.4615, 39.9048]]}},
-        {'name': '针织路北向南',           'capacity': 1000, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4650, 39.9140], 'end': [116.4650, 39.9028],
-                         'waypoints': [[116.4650, 39.9113], [116.4650, 39.9095], [116.4650, 39.9080],
-                                       [116.4650, 39.9065], [116.4650, 39.9048]]}},
-        {'name': '西大望路北向南',         'capacity': 1200, 'length': 1.2, 'max_speed': 40,
-         'coordinates': {'start': [116.4685, 39.9140], 'end': [116.4685, 39.9028],
-                         'waypoints': [[116.4685, 39.9113], [116.4685, 39.9095], [116.4685, 39.9080],
-                                       [116.4685, 39.9065], [116.4685, 39.9048]]}},
-    ]
+    # 如果OSM数据不足以填充，添加fallback
+    if len(sections_data) < 10:
+        sections_data = [
+            {'name': '建国路', 'capacity': 2000, 'length': 1.4, 'max_speed': 60,
+             'coordinates': {'start': [116.452, 39.908], 'end': [116.469, 39.908], 'waypoints': []}},
+            {'name': '东三环中路', 'capacity': 2000, 'length': 1.2, 'max_speed': 60,
+             'coordinates': {'start': [116.462, 39.903], 'end': [116.462, 39.914], 'waypoints': []}},
+            # ... more fallbacks as needed
+        ]
 
     for sd in sections_data:
         if not TrafficSection.query.filter_by(name=sd['name']).first():

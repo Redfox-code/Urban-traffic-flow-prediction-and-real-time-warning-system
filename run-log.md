@@ -26,6 +26,12 @@
 | 7/06 | 🤖Lead | ✅ | curl验证: /predict/forecast(RF+KNN)返回using_trained_model:true |
 | 7/06 | 🤖Lead | ✅ | 模型保存: backend/saved_models/(knn_sklearn_latest.pkl 6.5MB + rf_sklearn_latest.pkl 9.3MB) |
 
+## OSM路网Polyline修复 (2026-07-06)
+
+| 时间 | 来源 | 类型 | 摘要 |
+|------|------|------|------|
+| 7/06 | 🤖Lead | ✅ | BUG-OSM-POLYLINE修复完成: (1) generate_segments相似路名合并(东三环+东三环中路+东三环北路→1条5213m); (2) _merge_named_edges投影+中心线平均(v7)替代中心点排序—平行车道合为中心线,弯曲道路形状保留,缺口500m跳过。验证:50路段ratio全部<2.5,9条主要道路span>1km,无重复路名。 |
+
 ## D3 概要设计 — 模块设计 (2026-07-01)
 
 | 时间 | 来源 | 类型 | 摘要 |

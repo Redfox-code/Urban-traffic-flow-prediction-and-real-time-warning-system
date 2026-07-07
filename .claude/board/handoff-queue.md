@@ -136,3 +136,9 @@
 | 7/06 | Algorithm → Lead | FEAT-PREDICTION-REAL: train_model.py用47,868条真实数据训练KNN+RF。模型保存于backend/saved_models/(knn_sklearn_latest.pkl + rf_sklearn_latest.pkl)。评估指标写入metrics.json |
 | 7/06 | Lead → FE-Main | FEAT-PREDICTION-REAL: prediction_service.py已使用真实模型(using_trained_model:true)。API契约不变。Accuracy端点返回真实评估指标 |
 | 7/06 | Lead → Test-Docs | FEAT-PREDICTION-REAL验证: RF MAE=6.16, R²=0.13。3个预测端点均返回using_trained_model=true |
+
+## BUG修复 — OSM路网Polyline (2026-07-06)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/06 | Lead → Algorithm | BUG-OSM-POLYLINE: extract_network_coords.py双修复。_merge_named_edges完全重写(投影+中心线平均v7), generate_segments重写(相似路名合并)。roadNetwork.json重新生成(50段无重复)。 |

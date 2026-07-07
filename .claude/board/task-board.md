@@ -11,6 +11,7 @@
 | FEAT-SIM-REWRITE | 实时仿真业务逻辑重写(去掉TraCI) | agent-lead |
 | FEAT-PREDICTION-REAL | 流量预测业务填充(真实模型+API) | agent-lead |
 | FEAT-REAL-NETWORK | 国贸CBD真实路网重建(SUMO+前端+后端三端对齐) | agent-lead |
+| BUG-OSM-POLYLINE | OSM路网Polyline双修复(去重+贯穿) | agent-lead |
 
 ## 📋 Backlog
 
