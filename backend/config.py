@@ -31,9 +31,16 @@ class TestConfig(Config):
 
 
 class ProdConfig(Config):
-    """生产环境"""
+    """生产环境（Docker）"""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'DATABASE_URL',
+        'sqlite:///dev.db'
+    )
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': {'check_same_thread': False},
+        'pool_pre_ping': True,
+    }
 
 
 config_map = {

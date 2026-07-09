@@ -86,4 +86,15 @@ def create_app(config_name=None):
         from app.models import warning_event, route_record, system_log
         db.create_all()
 
+    # 生产环境：serve 前端静态文件 + SPA fallback
+    from flask import send_from_directory
+    frontend_dist = os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'dist')
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        if path and os.path.exists(os.path.join(frontend_dist, path)):
+            return send_from_directory(frontend_dist, path)
+        return send_from_directory(frontend_dist, 'index.html')
+
     return app

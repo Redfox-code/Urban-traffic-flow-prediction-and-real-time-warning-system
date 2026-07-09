@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - VITE_AMAP_KEY=${VITE_AMAP_KEY:-a7e006e65af936c9e57abc52fff9b826}
+    volumes:
+      - ./backend/instance:/app/backend/instance
