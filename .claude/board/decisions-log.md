@@ -18,6 +18,27 @@
 - 坐标使用GCJ-02（高德坐标系），确保Polyline与AMap底图道路对齐
 - 保持24路段架构不变（7×2+5×2），section ID映射兼容
 - 保留旧网格路网作为fallback（city_network.net.xml）
+
+---
+
+### [决策] FEAT-REPLAY-MODE "启动实时仿真"切换为回放模式 — Agent-Lead
+
+**时间**：2026-07-08
+**背景**：前端Dashboard的"启动实时仿真"按钮目前启动sync_amap_traffic.py的--continuous模式，该模式每120秒调用一次高德API拉取实时路况。但高德API有调用次数限制（企业认证每日约30万次，个人更少），且连续频繁调用存在被封风险。同时仿真演示场景中更希望看到随时间变化的路况动态效果，而非静态的当前快照。
+**方案**：
+- 将`/run_realtime`从`--continuous --interval 120`改为`--replay --speed 30`
+- 回放模式从DB读取已有的历史高德数据批次，按时间顺序逐批将timestamp更新为当前时间，前端5秒轮询感知数据变化
+- replay()增强：每批写入进度百分比到.sim_progress（0-100）、心跳写入.sim_heartbeat、检查.stop_realtime停止信号和.pause_realtime暂停信号
+- 加速倍数30表示1秒回放30分钟数据，跨度为几小时的记录可在几十秒内完成回放
+- 保留--continuous模式代码，通过命令行参数手动调用
+**优点**：
+1. 零API调用成本，不受次数限制
+2. 路况数据随时间动态变化，演示效果更好
+3. 暂停/停止信号精确响应
+4. 前端进度条正常显示
+**注意事项**：
+- 需要确保DB中有足够的离线历史数据批次（至少2批）
+- 回放完成后数据保留在DB中，可重新启动再次回放
 **影响**：seed_data.py需要重新运行清除旧路段；run_simulation.py改为使用netconvert；前端地图中心调整到新区域中心[116.4603, 39.9084]
 **文件**：
 - 新建: algorithm/sumo/real_network.nod.xml (35节点)

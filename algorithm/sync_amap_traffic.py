@@ -11,6 +11,7 @@
 """
 import sys
 import os
+import time
 from datetime import datetime
 
 import requests
@@ -21,8 +22,15 @@ if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
 # ─── 高德API配置 ────────────────────────────────────────────────
-AMAP_KEY = 'a7e006e65af936c9e57abc52fff9b826'
+AMAP_KEY = 'ba84849ebaf1cbff13ee7c0afcd34984'
 RECTANGLE = '116.44,39.898;116.48,39.918'  # 国贸CBD区域 (左下经度,纬度;右上经度,纬度)
+
+# ─── 控制信号文件 ────────────────────────────────────────────
+ALGORITHM_DIR = os.path.dirname(os.path.abspath(__file__))
+STOP_FILE = os.path.join(ALGORITHM_DIR, '.stop_realtime')
+PAUSE_FILE = os.path.join(ALGORITHM_DIR, '.pause_realtime')
+PROGRESS_FILE = os.path.join(ALGORITHM_DIR, '.sim_progress')
+HEARTBEAT_FILE = os.path.join(ALGORITHM_DIR, '.sim_heartbeat')
 
 # 状态映射: 高德status → occupancy(%) + level
 STATUS_MAP = {
@@ -157,8 +165,41 @@ def sync():
             db.session.add(record)
             inserted_count += 1
 
-        # 4. 提交事务
+        # 4. 提交 traffic_records
         db.session.commit()
+
+        # 4.5. 生成预警 — 检查高占有率路段
+        from app.models.warning_event import WarningEvent
+        warning_count = 0
+        for road in roads:
+            name = road.get('name', '').strip()
+            if not name: continue
+            section = match_section(sections, name)
+            if not section: continue
+
+            status_code = int(road.get('status', 1))
+            occ_info = get_status_mapping(status_code)
+            occupancy = occ_info['occupancy']
+
+            if occupancy >= 85:
+                level = 'CRITICAL' if occupancy >= 95 else 'WARNING'
+                # 去重：同一路段+同一级别5分钟内不重复
+                recent = WarningEvent.query.filter_by(
+                    section_id=section.id, level=level, is_resolved=False
+                ).order_by(WarningEvent.created_at.desc()).first()
+                if recent and (now - recent.created_at).total_seconds() < 300:
+                    continue
+
+                msg = f'{section.name}: 占有率{occupancy}%, 速度{amap_speed}km/h — 高德实时路况'
+                db.session.add(WarningEvent(
+                    section_id=section.id, level=level,
+                    message=msg, trigger_flow=vehicle_count, threshold=85,
+                    is_resolved=False, created_at=now
+                ))
+                warning_count += 1
+        if warning_count:
+            db.session.commit()
+            print(f'[sync] 生成 {warning_count} 条预警')
 
         # 5. 打印同步结果
         print(f'[sync] 匹配结果: {matched_count} 条道路匹配成功')
@@ -179,6 +220,12 @@ def replay(speed=30):
     不调API。将每批记录的timestamp更新为当前时间，
     前端5秒刷新感知数据变化，模拟实时路况效果。
 
+    支持通过信号文件进行暂停/停止控制：
+    - STOP_FILE (.stop_realtime): 检测到立即退出
+    - PAUSE_FILE (.pause_realtime): 检测到进入等待循环，文件删除后继续
+    - PROGRESS_FILE (.sim_progress): 每批写入进度百分比(0-100)
+    - HEARTBEAT_FILE (.sim_heartbeat): 每批写入当前时间戳
+
     Args:
         speed: 加速倍数。speed=30表示1秒回放30分钟数据
     """
@@ -193,32 +240,106 @@ def replay(speed=30):
             .order_by(TrafficRecord.timestamp.asc())\
             .all()
         batches = [t[0] for t in timestamps]
-        print(f'[replay] 共 {len(batches)} 个时间批次')
+        total = len(batches)
+        print(f'[replay] 共 {total} 个时间批次')
 
-        if len(batches) < 2:
+        if total < 2:
             print('[replay] 数据不足，至少需要2个批次')
             return
 
         # 计算相邻批次的实际时间间隔
         batch_span = (batches[-1] - batches[0]).total_seconds()
         replay_seconds = batch_span / speed
-        batch_delay = replay_seconds / len(batches)
+        batch_delay = replay_seconds / total
         print(f'[replay] 实际跨度 {batch_span/60:.0f}分钟, '
               f'回放速度 ×{speed}, 预计 {replay_seconds:.0f}秒完成 '
               f'(每批{batch_delay:.1f}秒)')
 
+        # 初始化进度
+        try:
+            with open(PROGRESS_FILE, 'w') as f:
+                f.write('0')
+        except OSError as e:
+            print(f'[replay] 写入进度文件失败: {e}')
+
         for i, ts in enumerate(batches):
-            # 将该批次所有记录的timestamp更新为"现在"
+            # 1) 检查停止信号
+            if os.path.exists(STOP_FILE):
+                print(f'\n[replay] 收到停止信号，退出')
+                try:
+                    os.remove(STOP_FILE)
+                except OSError:
+                    pass
+                try:
+                    with open(PROGRESS_FILE, 'w') as f:
+                        f.write('0')
+                except OSError:
+                    pass
+                return
+
+            # 2) 检查暂停信号 — 循环等待直到继续或停止
+            while os.path.exists(PAUSE_FILE):
+                # 暂停期间也检查停止信号
+                if os.path.exists(STOP_FILE):
+                    print(f'\n[replay] 暂停中收到停止信号，退出')
+                    try:
+                        os.remove(STOP_FILE)
+                    except OSError:
+                        pass
+                    try:
+                        os.remove(PAUSE_FILE)  # 清理暂停文件
+                    except OSError:
+                        pass
+                    try:
+                        with open(PROGRESS_FILE, 'w') as f:
+                            f.write('0')
+                    except OSError:
+                        pass
+                    return
+                time.sleep(0.5)
+
+            # 3) 更新进度 (0-100)
+            progress_pct = int((i + 1) / total * 100)
+            try:
+                with open(PROGRESS_FILE, 'w') as f:
+                    f.write(str(progress_pct))
+            except OSError as e:
+                print(f'[replay] 写入进度文件失败: {e}')
+
+            # 4) 写入心跳
+            try:
+                with open(HEARTBEAT_FILE, 'w') as f:
+                    f.write(datetime.utcnow().isoformat())
+            except OSError:
+                pass
+
+            # 5) 将该批次所有记录的timestamp更新为"现在"
             now = datetime.utcnow()
             count = TrafficRecord.query.filter_by(timestamp=ts).update(
                 {'timestamp': now}, synchronize_session=False
             )
             db.session.commit()
-            print(f'\r[replay] {i+1}/{len(batches)} ts={ts.strftime("%H:%M")} '
-                  f'→ now ({count}条)', end='')
-            time.sleep(batch_delay)
+            print(f'\r[replay] {i+1}/{total} ts={ts.strftime("%H:%M")} '
+                  f'→ now ({count}条) [{progress_pct}%]', end='')
 
+            # 6) 等待期间也检测暂停/停止
+            for _ in range(max(1, int(batch_delay))):
+                if os.path.exists(STOP_FILE) or os.path.exists(PAUSE_FILE):
+                    break
+                time.sleep(1)
+            else:
+                # 没有提前中断，处理剩余小数部分
+                remaining = batch_delay - int(batch_delay)
+                if remaining > 0:
+                    time.sleep(remaining)
+
+        # 完成
         print(f'\n[replay] 回放完成')
+        try:
+            with open(PROGRESS_FILE, 'w') as f:
+                f.write('100')
+        except OSError:
+            pass
 
 
 if __name__ == '__main__':

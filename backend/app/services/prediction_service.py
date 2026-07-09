@@ -23,7 +23,7 @@ class PredictionService:
             cls._instance._feature_cols = [
                 'section_id', 'hour', 'day_of_week', 'is_weekend',
                 'avg_speed_lag_1', 'occupancy_lag_1',
-                'vehicle_count_lag_1', 'vehicle_count_lag_2', 'vehicle_count_lag_3'
+                'vehicle_count_lag_1'
             ]
             cls._instance._load_models()
         return cls._instance
@@ -200,9 +200,7 @@ class PredictionService:
                 # 多步预测：用预测值更新滞后特征
                 if i < n_points - 1:
                     new_feat = current_feat.copy()
-                    new_feat.iloc[0, 6] = pred_val   # vehicle_count_lag_1
-                    new_feat.iloc[0, 7] = current_feat.iloc[0, 6]  # vehicle_count_lag_2
-                    new_feat.iloc[0, 8] = current_feat.iloc[0, 7]  # vehicle_count_lag_3
+                    new_feat.iloc[0, 6] = pred_val  # vehicle_count_lag_1 (window=1)
                     current_feat = new_feat
 
             return {

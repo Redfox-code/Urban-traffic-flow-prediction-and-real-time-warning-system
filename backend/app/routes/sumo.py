@@ -129,11 +129,11 @@ def run_realtime():
     # 重置进度
     with open(PROGRESS_FILE, 'w') as f: f.write('0')
     try:
-        # 使用高德API持续同步模式（替代TraCI仿真）
+        # 回放模式：speed=5，约40秒完成，数据变化肉眼可见
         _realtime_process = subprocess.Popen(
-            [sys.executable, 'sync_amap_traffic.py', '--continuous', '--interval', '120'],
-            cwd=ALGORITHM_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真已启动'})
+            [sys.executable, '-u', 'sync_amap_traffic.py', '--replay', '--speed', '5'],
+            cwd=ALGORITHM_DIR, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真(回放模式)已启动'})
     except Exception as e:
         return jsonify({'code': 500, 'data': None, 'message': str(e)}), 500
 

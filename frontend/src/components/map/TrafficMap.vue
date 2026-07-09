@@ -33,6 +33,7 @@ import { trafficApi } from '@/api/traffic'
 const props = defineProps({
   sections: { type: Array, default: () => [] },
   mapHeight: { type: String, default: '500px' },
+  routePath: { type: Array, default: () => [] },  // 规划路径 [{name, path:[[lng,lat],...]}]
 })
 const emit = defineEmits(['section-click'])
 
@@ -51,7 +52,7 @@ const loadAMapScript = () => {
   return new Promise((resolve, reject) => {
     if (window.AMap) return resolve()
     const script = document.createElement('script')
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Polyline,AMap.InfoWindow`
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Polyline,AMap.InfoWindow,AMap.Marker`
     script.onload = resolve
     script.onerror = () => reject(new Error('高德地图加载失败'))
     document.head.appendChild(script)
@@ -158,6 +159,62 @@ onUnmounted(() => {
 // props.sections变化时重新获取路况
 watch(() => props.sections, () => {
   if (mapReady.value) fetchTrafficData()
+}, { deep: true })
+
+// ===== 高亮规划路线 =====
+let routePolyline = null
+let routeMarkers = []
+
+const clearRoute = () => {
+  if (routePolyline) { mapInstance.value?.remove(routePolyline); routePolyline = null }
+  routeMarkers.forEach(m => mapInstance.value?.remove(m))
+  routeMarkers = []
+}
+
+const highlightRoute = (segments) => {
+  if (!mapInstance.value || !segments.length) return
+  clearRoute()
+
+  // 收集所有路径坐标
+  const fullPath = []
+  segments.forEach(seg => {
+    if (seg.path) fullPath.push(...seg.path)
+  })
+
+  if (fullPath.length < 2) return
+
+  // 画高亮路线
+  routePolyline = new AMap.Polyline({
+    path: fullPath,
+    strokeColor: '#00d4ff',
+    strokeWeight: 8,
+    strokeOpacity: 0.9,
+    lineJoin: 'round',
+    lineCap: 'round',
+    zIndex: 100,  // 最上层
+    showDir: true,  // 显示方向箭头
+  })
+  mapInstance.value.add(routePolyline)
+
+  // 起终点标记
+  const start = fullPath[0], end = fullPath[fullPath.length - 1]
+  if (window.AMap?.Marker) {
+    const startM = new AMap.Marker({
+      position: start, content: '<div style="background:#00d4ff;color:#000;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:bold">起</div>', offset: new AMap.Pixel(-12, -12), zIndex: 101,
+    })
+    const endM = new AMap.Marker({
+      position: end, content: '<div style="background:#ff4d4f;color:#fff;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:bold">终</div>', offset: new AMap.Pixel(-12, -12), zIndex: 101,
+    })
+    mapInstance.value.add([startM, endM])
+    routeMarkers = [startM, endM]
+  }
+
+  // 自适应视野
+  mapInstance.value.setFitView([routePolyline])
+}
+
+watch(() => props.routePath, (val) => {
+  if (mapReady.value) highlightRoute(val)
 }, { deep: true })
 </script>
 

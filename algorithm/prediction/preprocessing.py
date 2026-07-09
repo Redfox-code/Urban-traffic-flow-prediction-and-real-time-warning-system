@@ -62,7 +62,7 @@ def load_traffic_data(db_uri=None, days=None):
         raise RuntimeError(f"无法加载流量数据: {e}")
 
 
-def create_lag_features(df, window=3):
+def create_lag_features(df, window=1):
     """为每个路段创建滞后特征
 
     Args:
@@ -92,7 +92,7 @@ def create_time_features(df):
     return df
 
 
-def build_features(df, window=3):
+def build_features(df, window=1):
     """完整特征工程管道
 
     Args:

@@ -51,7 +51,7 @@ def train_models(save_dir=None, days=None, horizon_minutes=5):
 
     # Step 2: 特征工程
     print(f"\n[2/5] 特征工程 (滞后窗口=3, 即{horizon_minutes*3}min)…")
-    X, y, df_feat = build_features(df, window=3)
+    X, y, df_feat = build_features(df, window=1)
     print(f"  特征矩阵: {X.shape}")
 
     # Step 3: 按时间划分训练/测试集

@@ -171,6 +171,12 @@
 | 7/02 | 🤖系统 | 🔧 | 追踪文件强制更新规则：三文件→四文件(含run-log) |
 | 7/02 | 🤖系统 | 🔧 | handoff-queue补全(D3-D13~50条)+decisions-log补全(+8条决策) |
 
+## 回放模式切换 — 2026-07-08
+
+| 时间 | 来源 | 类型 | 摘要 |
+|------|------|------|------|
+| 7/08 | 🤖Lead | ✅ | FEAT-REPLAY-MODE: "启动实时仿真"按钮切换为回放模式。sumo.py /run_realtime 改为 --replay --speed 30；sync_amap_traffic.py replay() 增加进度写入(.sim_progress)+暂停(.pause_realtime)/停止(.stop_realtime)信号检测+心跳写入(.sim_heartbeat)。验证: 两文件 py_compile 通过。 |
+
 ---
 
 ## 项目总结

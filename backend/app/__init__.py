@@ -14,6 +14,12 @@ _sync_process = None
 def _start_amap_sync():
     """后台启动高德数据同步（Flask启动时自动运行）"""
     global _sync_process
+    # 先杀掉旧进程，避免多个sync同时写DB
+    if _sync_process and _sync_process.poll() is None:
+        print('[AmapSync] 终止旧同步进程...')
+        _sync_process.terminate()
+        try: _sync_process.wait(timeout=3)
+        except: _sync_process.kill()
     sync_script = os.path.join(os.path.dirname(__file__), '..', '..', 'algorithm', 'sync_amap_traffic.py')
     if not os.path.exists(sync_script):
         print('[AmapSync] 同步脚本未找到，跳过')
@@ -41,12 +47,11 @@ def create_app(config_name=None):
     jwt.init_app(app)
     CORS(app)
 
-    # 后台启动高德数据同步（仅在Flask reloader子进程中启动一次，避免双进程冲突）
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or os.environ.get('FLASK_ENV') == 'production':
-        import time
-        time.sleep(3)  # 等Flask完全就绪后再启动同步
-        sync_thread = threading.Thread(target=_start_amap_sync, daemon=True)
-        sync_thread.start()
+    # 演示模式：不自动启动同步，由前端"启动实时仿真"按钮触发回放
+    # 如需恢复自动同步，取消下面注释：
+    # if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    #     sync_thread = threading.Thread(target=_start_amap_sync, daemon=True)
+    #     sync_thread.start()
 
     # 注册蓝图（Agent-Lead 负责的 5 个 Blueprint）
     from app.routes.auth import auth_bp

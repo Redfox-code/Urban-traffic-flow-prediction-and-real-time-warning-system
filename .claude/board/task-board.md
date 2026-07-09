@@ -28,6 +28,12 @@
 |----|------|-------|
 | FEAT-AMAP-RETRAIN | 高德API真实数据重新训练KNN+RF(463条,17路段) | agent-lead |
 
+## ✅ Done (2026-07-08)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| FEAT-REPLAY-MODE | 前端"启动实时仿真"按钮触发回放模式: sync_amap_traffic.py replay() 增强(进度+暂停/停止检测), sumo.py /run_realtime 改为 --replay | agent-lead |
+
 ## 📋 Backlog
 
 | ID | 任务 | 优先级 | Agent |
