@@ -129,9 +129,9 @@ def run_realtime():
     # 重置进度
     with open(PROGRESS_FILE, 'w') as f: f.write('0')
     try:
-        # 回放模式：speed=5，约40秒完成，数据变化肉眼可见
+        # 回放模式：speed=300，约12分钟完成，3秒/批肉眼可见
         _realtime_process = subprocess.Popen(
-            [sys.executable, '-u', 'sync_amap_traffic.py', '--replay', '--speed', '5'],
+            [sys.executable, '-u', 'sync_amap_traffic.py', '--replay', '--speed', '300'],
             cwd=ALGORITHM_DIR, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return jsonify({'code': 200, 'data': {'status': 'started'}, 'message': '实时仿真(回放模式)已启动'})
     except Exception as e:

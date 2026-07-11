@@ -1,16 +1,16 @@
 {
   "best_model": "KNN",
-  "training_date": "2026-07-08T13:39:07.283287",
-  "total_records": 5627,
-  "train_samples": 4474,
-  "test_samples": 1119,
+  "training_date": "2026-07-11T16:28:13.408903",
+  "total_records": 15426,
+  "train_samples": 12313,
+  "test_samples": 3079,
   "feature_count": 7,
-  "KNN_mae": 129.26,
-  "KNN_rmse": 163.44,
-  "KNN_mape": 56.58,
-  "KNN_r2": -0.471,
-  "RF_mae": 137.59,
-  "RF_rmse": 168.94,
-  "RF_mape": 63.79,
-  "RF_r2": -0.595
+  "KNN_mae": 158.29,
+  "KNN_rmse": 212.1,
+  "KNN_mape": 63.2,
+  "KNN_r2": -0.247,
+  "RF_mae": 162.52,
+  "RF_rmse": 215.53,
+  "RF_mape": 66.39,
+  "RF_r2": -0.307
 }
