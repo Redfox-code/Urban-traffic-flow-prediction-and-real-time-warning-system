@@ -10,6 +10,26 @@
 >
 > **每次输出时必须标明当前所处阶段**：`[阶段一 需求分析]` / `[阶段二 任务执行]` / `[阶段三 PR审核]` / `[阶段四 审查验收]` / `[阶段五 发布上线]`
 
+### 🚫 禁止自主改代码（最高优先级铁律）
+
+**在完成以下全部步骤之前，协调者（Claude）/ Agent-Lead 绝对不得直接修改任何代码文件：**
+
+1. ❌ **禁止未分析就动手** — 必须先读代码确认问题，写分析日志到 `agent-logs/agent-lead-log.md`
+2. ❌ **禁止未分配任务就动手** — 必须先在 `.claude/board/task-board.md` 创建任务，写清 ID/描述/Agent
+3. ❌ **禁止跨Agent领地** — Agent-Lead 只能改 `backend/`，不得改 `frontend/`（那是Agent-Frontend-Main/Map的领地）
+4. ❌ **禁止跳过Git Flow** — 必须先 `git checkout -b feature/{agent-name}/{task-id}`，不得在 dev 上直接 commit
+
+**违反任何一条 = 流程违规，必须立即停止，回溯补全所有步骤后才能继续。**
+
+**每个任务的标准路径**：
+```
+用户提出需求
+ → 阶段一：读代码 → 写分析日志 → task-board创建任务 → 分配Agent
+ → 阶段二：Agent从dev拉feature分支 → 编码 → 验证 → 写日志 → push → PR
+ → 阶段三：Agent-Lead审核PR → 全量测试 → --no-ff合并到dev
+ → 阶段四：Agent-Judge审查 → 等用户确认测试通过
+```
+
 ---
 
 ## 完整开发流程：从用户需求到代码上线
@@ -48,9 +68,10 @@ Agent被唤醒后:
     ├─ 2. 读 STATE.md + task-board.md 找自己的Todo任务
     ├─ 3. 检查依赖(BlockedBy) — 阻塞则等，非阻塞则开始
     │
-    ├─ 4. 从dev拉feature分支
+    ├─ 4. 从dev拉feature分支（必须新建分支！禁止在dev上直接修改！！！）
     │      git checkout dev && git pull origin dev
     │      git checkout -b feature/{agent-name}/{task-id}-{描述}
+    **铁律**：Agent在**拉取创建分支**之前，**不得**写任何代码。
     │
     ├─ 5. 编码开发（只改自己负责的目录）
     │      Agent-Lead:          backend/app/routes/ + services/ + models/
