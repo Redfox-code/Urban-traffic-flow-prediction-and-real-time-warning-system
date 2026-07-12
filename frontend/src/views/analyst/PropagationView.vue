@@ -41,7 +41,7 @@
           <template #header>
             <span>拥堵传播树</span>
             <span class="tree-stats" v-if="treeData">
-              节点: {{ treeData.total_nodes }} | 最大深度: {{ treeData.max_depth }} | 平均概率: {{ (treeData.avg_probability * 100).toFixed(1) }}%
+              节点: {{ treeData.total_nodes }} | 最大深度: {{ treeData.max_depth }}
             </span>
           </template>
           <div ref="treeChartRef" class="tree-chart" v-if="treeData"></div>
@@ -123,7 +123,7 @@ async function handleAnalyze() {
       min_probability: form.min_probability,
     })
     treeData.value = res.data || res
-    flatList.value = treeData.value?.flat_list || extractFlat(treeData.value?.tree)
+    flatList.value = treeData.value?.flat_list || extractFlat(treeData.value?.propagation_tree)
     await nextTick()
     renderTreeChart()
   } catch {
@@ -168,7 +168,7 @@ function renderTreeChart() {
   if (!treeChartRef.value || !treeData.value) return
   if (!treeChart) treeChart = echarts.init(treeChartRef.value)
 
-  const root = treeData.value.tree || treeData.value
+  const root = treeData.value.propagation_tree || treeData.value
   const treeRoot = buildEChartsTree(root)
 
   if (!treeRoot) return
