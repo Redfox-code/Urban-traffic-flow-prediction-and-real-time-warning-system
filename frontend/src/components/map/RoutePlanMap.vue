@@ -37,7 +37,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { Search, Location } from '@element-plus/icons-vue'
 
-const emit = defineEmits(['start-select', 'end-select', 'point-select', 'poi-select'])
+const emit = defineEmits(['start-select', 'end-select', 'point-select', 'poi-select', 'error', 'map-ready'])
 
 const props = defineProps({
   map: { type: Object, default: null },
@@ -89,8 +89,11 @@ const initMap = async () => {
     })
     mapReady.value = true
     bindEvents()
+    emit('map-ready')
   } catch (e) {
     console.warn('[RoutePlanMap] 地图加载失败:', e)
+    emit('error', e instanceof Error ? e.message : '地图加载失败')
+    emit('map-ready')
   }
 }
 
