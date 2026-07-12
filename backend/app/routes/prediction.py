@@ -43,3 +43,22 @@ def analysis():
     if 'error' in result:
         return jsonify({'code': result['code'], 'data': None, 'message': result['error']}), result['code']
     return jsonify({'code': 200, 'data': result, 'message': 'ok'})
+
+
+@prediction_bp.route('/evaluation', methods=['GET'])
+def evaluation():
+    """评估模型在当前采样数据上的表现
+
+    从 traffic_records 随机采样，用已加载的 KNN 和 RF 模型分别预测，
+    返回模型指标、逐条预测结果和 KNN vs RF 对比。
+
+    Query 参数:
+        sample_size (int): 采样条数，默认50，范围10-200
+    """
+    sample_size = request.args.get('sample_size', 50, type=int)
+    sample_size = max(10, min(200, sample_size))
+
+    result = service.evaluate(sample_size)
+    if 'error' in result:
+        return jsonify({'code': result.get('code', 500), 'data': None, 'message': result['error']}), result.get('code', 500)
+    return jsonify({'code': 200, 'data': result, 'message': 'ok'})
