@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { Search, Location } from '@element-plus/icons-vue'
 
 const emit = defineEmits(['start-select', 'end-select', 'point-select', 'poi-select'])
@@ -44,6 +44,7 @@ const props = defineProps({
   standalone: { type: Boolean, default: true }, // 独立模式（自带地图实例）
   height: { type: String, default: '400px' },
   mode: { type: String, default: 'start-end' }, // 'start-end' | 'single-point'
+  routeData: { type: Object, default: null }, // 路线数据 { path: [{lat, lng, name}, ...], routes: [...] }
 })
 
 const mapContainer = ref(null)
@@ -56,6 +57,8 @@ const showLongPressHint = ref(false)
 let gpsMarker = null
 let longPressTimer = null
 let selectedMarkers = []
+let routePolyline = null
+let routeMarkers = []
 
 const AMAP_KEY = import.meta.env.VITE_AMAP_KEY
 
@@ -189,18 +192,102 @@ const clearMarkers = () => {
   selectedMarkers.forEach(m => mapInstance.value?.remove(m))
   selectedMarkers = []
   if (gpsMarker) { mapInstance.value?.remove(gpsMarker); gpsMarker = null }
+  clearRoute()
 }
+
+// ---------- 路线渲染 ----------
+
+const clearRoute = () => {
+  if (routePolyline) {
+    mapInstance.value?.remove(routePolyline)
+    routePolyline = null
+  }
+  routeMarkers.forEach(m => mapInstance.value?.remove(m))
+  routeMarkers = []
+}
+
+const renderRoute = (data) => {
+  if (!mapInstance.value || !window.AMap || !data || !data.path || data.path.length < 2) return
+
+  clearRoute()
+
+  const path = data.path
+  const pathLngLats = path.map(p => [p.lng, p.lat])
+
+  // 绘制路径线
+  routePolyline = new AMap.Polyline({
+    path: pathLngLats,
+    strokeColor: '#1677ff',
+    strokeWeight: 6,
+    strokeStyle: 'solid',
+    strokeOpacity: 0.9,
+    lineJoin: 'round',
+    lineCap: 'round',
+    zIndex: 50,
+  })
+  mapInstance.value.add(routePolyline)
+
+  // 起点 — 蓝色标记
+  const start = path[0]
+  const startMarker = new AMap.Marker({
+    position: [start.lng, start.lat],
+    content: `<div class="rpm-route-start">起</div>`,
+    offset: new AMap.Pixel(-14, -14),
+    zIndex: 60,
+  })
+  mapInstance.value.add(startMarker)
+  routeMarkers.push(startMarker)
+
+  // 终点 — 红色标记
+  const end = path[path.length - 1]
+  const endMarker = new AMap.Marker({
+    position: [end.lng, end.lat],
+    content: `<div class="rpm-route-end">终</div>`,
+    offset: new AMap.Pixel(-14, -14),
+    zIndex: 60,
+  })
+  mapInstance.value.add(endMarker)
+  routeMarkers.push(endMarker)
+
+  // 途经点 — 小圆标记
+  if (path.length > 2) {
+    for (let i = 1; i < path.length - 1; i++) {
+      const wp = path[i]
+      const wpMarker = new AMap.Marker({
+        position: [wp.lng, wp.lat],
+        content: `<div class="rpm-route-waypoint"></div>`,
+        offset: new AMap.Pixel(-5, -5),
+        zIndex: 55,
+      })
+      mapInstance.value.add(wpMarker)
+      routeMarkers.push(wpMarker)
+    }
+  }
+
+  // 自动缩放至路线范围
+  mapInstance.value.setFitView(routeMarkers.concat(routePolyline), false, [60, 60, 60, 60])
+}
+
+// 监听 routeData 变化
+watch(() => props.routeData, (newVal) => {
+  if (newVal) {
+    renderRoute(newVal)
+  } else {
+    clearRoute()
+  }
+}, { deep: true, immediate: false })
 
 onMounted(initMap)
 
 onUnmounted(() => {
+  clearRoute()
   clearMarkers()
   if (props.standalone && mapInstance.value) {
     mapInstance.value.destroy()
   }
 })
 
-defineExpose({ locateMe, clearMarkers, selectPoint, mapInstance })
+defineExpose({ locateMe, clearMarkers, clearRoute, renderRoute, selectPoint, mapInstance })
 </script>
 
 <style scoped>
@@ -270,6 +357,28 @@ defineExpose({ locateMe, clearMarkers, selectPoint, mapInstance })
   animation: rpm-fade 2s ease-in-out;
 }
 .rpm-point-marker { font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+.rpm-route-start {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #1677ff, #0958d9);
+  color: #fff; font-size: 12px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,.6);
+  box-shadow: 0 2px 8px rgba(22,119,255,.5);
+}
+.rpm-route-end {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #ff4d4f, #cf1322);
+  color: #fff; font-size: 12px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,.6);
+  box-shadow: 0 2px 8px rgba(255,77,79,.5);
+}
+.rpm-route-waypoint {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #1677ff;
+  border: 2px solid rgba(255,255,255,.8);
+  box-shadow: 0 1px 4px rgba(22,119,255,.4);
+}
 @keyframes rpm-fade { 0% { opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 </style>
 
