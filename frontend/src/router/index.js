@@ -16,8 +16,7 @@ const routes = [
 
   // ===== 旧版布局（向后兼容） =====
   {
-    path: '/', component: () => import('@/layouts/MainLayout.vue'), meta: { requiresAuth: true },
-    redirect: '/',
+    path: '/legacy', component: () => import('@/layouts/MainLayout.vue'), meta: { requiresAuth: true },
     children: [
       { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '系统首页' } },
       { path: 'traffic', name: 'TrafficMonitor', component: () => import('@/views/TrafficMonitor.vue'), meta: { title: '实时路况' } },
