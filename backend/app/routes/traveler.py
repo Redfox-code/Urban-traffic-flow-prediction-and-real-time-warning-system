@@ -1,6 +1,7 @@
 """出行者API — /api/v1/traveler/* — Agent-Lead"""
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app import db
 from app.services.traveler_service import (
     get_user_profiles, save_route_profile, delete_route_profile, update_route_label,
     get_user_alerts, mark_alert_read, batch_mark_read, update_alert_settings,
@@ -155,3 +156,38 @@ def clear_history():
     user_id = int(get_jwt_identity())
     count = delete_route_history(user_id)
     return jsonify({'code': 200, 'data': {'deleted': count}, 'message': f'已清空{count}条记录'})
+
+
+# ========== 偏好设置 (Preferences) ==========
+
+@traveler_bp.route('/preferences', methods=['GET'])
+@jwt_required()
+def get_preferences():
+    """获取用户出行偏好。"""
+    import json
+    from app.models.user import User
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
+    try:
+        prefs = json.loads(user.preferences or '{}')
+    except (json.JSONDecodeError, TypeError):
+        prefs = {'defaultTime': '08:00', 'commuteAlert': True, 'alertBefore': 30}
+    return jsonify({'code': 200, 'data': {'preferences': prefs}, 'message': 'ok'})
+
+
+@traveler_bp.route('/preferences', methods=['PUT'])
+@jwt_required()
+def update_preferences():
+    """更新用户出行偏好。"""
+    import json
+    from app.models.user import User
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
+    data = request.get_json(silent=True) or {}
+    user.preferences = json.dumps(data.get('preferences', {}))
+    db.session.commit()
+    return jsonify({'code': 200, 'data': None, 'message': '偏好已保存'})
