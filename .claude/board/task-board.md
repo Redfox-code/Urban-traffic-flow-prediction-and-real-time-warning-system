@@ -116,18 +116,25 @@
 |----|------|-------|
 | ALGO-EVAL-01 | 新增评估数据API端点 GET /api/v1/predict/evaluation | agent-algorithm |
 
+## ✅ Done (2026-07-13) — 管理员平台
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| LEAD-STATS-01 | 增强 stats/dashboard 端点查询真实DB聚合数据（7项指标+24h趋势+日报） | agent-lead |
+| FE-API-01 | 创建 signal.js API模块（5方法） | agent-lead |
+| FE-API-02 | 创建 emergency.js API模块（5方法） | agent-lead |
+| FE-API-03 | warning.js 新增 getRules/updateRules 方法 | agent-lead |
+| FE-ADMIN-01 | DashboardView 实时监控大屏（6统计卡片+ECharts趋势+TOP10路况+30s轮询） | agent-lead |
+| FE-ADMIN-02 | WarningsView 预警管理（筛选+分页+批量解除+规则弹窗） | agent-lead |
+| FE-ADMIN-03 | SignalOptimizationView 信号优化（Webster计算+绿信比+历史+应用） | agent-lead |
+| FE-ADMIN-04 | EmergencyView 应急调度（规划表单+地图路线+调度记录CRUD+状态管理） | agent-frontend-main |
+| FE-ADMIN-05 | ReportsView 统计报表（ECharts四图：流量趋势+拥堵饼图+预警柱图+信号效果） | agent-frontend-main |
+
 ## 📋 Backlog
 
 | ID | 任务 | 优先级 | Agent | 备注 |
 |----|------|--------|-------|------|
 | D12-T01 | 演示视频录制 | P1 | agent-test-docs | |
-| FE-ADMIN-01~05 | 管理员5个页面填充真实内容 | P2 | agent-frontend-main | 后续 |
-
-## ✅ Done (2026-07-12) — Bug修复
-
-| ID | 任务 | Agent | 审查结果 |
-|----|------|-------|---------|
-| FEAT-PREDICTION-REAL | 预测真实模型(修正) — 移除硬编码MAE默认值(6.16/5.34)，统一从metrics.json动态读取；增强模型可靠性建议说明 | agent-lead | ✅ 已修复 (91/91测试通过) |
 
 ## 🔄 InProgress
 
