@@ -27,8 +27,9 @@
           <el-form-item label="当前周期(s)"><el-input-number v-model="calcForm.current_cycle" :min="30" :max="240" :step="5" /></el-form-item>
           <el-form-item label="相位数"><el-input-number v-model="calcForm.phase_count" :min="2" :max="6" :step="1" /></el-form-item>
           <el-form-item label="损失时间(s)"><el-input-number v-model="calcForm.lost_time" :min="1" :max="20" :step="0.5" :precision="1" /></el-form-item>
-          <el-form-item label="总流量(veh/h)"><el-input-number v-model="calcForm.total_flow" :min="100" :max="5000" :step="100" /></el-form-item>
-          <el-form-item label="饱和流量(veh/h)"><el-input-number v-model="calcForm.saturation_flow" :min="500" :max="3000" :step="100" /></el-form-item>
+          <el-form-item label="总流量(veh/h)"><el-input-number v-model="calcForm.total_flow" :min="100" :max="5000" :step="100" /><div class="form-hint">各相位流量之和，需 &lt; 饱和流量</div></el-form-item>
+          <el-form-item label="饱和流量(veh/h)"><el-input-number v-model="calcForm.saturation_flow" :min="500" :max="3000" :step="100" /><div class="form-hint">单车道最大通过能力，默认1800</div></el-form-item>
+          <div class="data-source-note">💡 优化数据来源：总流量来自所选路口的实时交通记录（TrafficRecord表），当前周期为假设值（120s）。平台未存储真实信号配时数据，结果仅供参考。</div>
           <el-form-item>
             <el-button type="primary" @click="doCalculate" :loading="calcLoading" style="width:100%">🧮 计算最优配时</el-button>
           </el-form-item>
@@ -112,7 +113,7 @@ const histLoading = ref(false)
 const signalStats = reactive({ total_optimizations: 0, applied_count: 0, average_efficiency_gain_pct: 0 })
 
 const calcForm = reactive({
-  intersection_name: '', current_cycle: 120, phase_count: 4, lost_time: 2, total_flow: 2000, saturation_flow: 1800,
+  intersection_name: '', current_cycle: 120, phase_count: 4, lost_time: 2, total_flow: 1200, saturation_flow: 1800,
 })
 
 async function fetchIntersections() {
@@ -176,4 +177,6 @@ onMounted(async () => { await Promise.all([fetchIntersections(), fetchStats(), f
 .split-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--text-secondary); }
 .split-bar { flex: 1; height: 8px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
 .split-fill { height: 100%; background: linear-gradient(90deg, #00d4ff, #4caf50); border-radius: 4px; transition: width .5s; }
+.form-hint { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.data-source-note { font-size: 12px; color: var(--text-secondary); background: rgba(0,212,255,.05); border-radius: 6px; padding: 8px 10px; line-height: 1.5; }
 </style>
