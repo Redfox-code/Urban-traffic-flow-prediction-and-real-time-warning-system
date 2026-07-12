@@ -21,7 +21,7 @@
         <el-form label-width="110px" size="default">
           <el-form-item label="路口名称">
             <el-select v-model="calcForm.intersection_name" placeholder="选择路口或手动输入" filterable allow-create style="width:100%">
-              <el-option v-for="it in intersections" :key="it.id" :label="it.name" :value="it.name" />
+              <el-option v-for="it in intersections" :key="it.intersection_id" :label="it.intersection_name" :value="it.intersection_name" />
             </el-select>
           </el-form-item>
           <el-form-item label="当前周期(s)"><el-input-number v-model="calcForm.current_cycle" :min="30" :max="240" :step="5" /></el-form-item>

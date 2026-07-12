@@ -13,26 +13,36 @@
               <el-option label="🚓 警车" value="police" />
             </el-select>
           </el-form-item>
-          <div class="coord-section">
-            <div class="coord-header">起点坐标</div>
-            <el-form-item label="纬度">
-              <el-input-number v-model="planForm.origin.lat" :min="-90" :max="90" :step="0.0001" :precision="6" controls-position="right" style="width:100%" />
-            </el-form-item>
-            <el-form-item label="经度">
-              <el-input-number v-model="planForm.origin.lng" :min="-180" :max="180" :step="0.0001" :precision="6" controls-position="right" style="width:100%" />
-            </el-form-item>
+          <!-- 起点选择 -->
+          <div class="coord-section" :class="{ 'coord-picking': pickingOrigin }">
+            <div class="coord-header">
+              🟢 起点
+              <el-button size="small" text :type="pickingOrigin ? 'warning' : 'primary'" @click="startPick('origin')" style="margin-left:8px">
+                {{ pickingOrigin ? '⏳ 请点击地图...' : '📍 从地图选择' }}
+              </el-button>
+            </div>
+            <div class="coord-display" v-if="planForm.origin.lat != null">
+              <span class="coord-val">{{ planForm.origin.lat.toFixed(6) }}, {{ planForm.origin.lng.toFixed(6) }}</span>
+              <el-button text size="small" type="danger" @click="clearPoint('origin')">✕</el-button>
+            </div>
+            <div class="coord-empty" v-else>点击「从地图选择」后在地图上点击起点位置</div>
           </div>
-          <div class="coord-section">
-            <div class="coord-header">终点坐标</div>
-            <el-form-item label="纬度">
-              <el-input-number v-model="planForm.destination.lat" :min="-90" :max="90" :step="0.0001" :precision="6" controls-position="right" style="width:100%" />
-            </el-form-item>
-            <el-form-item label="经度">
-              <el-input-number v-model="planForm.destination.lng" :min="-180" :max="180" :step="0.0001" :precision="6" controls-position="right" style="width:100%" />
-            </el-form-item>
+          <!-- 终点选择 -->
+          <div class="coord-section" :class="{ 'coord-picking': pickingDest }">
+            <div class="coord-header">
+              🔴 终点
+              <el-button size="small" text :type="pickingDest ? 'warning' : 'danger'" @click="startPick('dest')" style="margin-left:8px">
+                {{ pickingDest ? '⏳ 请点击地图...' : '📍 从地图选择' }}
+              </el-button>
+            </div>
+            <div class="coord-display" v-if="planForm.destination.lat != null">
+              <span class="coord-val">{{ planForm.destination.lat.toFixed(6) }}, {{ planForm.destination.lng.toFixed(6) }}</span>
+              <el-button text size="small" type="danger" @click="clearPoint('dest')">✕</el-button>
+            </div>
+            <div class="coord-empty" v-else>点击「从地图选择」后在地图上点击终点位置</div>
           </div>
           <el-form-item>
-            <el-button type="primary" @click="doPlan" :loading="planLoading" style="width:100%">
+            <el-button type="primary" @click="doPlan" :loading="planLoading" :disabled="!canPlan" style="width:100%">
               🗺️ 规划最优路径
             </el-button>
           </el-form-item>
@@ -120,7 +130,7 @@
 
     <!-- 右列：地图 -->
     <div class="ev-right">
-      <TrafficMap :routePath="routePath" mapHeight="calc(100vh - 88px)" />
+      <TrafficMap :routePath="routePath" mapHeight="calc(100vh - 88px)" @map-click="onMapClick" />
     </div>
   </div>
 </template>
@@ -134,19 +144,53 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 // ===== 表单数据 =====
 const planForm = reactive({
   vehicle_type: 'ambulance',
-  origin: { lat: 39.9084, lng: 116.4603 },
-  destination: { lat: 39.9158, lng: 116.4710 },
+  origin: { lat: null, lng: null },
+  destination: { lat: null, lng: null },
 })
 
 const planLoading = ref(false)
 const planResult = ref(null)
 const createLoading = ref(false)
 
+// 地图选点状态
+const pickingOrigin = ref(false)
+const pickingDest = ref(false)
+
+// 是否可规划
+const canPlan = computed(() => {
+  return planForm.origin.lat != null && planForm.origin.lng != null &&
+         planForm.destination.lat != null && planForm.destination.lng != null
+})
+
 // 地图路线路径
 const routePath = computed(() => {
   if (!planResult.value?.route) return []
   return planResult.value.route
 })
+
+// ===== 地图点击选点 =====
+function startPick(type) {
+  if (type === 'origin') { pickingOrigin.value = true; pickingDest.value = false }
+  else { pickingDest.value = true; pickingOrigin.value = false }
+}
+
+function onMapClick(coord) {
+  if (!coord || coord.lat == null || coord.lng == null) return
+  if (pickingOrigin.value) {
+    planForm.origin.lat = coord.lat
+    planForm.origin.lng = coord.lng
+    pickingOrigin.value = false
+  } else if (pickingDest.value) {
+    planForm.destination.lat = coord.lat
+    planForm.destination.lng = coord.lng
+    pickingDest.value = false
+  }
+}
+
+function clearPoint(type) {
+  if (type === 'origin') { planForm.origin.lat = null; planForm.origin.lng = null }
+  else { planForm.destination.lat = null; planForm.destination.lng = null }
+}
 
 // ===== 调度记录 =====
 const records = ref([])
@@ -182,15 +226,12 @@ async function doCreateRecord() {
   try {
     await emergencyApi.createRecord({
       vehicle_type: planForm.vehicle_type,
-      origin_lat: planForm.origin.lat,
-      origin_lng: planForm.origin.lng,
-      dest_lat: planForm.destination.lat,
-      dest_lng: planForm.destination.lng,
+      origin: { lat: planForm.origin.lat, lng: planForm.origin.lng },
+      destination: { lat: planForm.destination.lat, lng: planForm.destination.lng },
       est_travel_time_sec: planResult.value.est_travel_time_sec,
       normal_travel_time_sec: planResult.value.normal_travel_time_sec,
-      time_saved_pct: planResult.value.time_saved_pct,
-      green_wave: planResult.value.green_wave,
-      route_data: planResult.value.route,
+      route: planResult.value.route || [],
+      green_wave: planResult.value.green_wave || [],
     })
     ElMessage.success('调度记录已创建')
     planResult.value = null
@@ -311,14 +352,30 @@ onMounted(() => {
 .coord-section {
   background: rgba(255,255,255,.02);
   border-radius: 8px;
-  padding: 8px 0;
+  padding: 10px 12px;
   margin-bottom: 4px;
+  transition: border-color .2s, background .2s;
+}
+.coord-section.coord-picking {
+  background: rgba(255,152,0,.08);
+  border: 1px solid rgba(255,152,0,.3);
 }
 .coord-header {
   font-size: 12px;
   color: var(--text-secondary);
-  padding: 0 0 4px 8px;
+  padding-bottom: 4px;
   font-weight: 500;
+  display: flex; align-items: center;
+}
+.coord-display {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px; color: var(--accent-blue); font-family: monospace;
+  padding: 4px 0;
+}
+.coord-val { font-weight: 500; }
+.coord-empty {
+  font-size: 12px; color: var(--text-secondary);
+  padding: 6px 0; font-style: italic;
 }
 
 /* 规划结果 */

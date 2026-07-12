@@ -35,7 +35,7 @@ const props = defineProps({
   mapHeight: { type: String, default: '500px' },
   routePath: { type: Array, default: () => [] },  // 规划路径 [{name, path:[[lng,lat],...]}]
 })
-const emit = defineEmits(['section-click'])
+const emit = defineEmits(['section-click', 'map-click'])
 
 const mapContainer = ref(null)
 const mapInstance = ref(null)
@@ -139,6 +139,10 @@ onMounted(async () => {
       center: [116.4603, 39.9084],  // 国贸CBD真实路网中心 (东大桥路~西大望路 / 通惠河~光华北路)
       mapStyle: 'amap://styles/darkblue',
       resizeEnable: true,
+    })
+    // 地图点击事件 — 用于应急调度等场景的地图选点
+    mapInstance.value.on('click', (e) => {
+      emit('map-click', { lng: e.lnglat.getLng(), lat: e.lnglat.getLat() })
     })
     mapReady.value = true
     drawRoadNetwork()
