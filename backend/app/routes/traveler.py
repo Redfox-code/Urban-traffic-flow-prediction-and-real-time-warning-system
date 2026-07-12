@@ -158,23 +158,36 @@ def clear_history():
     return jsonify({'code': 200, 'data': {'deleted': count}, 'message': f'已清空{count}条记录'})
 
 
+# ========== 偏好设置 (Preferences) ==========
+
 @traveler_bp.route('/preferences', methods=['GET'])
 @jwt_required()
 def get_preferences():
-    import json; from app.models.user import User
-    user = User.query.get(int(get_jwt_identity()))
-    if not user: return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
-    try: prefs = json.loads(user.preferences or '{}')
-    except: prefs = {'defaultTime': '08:00', 'commuteAlert': True, 'alertBefore': 30}
+    """获取用户出行偏好。"""
+    import json
+    from app.models.user import User
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
+    try:
+        prefs = json.loads(user.preferences or '{}')
+    except (json.JSONDecodeError, TypeError):
+        prefs = {'defaultTime': '08:00', 'commuteAlert': True, 'alertBefore': 30}
     return jsonify({'code': 200, 'data': {'preferences': prefs}, 'message': 'ok'})
 
 
 @traveler_bp.route('/preferences', methods=['PUT'])
 @jwt_required()
 def update_preferences():
-    import json; from app.models.user import User
-    user = User.query.get(int(get_jwt_identity()))
-    if not user: return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
-    user.preferences = json.dumps((request.get_json(silent=True) or {}).get('preferences', {}))
+    """更新用户出行偏好。"""
+    import json
+    from app.models.user import User
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
+    data = request.get_json(silent=True) or {}
+    user.preferences = json.dumps(data.get('preferences', {}))
     db.session.commit()
     return jsonify({'code': 200, 'data': None, 'message': '偏好已保存'})

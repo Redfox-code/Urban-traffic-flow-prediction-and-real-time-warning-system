@@ -26,7 +26,9 @@ export const travelerApi = {
   updateAlertSettings: (data) => request.put('/traveler/alerts/settings', data),
 
   // ===== 偏好 =====
+  /** 获取出行偏好 */
   getPreferences: () => request.get('/traveler/preferences'),
+  /** 更新出行偏好 */
   updatePreferences: (data) => request.put('/traveler/preferences', data),
 
   // ===== 历史 =====
