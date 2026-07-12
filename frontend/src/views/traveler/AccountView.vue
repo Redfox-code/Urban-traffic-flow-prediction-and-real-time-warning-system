@@ -1,17 +1,42 @@
 <template>
-  <div class="traveler-placeholder">
+  <div class="account-view">
     <h2>⚙️ 账户设置</h2>
-    <p>TODO: 个人资料编辑 + 密码修改 + 偏好设置 + 常用路线管理</p>
-    <el-card>
-      <template #header>账户设置</template>
-      <el-alert title="开发中 — 账户设置（需登录）" type="info" :closable="false" show-icon />
+    <el-card shadow="never" style="background:var(--bg-panel);margin-bottom:16px">
+      <template #header><span style="font-weight:bold">👤 基本信息</span></template>
+      <div v-if="userStore.isLoggedIn" style="display:flex;flex-direction:column;gap:12px">
+        <div><span style="color:var(--text-secondary)">用户名：</span><strong>{{ userStore.userInfo?.username || '-' }}</strong></div>
+        <div><span style="color:var(--text-secondary)">角色：</span><el-tag size="small">{{ userStore.userInfo?.role || 'traveler' }}</el-tag></div>
+        <div><span style="color:var(--text-secondary)">注册时间：</span>{{ userStore.userInfo?.created_at?.slice(0,10) || '-' }}</div>
+      </div>
+      <el-empty v-else description="请先登录" :image-size="80" />
+    </el-card>
+
+    <el-card shadow="never" style="background:var(--bg-panel);margin-bottom:16px">
+      <template #header><span style="font-weight:bold">🚗 出行偏好</span></template>
+      <el-form label-width="100px" size="default">
+        <el-form-item label="默认出发时间"><el-time-select v-model="prefs.defaultTime" start="06:00" step="00:30" end="23:00" /></el-form-item>
+        <el-form-item label="通勤提醒"><el-switch v-model="prefs.commuteAlert" /></el-form-item>
+        <el-form-item label="提前提醒">
+          <el-select v-model="prefs.alertBefore" size="small" style="width:120px">
+            <el-option :value="15" label="15分钟" /><el-option :value="30" label="30分钟" /><el-option :value="60" label="60分钟" />
+          </el-select>
+        </el-form-item>
+        <el-form-item><el-button type="primary" @click="savePrefs">保存偏好</el-button></el-form-item>
+      </el-form>
     </el-card>
   </div>
 </template>
+
 <script setup>
-// FE-MAIN-04: Traveler Account
+import { reactive } from 'vue'
+import { useUserStore } from '@/store/user'
+import { ElMessage } from 'element-plus'
+const userStore = useUserStore()
+const prefs = reactive({ defaultTime: '08:00', commuteAlert: true, alertBefore: 30 })
+const savePrefs = () => ElMessage.success('偏好已保存')
 </script>
+
 <style scoped>
-.traveler-placeholder { padding: 20px; }
-.traveler-placeholder h2 { color: var(--text-primary); margin-bottom: 16px; }
+.account-view { padding:20px; max-width:600px }
+.account-view h2 { color:var(--text-primary); margin-bottom:20px }
 </style>

@@ -121,7 +121,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { routeApi } from '@/api/routePlan'
 import { sectionsApi } from '@/api/sections'
 import { travelerApi } from '@/api/traveler'
@@ -130,6 +130,7 @@ import { ElMessage } from 'element-plus'
 import TrafficMap from '@/components/map/TrafficMap.vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 const sections = ref([])
@@ -148,6 +149,15 @@ onMounted(async () => {
     sections.value = res.data?.items || res?.items || []
   } catch (e) {
     console.warn('加载路段列表失败', e)
+  }
+  // 从MyTrips跳转过来时预填起终点
+  const q = route.query
+  if (q.origin_name && q.dest_name) {
+    const o = sections.value.find(s => s.name === q.origin_name)
+    const d = sections.value.find(s => s.name === q.dest_name)
+    if (o) origin.value = o.id
+    if (d) dest.value = d.id
+    if (o && d) setTimeout(() => planRoute(), 300)
   }
 })
 
