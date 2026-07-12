@@ -115,3 +115,39 @@
 **决策**：全部6个算法模块使用纯Python实现，不依赖外部仿真引擎，可直接独立运行测试。平均每个模块200+行代码+完整测试用例。
 
 **验证结果**：6个模块全部独立测试通过。
+
+### ALGO-EVAL-01 评估数据API端点 (2026-07-13)
+
+**任务**：新增 `GET /api/v1/predict/evaluation` 端点，从 traffic_records 随机采样并用当前 KNN/RF 模型评估。
+
+**修改文件**：
+- `backend/app/services/prediction_service.py` — 新增 `evaluate()` 方法（131行）
+- `backend/app/routes/prediction.py` — 新增 `/evaluation` 路由
+
+**功能实现**：
+1. 从 traffic_records 随机采样 50-100 条数据（默认50，支持 `?sample_size=`）
+2. 对每条数据构建特征向量（用前序记录作为滞后特征来源），分别用 KNN 和 RF 预测
+3. 从 metrics.json 读取历史模型指标（MAE/RMSE/R²）
+4. 在采样集上实时计算 KNN vs RF 对比指标
+5. 不依赖 JWT，便于算法评估测试
+
+**返回格式**：
+```json
+{
+  "code": 200,
+  "data": {
+    "models": {"KNN": {mae, rmse, r2}, "RF": {mae, rmse, r2}},
+    "comparison": [{metric, knn, rf}, ...],
+    "predictions": [{actual, knn_pred, rf_pred}, ...],
+    "sample_count": 50
+  }
+}
+```
+
+**验证结果**：
+- `curl http://127.0.0.1:5001/api/v1/predict/evaluation` → 200 OK（50条）
+- `curl http://127.0.0.1:5001/api/v1/predict/evaluation?sample_size=10` → 200 OK（10条）
+- 模型指标正确读取 metrics.json，对比指标在样本集实时计算
+
+**分支**：`feature/agent-algorithm/ALGO-EVAL-01`
+**PR**：https://github.com/Redfox-code/Urban-traffic-flow-prediction-and-real-time-warning-system/pull/new/feature/agent-algorithm/ALGO-EVAL-01

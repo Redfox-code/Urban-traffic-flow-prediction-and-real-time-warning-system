@@ -184,3 +184,22 @@
 ### UI-04 TrafficMonitor重写
 **问题**：页面仍是D6骨架「TODO D8: 地图组件 + 实时数据面板」。
 **修复**：左地图+右数据面板双栏布局。24路段列表可滚动点击。TrafficBadge组件(畅通🟢/缓行🟡/拥堵🟠/严重🔴)。选中路段调trafficApi.getCurrent()显示实时数据。
+### FE-MODEL-CHART 模型评估可视化图表 (2026-07-13)
+
+**任务接收**：给 ModelsView 增加模型评估可视化图表
+
+**分析**：
+- 需要在现有指标卡片下方增加2个ECharts图表
+- API未就绪(GET /predict/evaluation不存在)，用硬编码默认数据
+- 需要ScatterChart + MarkLineComponent组件
+
+**实现**：
+1. frontend/src/api/prediction.js — 新增 getEvaluation() 方法
+2. frontend/src/views/analyst/ModelsView.vue：
+   - KNN vs RF 对比柱状图：MAE / RMSE / R2 三组对比
+   - 预测值 vs 实际值散点图：KNN红点、RF蓝点，对角线y=x参考线
+   - 硬编码默认数据回退
+
+**验证**：npx vite build -> 2298 modules, 0 errors
+
+**交付**：分支 feature/agent-frontend-main/FE-MODEL-CHART

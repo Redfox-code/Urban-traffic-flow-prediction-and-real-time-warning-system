@@ -83,6 +83,12 @@
 
 | FE-MAP-ROUTE | RoutePlanMap 路线渲染(routeData prop + Polyline + 起终点/途经点标记 + setFitView) | agent-frontend-map |
 
+## ✅ Done (2026-07-13)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| FE-MODEL-CHART | ModelsView增加模型评估可视化图表（KNN vs RF柱状图 + 预测vs实际散点图） | agent-frontend-main |
+
 ## 🔄 InProgress
 
 （空）
@@ -103,6 +109,12 @@
 | FE-TRAVELER-02 | 我的出行页(MyTripsView): 路线卡片网格+路况指示条30s轮询+ECharts时段分布 | agent-frontend-main |
 | FE-TRAVELER-03 | 出行提醒页(AlertsView): 通勤开关+无限滚动+类型徽标+未读蓝色竖线标记已读 | agent-frontend-main |
 | FE-TRAVELER-04 | 历史记录页(HistoryView): 查询列表+重新加载+单条删除+清空全部 | agent-frontend-main |
+
+## ✅ Done (2026-07-13)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| ALGO-EVAL-01 | 新增评估数据API端点 GET /api/v1/predict/evaluation | agent-algorithm |
 
 ## 📋 Backlog
 
