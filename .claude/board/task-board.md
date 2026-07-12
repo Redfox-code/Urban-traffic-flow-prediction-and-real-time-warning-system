@@ -81,11 +81,24 @@
 | FEAT-SIM-REWRITE | 实时仿真重写 | agent-lead | ✅ APPROVED |
 | FEAT-ANALYSIS-REPORT | 预测分析报告模块 | agent-lead | ✅ APPROVED |
 
+## 🔄 InProgress
+
+（空）
+
+## ✅ Done (2026-07-12)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| FIX-LOGIN-01 | 登录页+注册页增加角色选择下拉框，按角色跳转首页 | agent-lead |
+| FE-ANALYST-01~05 | 分析员5个页面填充真实内容(模型管理/拥堵传播/碳排放/数据探索/场景仿真) — 对接后端API+ECharts | agent-frontend-main |
+
 ## 📋 Backlog
 
 | ID | 任务 | 优先级 | Agent | 备注 |
 |----|------|--------|-------|------|
 | D12-T01 | 演示视频录制 | P1 | agent-test-docs | |
+| FE-ADMIN-01~05 | 管理员5个页面填充真实内容 | P2 | agent-frontend-main | 后续 |
+| FE-TRAVELER-01~04 | 出行者4个页面填充真实内容 | P2 | agent-frontend-main | 后续 |
 
 ## ✅ Done (2026-07-12) — Bug修复
 

@@ -23,6 +23,32 @@
 | 7/02 | UI-03 | ✅美化 | 全局样式：卡片圆角+表格暗色+输入框+标签+按钮统一暗色主题。 |
 | 7/02 | UI-04 | ✅重写 | TrafficMonitor: 左地图+右数据面板+TrafficBadge组件。 |
 
+### FE-ANALYST-01~05 分析员5页面填充真实内容 (2026-07-12)
+
+**🎯 任务接收**：分析员5个页面填充真实内容，对接后端API+ECharts图表
+
+**💭 分析**：
+- 后端API都已就绪（dev分支，91测试通过），需要调用：/carbon/*, /propagation/*, /scenario/*, /predict/accuracy, /traffic/history等
+- 需要新建3个API模块：carbon.js, propagation.js, scenario.js
+- 5个页面需覆盖：Loading状态、Empty状态、暗色主题
+
+**📝 实现**：
+
+| ID | 页面 | 关键功能 | API调用 |
+|----|------|---------|---------|
+| FE-ANALYST-01 | ModelsView.vue | KNN/RF状态卡片+MAE/RMSE/MAPE指标+趋势图+参数滑块+重训练 | GET /predict/accuracy |
+| FE-ANALYST-02 | PropagationView.vue | 路段选择+步数/时间窗口/阈值+ECharts Tree图+链详情表 | POST /propagation/analyze |
+| FE-ANALYST-03 | CarbonView.vue | 日/周/月切换+概览统计+趋势折线+额外排放堆叠+Top10水平柱状 | GET /carbon/trend, /carbon/current, /carbon/sections/top |
+| FE-ANALYST-04 | ExploreView.vue | 日期/路段/小时/星期筛选+TrafficBadge+异常橙色高亮+CSV导出 | GET /traffic/history |
+| FE-ANALYST-05 | ScenariosView.vue | 场景CRUD+运行+三列对比(基线/干预/改善)+报告导出+发送管理员 | POST /scenario/create, POST /scenario/{id}/run, etc. |
+
+**新增文件**：
+- `frontend/src/api/carbon.js` — 碳排放API模块
+- `frontend/src/api/propagation.js` — 拥堵传播API模块
+- `frontend/src/api/scenario.js` — 场景仿真API模块
+
+**✅ 验证**：`npx vite build` → 2287 modules transformed, 0 errors, 0 warnings
+
 ### FE-MAIN-01~04 三角色路由+布局+占位视图 (2026-07-12)
 
 **🎯任务接收**：实现三用户角色平台 Phase 1 — 路由重构 + 管理员/分析员/出行者布局 + 占位视图
