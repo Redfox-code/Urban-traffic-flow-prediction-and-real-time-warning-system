@@ -396,3 +396,65 @@ trend: 上升(6.0%), peak: 19.5@02:55, congestion: 低(0.0%), best_model: RF
 - `carbon_emissions` — 碳排放记录（路段, 速度, 总排放/正常/额外CO2）
 
 ✅ **验证通过**：全部7张表在DB中创建成功（inspector.get_table_names确认）
+
+---
+
+## 2026-07-12 🎯 需求分析：平台页面空壳 + 登录缺少角色选择
+
+### 📋 需求原文
+
+> "数据分析平台的各个功能都只有一个架子，没有具体实现，然后就是我需要选择不同的用户类型登录，不然我现在只能登录数据分析平台"
+
+### 🔍 现状分析（已读代码确认）
+
+**问题1：14个平台页面全部是空壳**
+
+读 `frontend/src/views/admin/*.vue` + `analyst/*.vue` + `traveler/*.vue`：
+- 管理员5页面：DashboardView / WarningsView / SignalOptimizationView / EmergencyView / ReportsView — 每个只有 `<el-alert title="开发中 — xxx面板">` 
+- 分析员5页面：ModelsView / PropagationView / CarbonView / ExploreView / ScenariosView — 同上
+- 出行者4页面：RoutePlanView / MyTripsView / AlertsView / HistoryView — 同上
+- 根因：FE-MAIN-01~04阶段Agent-Frontend-Main只创建了路由+布局骨架，页面内容留TODO
+
+**问题2：登录/注册无法选择角色**
+
+读 `frontend/src/views/Login.vue`（39行）：
+- 只有用户名+密码两个输入框，无角色选择
+- 登录后 `router.push('/dashboard')` 硬编码跳转旧版dashboard
+
+读 `frontend/src/views/Register.vue`（31行）：
+- 第25行硬编码 `role: 'analyst'`，所有新用户默认注册为分析员
+- 后端已支持三种角色（RBAC-01/02: User表role字段 + /auth/roles端点），前端未对接
+
+### 📊 任务拆分
+
+| 任务ID | 描述 | Agent | 优先级 | 预估 |
+|--------|------|-------|--------|------|
+| FIX-LOGIN-01 | 登录页+注册页增加角色选择下拉框，登录后按role跳转对应首页 | agent-lead | **P0** | 30min |
+| FE-ANALYST-01 | 分析员ModelsView: KNN/RF状态卡片+精度趋势图+参数调优面板 | agent-frontend-main | **P1** | 30min |
+| FE-ANALYST-02 | 分析员PropagationView: 传播树ECharts图+路段搜索+历史回放 | agent-frontend-main | **P1** | 30min |
+| FE-ANALYST-03 | 分析员CarbonView: 排放趋势折线图+额外排堆放柱状图+Top10排行 | agent-frontend-main | **P1** | 20min |
+| FE-ANALYST-04 | 分析员ExploreView: 多维查询面板+数据表格+异常标记 | agent-frontend-main | **P1** | 30min |
+| FE-ANALYST-05 | 分析员ScenariosView: 场景列表+新建场景+三列对比结果 | agent-frontend-main | **P1** | 30min |
+| FE-ADMIN-01~05 | 管理员5页面(监控/预警/信号/应急/报表) | agent-frontend-main | P2 | 后续 |
+| FE-TRAVELER-01~04 | 出行者4页面(路径规划/我的出行/提醒/历史) | agent-frontend-main | P2 | 后续 |
+
+### 🔗 依赖关系
+
+- FIX-LOGIN-01 无依赖 → **先执行**（阻塞用户切换角色）
+- FE-ANALYST-01~05 依赖后端API → **已就绪**（/api/v1/predict /propagation /carbon /traffic /scenario 在dev分支全部可用，91测试通过）
+
+### 🎯 决策
+
+- **决策1**：登录页用 `el-select` 下拉框选角色。理由：用户可能有多个角色（如同时是admin+analyst），需手动选择而非自动检测。
+- **决策2**：优先实现分析员平台。理由：用户当前只能登录分析员，先让这个平台可用。
+- **决策3**：直接对接后端真实API。理由：后端已就绪且91测试通过，不需要mock数据。
+
+### 🎯 FIX-LOGIN-01 执行 (2026-07-12)
+
+**分支**: `feature/agent-lead/FIX-login-role` → PR → dev
+
+📝 **产出**:
+- `Login.vue`: 新增 `el-select` 角色下拉框(traveler/analyst/admin)，默认analyst；登录后按role跳转对应首页(admin→/admin/dashboard, analyst→/analyst/models, traveler→/traveler/route-plan)
+- `Register.vue`: 新增角色选择下拉框，携带角色描述；移除硬编码 `role:'analyst'`，改用 `form.role`；默认值改为 `traveler`
+
+✅ **验证**: `npx vite build` — built in 5.87s, 0 errors
