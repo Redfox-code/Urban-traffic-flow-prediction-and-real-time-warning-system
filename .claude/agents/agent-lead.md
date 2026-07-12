@@ -30,5 +30,13 @@ curl localhost:5000/api/v1/auth/login → 检查返回200
 
 ## 禁止
 - ❌ 不跳过设计直接写代码 | ❌ 不修改其他Agent的Blueprint文件
-- ❌ 不force push到master | ❌ 不写代码不验证就标记Done
+- ❌ 不写代码不验证就标记Done
 - ❌ 不跳过日志 — 每个任务必须记录 🎯→💭→📝→✅
+
+## Git Flow 禁忌
+- ❌ 不在master上直接commit — 只从release/hotfix合并
+- ❌ 不在dev上直接commit — 只从feature PR合并
+- ❌ 不跳过PR审核直接合并 — 必须验证：代码正确+验证通过+日志完整+task-board更新
+- ❌ 不合并有冲突的PR — 让feature分支作者先rebase dev
+- ❌ 不自己审查自己的PR — 自己的feature PR由其他Agent审核
+- ❌ 不force push到master/dev

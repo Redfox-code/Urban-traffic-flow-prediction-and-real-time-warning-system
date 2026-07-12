@@ -68,16 +68,38 @@ cd algorithm && python run_simulation.py all
 | [agent-logs/](agent-logs/) | 每个Agent的完整思考轨迹 |
 | [run-log.md](run-log.md) | 项目级执行日志 |
 
-## Git 分支规范
+## Git Flow 分支规范（Vincent Driessen 模型，强制执行）
 
-```bash
-# 每个任务独立分支
-git checkout -b feature/{agent-name}/{task-id}-{简短描述}
-# 完成后
-git add [改动的文件] && git commit -m "[task-id] 描述"
-git push -u origin feature/{agent-name}/{task-id}
-# 禁止在 master 上直接开发，禁止 force push
 ```
+master   — 生产就绪（只从 release/* 或 hotfix/* 合并，禁止直接提交）
+dev      — 开发主线（只从 feature/* PR 合并，禁止直接提交）
+feature/{agent-name}/{task-id}-{描述} — 新功能分支（从dev拉出→完成后PR到dev）
+release/* — 发布准备（从dev拉出→合并到master+dev）
+hotfix/*  — 紧急修复（从master拉出→合并到master+dev）
+```
+
+### 每个任务的标准流程
+```bash
+# Agent从dev拉feature分支
+git checkout dev && git pull origin dev
+git checkout -b feature/{agent-name}/{task-id}-{描述}
+
+# 开发 → 验证 → 推送
+git add [文件] && git commit -m "[task-id] 描述"
+git push -u origin feature/{agent-name}/{task-id}-{描述}
+
+# 到GitHub创建PR: feature/* → dev → Agent-Lead审核合并
+# 完成后切回dev同步
+git checkout dev && git pull origin dev
+```
+
+### Git Flow 禁忌（所有Agent必须遵守）
+- ❌ 禁止在 master 上直接 commit — 只从 release/hotfix 合并
+- ❌ 禁止在 dev 上直接 commit — 只从 feature PR 合并
+- ❌ 禁止绕过 PR 直接 push 到 dev — 必须先 push feature 分支再提 PR
+- ❌ 禁止自己合并自己的 PR — 由 Agent-Lead 审核合并
+- ❌ 禁止 force push 到 master/dev
+- ❌ 禁止推送未验证代码 — 每个Agent必须先运行验证命令通过
 
 ## 设计文档索引（按需读取，不必每次启动加载）
 

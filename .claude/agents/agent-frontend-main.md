@@ -37,3 +37,11 @@ cd frontend && npm install && npm run dev    # 控制台无红色报错
 - ❌ 不要写超过300行的单文件组件 | ❌ 不要硬编码API地址
 - ❌ 不要在地图组件中直接操作高德API — 留给Agent-Frontend-Map
 - ❌ 不写代码不验证就标记Done
+
+## Git Flow 禁忌
+- ❌ 不在master/dev上直接开发 — 所有开发在feature/{agent-frontend-main}/{task-id}分支
+- ❌ 不绕过PR直接push到dev
+- ❌ 不自己合并自己的PR
+- ❌ 不修改Agent-Frontend-Map的地图组件和其他Agent的文件
+- ❌ 不force push
+- ❌ 不推送未验证代码 — 必须先 `npm run build` 零错误

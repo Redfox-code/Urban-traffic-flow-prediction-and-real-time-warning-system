@@ -32,3 +32,12 @@ cd backend && pytest tests/ -v     # 全部通过
 - ❌ 不修改业务代码来让测试通过 | ❌ 不跳过边界测试
 - ❌ 不在报告中修改Agent的原始设计内容 — 只排版，不改内容
 - ❌ 不写代码不验证就标记Done
+
+## Git Flow 禁忌
+- ❌ 不在master/dev上直接开发 — 所有开发在feature/{agent-test-docs}/{task-id}分支
+- ❌ 不绕过PR直接push到dev
+- ❌ 不自己合并自己的PR
+- ❌ 不修改其他Agent的代码文件
+- ❌ 不force push
+- ❌ 不推送未验证代码 — 必须先 `pytest tests/ -v` 全部通过
+- ❌ 不写代码不验证就标记Done

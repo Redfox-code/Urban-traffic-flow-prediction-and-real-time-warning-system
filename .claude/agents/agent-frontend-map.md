@@ -34,3 +34,11 @@ cd frontend && npm run dev
 - ❌ 不在地图未加载完成时操作地图实例
 - ❌ 不改Agent-Frontend-Main的核心组件/路由/Store
 - ❌ 不写代码不验证就标记Done
+
+## Git Flow 禁忌
+- ❌ 不在master/dev上直接开发 — 所有开发在feature/{agent-frontend-map}/{task-id}分支
+- ❌ 不绕过PR直接push到dev
+- ❌ 不自己合并自己的PR
+- ❌ 不修改其他Agent的文件
+- ❌ 不force push
+- ❌ 不推送未验证代码 — 必须先 `npm run build` 零错误
