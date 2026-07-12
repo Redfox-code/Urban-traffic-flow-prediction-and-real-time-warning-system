@@ -240,8 +240,8 @@ const saveAsFavorite = async () => {
   savingFavorite.value = true
   try {
     await travelerApi.saveRoute({
-      origin_name: o?.name||'', origin_lat: o?.coordinates?.[0]?.[0]||null, origin_lng: o?.coordinates?.[0]?.[1]||null,
-      dest_name: d?.name||'', dest_lat: d?.coordinates?.[0]?.[0]||null, dest_lng: d?.coordinates?.[0]?.[1]||null,
+      origin_name: o?.name||'', origin_lat: o?.coordinates?.start?.[1]||null, origin_lng: o?.coordinates?.start?.[0]||null,
+      dest_name: d?.name||'', dest_lat: d?.coordinates?.end?.[1]||null, dest_lng: d?.coordinates?.end?.[0]||null,
       origin_section_id: origin.value, dest_section_id: dest.value
     })
     ElMessage.success('已保存到我的行程')
