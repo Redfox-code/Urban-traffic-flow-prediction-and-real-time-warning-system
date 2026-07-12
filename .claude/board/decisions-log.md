@@ -200,6 +200,33 @@
 
 ---
 
+### [决策] ALGO-ENGINES 六算法模块设计 — Agent-Algorithm
+
+**时间**：2026-07-12
+**背景**：系统需要新增6个算法模块支持信号配时、碳排放、拥堵传播、出行画像、多路线规划和场景仿真功能。
+**设计方案**：
+
+**ALGO-SIG-01 Webster配时**：纯函数实现Webster公式C_opt=(1.5L+5)/(1-Y)。支持多相位输入→最优周期+绿灯分配+延误对比。工程约束 30s≤C≤180s, 最小绿灯保障。
+
+**ALGO-CARB-01 碳排放**：简化COPERT模型(CO2=a+bv+cv²+d/v)，6种车辆类型加权。拥堵额外排放=正常排放*(40/v-1)当v<40km/h。4级拥堵等级(freeflow/moderate/congested/severe)。
+
+**ALGO-PROP-01 拥堵传播**：从roadNetwork.json(92段,225边)构建邻接矩阵。递归DFS传播P=base_prob*exp(-alpha*d)*speed_factor。剪枝条件：P<0.3或深度>3。支持连通分量分析。
+
+**ALGO-PROF-01 路线学习**：OD对聚合(容差0.001), K-means出发时间聚类(k=2), semantic标签(上班/回家/周末), EWMA更新(alpha=0.3), 频次过滤(f>=3)。
+
+**ALGO-RTE-01 三路线**：Dijkstra最短时间(A)+排除拥堵备选(B)+(C)最短距离。BPR速度-流量函数。8节点示例图测试通过。
+
+**ALGO-SCEN-01 What-If**：数学估算模型(4策略:限流/信号优化/路段封闭/组合)。BPR函数更新速度。基线vs干预指标对比(延误/速度/拥堵/CO2)。
+
+**关键约束**：
+1. 全部纯Python实现，不依赖SUMO/TraCI
+2. 每模块含完整独立测试用例
+3. 所有模块即日起可被Agent-Lead集成到backend API
+
+**影响**：等待Agent-Lead在backend/app/services/和routes/中创建对应的API端点。
+
+---
+
 ## 审查记录
 
 ---
