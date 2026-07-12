@@ -8,21 +8,23 @@
 
 | ID | 任务 | Agent | 分支 |
 |----|------|-------|------|
-| RBAC-01 | User模型+role字段('admin'/'analyst'/'traveler')；JWT role claim | agent-lead | feature/agent-lead/RBAC-01 |
+| _(无进行中任务)_ | | |
 
 ---
 
-## 📋 Todo — Phase 2: 三用户角色平台基础架构
+## ✅ Done (2026-07-12)
 
-| ID | 任务 | Agent | 依赖 | 分支 |
-|----|------|-------|------|------|
-| RBAC-02 | @role_required装饰器；现有Blueprint加角色保护 | agent-lead | RBAC-01 | feature/agent-lead/RBAC-02 |
-| RBAC-03 | GET /auth/me返回角色；PUT /admin/users/{id}/role | agent-lead | RBAC-01 | feature/agent-lead/RBAC-03 |
-| LEAD-DB-01 | 新增6张表模型(congestion_propagation/user_travel_profile/user_alert_history/signal_optimization/emergency_route/scenario_simulation/carbon_emission) | agent-lead | — | feature/agent-lead/LEAD-DB-01 |
-| FE-MAIN-01 | Vue Router增加/admin /analyst /traveler三条路由树；路由守卫按role跳转 | agent-frontend-main | RBAC-01 | feature/agent-frontend-main/FE-MAIN-01 |
-| FE-MAIN-02 | 管理员布局组件(侧边栏+预警角标+顶栏) | agent-frontend-main | FE-MAIN-01 | feature/agent-frontend-main/FE-MAIN-02 |
-| FE-MAIN-03 | 分析员布局组件(侧边栏+训练状态灯) | agent-frontend-main | FE-MAIN-01 | feature/agent-frontend-main/FE-MAIN-03 |
-| FE-MAIN-04 | 出行者布局组件(底部Tab+移动端适配) | agent-frontend-main | FE-MAIN-01 | feature/agent-frontend-main/FE-MAIN-04 |
+| ID | 任务 | Agent |
+|----|------|-------|
+| FE-MAIN-01 | Vue Router增加/admin /analyst /traveler三条路由树；路由守卫按role跳转 | agent-frontend-main |
+| FE-MAIN-02 | 管理员布局组件(侧边栏+预警角标+顶栏) | agent-frontend-main |
+| FE-MAIN-03 | 分析员布局组件(侧边栏+训练状态灯) | agent-frontend-main |
+| FE-MAIN-04 | 出行者布局组件(底部Tab+移动端适配) | agent-frontend-main |
+| FIX-01~06 | 基础设施修复(CLAUDE.md精简+Agent角色精简+STATE更新+心跳/站会恢复) | agent-lead |
+| RBAC-01 | User模型+role字段+JWT role claim | agent-lead |
+| RBAC-02 | @role_required装饰器 + optional_role | agent-lead |
+| RBAC-03 | GET /auth/me + GET /auth/roles | agent-lead |
+| LEAD-DB-01 | 7张新表模型(propagation/profile/alert/signal/emergency/scenario/carbon) | agent-lead |
 
 ---
 

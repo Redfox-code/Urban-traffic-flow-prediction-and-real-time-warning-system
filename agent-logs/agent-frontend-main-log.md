@@ -7,6 +7,7 @@
 | 时间 | 任务ID | 类型 | 内容 |
 |------|--------|------|------|
 | 系统初始化 | — | 📝 | Agent #3 日志创建。角色：前端开发(主)。 |
+| 2026-07-12 | FE-MAIN-01~04 | ✅ | 三角色路由重构+3套布局组件+15个占位视图+JWT解析工具 |
 | 7/01 | D3-T03 | ✅ | 前端架构设计(8章)。组件树+路由+Store+Axios。 |
 | 7/01 | D4-T03 | ✅ | 前端API对接+Mock数据(5章)。 |
 | 7/02 | D6-T03 | ✅ | Vue 3初始化(17文件)。Router+Store+Layout+9视图。 |
@@ -21,6 +22,33 @@
 | 7/02 | UI-02 | ✅美化 | Dashboard卡片：图标+渐变色+悬浮动画。 |
 | 7/02 | UI-03 | ✅美化 | 全局样式：卡片圆角+表格暗色+输入框+标签+按钮统一暗色主题。 |
 | 7/02 | UI-04 | ✅重写 | TrafficMonitor: 左地图+右数据面板+TrafficBadge组件。 |
+
+### FE-MAIN-01~04 三角色路由+布局+占位视图 (2026-07-12)
+
+**🎯任务接收**：实现三用户角色平台 Phase 1 — 路由重构 + 管理员/分析员/出行者布局 + 占位视图
+
+**💭分析**：
+- 需要从0创建3套布局组件、15个占位视图页、1个JWT解析工具
+- 现有MainLayout.vue需保留做向后兼容
+- 路由守卫需从JWT payload解析role字段做角色分流
+- 出行者布局需移动端优先设计
+
+**📝实现**：
+1. `utils/jwt.js` — parseJWT()和getRoleFromToken()函数
+2. `store/user.js` — 增强parseRoleFromToken action + isAnalyst/isTraveler getter
+3. `router/index.js` — 新增/admin /analyst /traveler三条路由树+完整角色守卫
+4. `layouts/AdminLayout.vue` — 280px侧边栏+5菜单项+预警角标+实时时钟+角色标签
+5. `layouts/AnalystLayout.vue` — 280px侧边栏+5菜单项+模型状态指示灯+实时时钟
+6. `layouts/TravelerLayout.vue` — 移动端底部Tab+≥768px侧边栏+登录引导
+7. 15个占位视图: admin(5) + analyst(5) + traveler(5)
+
+**关键决策**：
+- 用emoji代替`<el-icon>`组件避免额外依赖
+- 路由守卫直接从localStorage读token解析role，不依赖Store初始化时序
+- TravelerLayout用`window.innerWidth`响应式检测+resize事件监听
+- 模型状态通过`window.__updateModelStatus`暴露给子组件
+
+**✅验证**：`npm run dev` → build成功，零红色错误。15个视图全部import按需加载正常。
 
 ## 思考轨迹
 
