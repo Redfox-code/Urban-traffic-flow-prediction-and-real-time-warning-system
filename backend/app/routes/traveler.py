@@ -1,6 +1,7 @@
 """出行者API — /api/v1/traveler/* — Agent-Lead"""
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app import db
 from app.services.traveler_service import (
     get_user_profiles, save_route_profile, delete_route_profile, update_route_label,
     get_user_alerts, mark_alert_read, batch_mark_read, update_alert_settings,
@@ -155,3 +156,36 @@ def clear_history():
     user_id = int(get_jwt_identity())
     count = delete_route_history(user_id)
     return jsonify({'code': 200, 'data': {'deleted': count}, 'message': f'已清空{count}条记录'})
+
+
+@traveler_bp.route('/history', methods=['POST'])
+@jwt_required()
+def save_history():
+    user_id = int(get_jwt_identity())
+    data = request.get_json(silent=True) or {}
+    from app.models.route_record import RouteRecord
+    record = RouteRecord(user_id=user_id, origin_section_id=data.get('origin_section_id'), dest_section_id=data.get('dest_section_id'), distance=data.get('distance'), estimated_time=data.get('estimated_time'))
+    db.session.add(record); db.session.commit()
+    return jsonify({'code': 201, 'data': {'id': record.id}, 'message': '已保存'})
+
+
+@traveler_bp.route('/preferences', methods=['GET'])
+@jwt_required()
+def get_preferences():
+    import json; from app.models.user import User
+    user = User.query.get(int(get_jwt_identity()))
+    if not user: return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
+    try: prefs = json.loads(user.preferences or '{}')
+    except: prefs = {'defaultTime': '08:00', 'commuteAlert': True, 'alertBefore': 30}
+    return jsonify({'code': 200, 'data': {'preferences': prefs}, 'message': 'ok'})
+
+
+@traveler_bp.route('/preferences', methods=['PUT'])
+@jwt_required()
+def update_preferences():
+    import json; from app.models.user import User
+    user = User.query.get(int(get_jwt_identity()))
+    if not user: return jsonify({'code': 404, 'data': None, 'message': '用户不存在'}), 404
+    user.preferences = json.dumps((request.get_json(silent=True) or {}).get('preferences', {}))
+    db.session.commit()
+    return jsonify({'code': 200, 'data': None, 'message': '偏好已保存'})

@@ -28,12 +28,21 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
 import { useUserStore } from '@/store/user'
+import { travelerApi } from '@/api/traveler'
 import { ElMessage } from 'element-plus'
 const userStore = useUserStore()
 const prefs = reactive({ defaultTime: '08:00', commuteAlert: true, alertBefore: 30 })
-const savePrefs = () => ElMessage.success('偏好已保存')
+
+onMounted(async () => {
+  if (!userStore.isLoggedIn) return
+  try { const res = await travelerApi.getPreferences(); const p = res.data?.preferences || res?.preferences; if (p) Object.assign(prefs, p) } catch {}
+})
+
+const savePrefs = async () => {
+  try { await travelerApi.updatePreferences({ preferences: { ...prefs } }); ElMessage.success('偏好已保存') } catch { ElMessage.error('保存失败') }
+}
 </script>
 
 <style scoped>

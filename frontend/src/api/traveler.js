@@ -25,6 +25,10 @@ export const travelerApi = {
   /** 更新提醒设置 */
   updateAlertSettings: (data) => request.put('/traveler/alerts/settings', data),
 
+  // ===== 偏好 =====
+  getPreferences: () => request.get('/traveler/preferences'),
+  updatePreferences: (data) => request.put('/traveler/preferences', data),
+
   // ===== 历史 =====
   /** 获取查询历史（分页） */
   getHistory: (params) => request.get('/traveler/history', { params }),
