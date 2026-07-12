@@ -537,7 +537,7 @@ if __name__ == "__main__":
         print(f"    ({key.origin_lat:.4f},{key.origin_lng:.4f}) -> "
               f"({key.dest_lat:.4f},{key.dest_lng:.4f}): {len(trips)} 次")
     assert len(groups) == 2, f"预期 2 个 OD 对, 实际 {len(groups)}"
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 2: 标签生成
     print("\n--- 测试 2: 路线标签生成 ---")
@@ -550,7 +550,7 @@ if __name__ == "__main__":
     assert label1 == "上班路线"
     assert label2 == "回家路线"
     assert label3 == "周末出行"
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 3: EWMA 更新
     print("\n--- 测试 3: EWMA 更新 ---")
@@ -559,7 +559,7 @@ if __name__ == "__main__":
     for v in updates:
         avg = ewma_update(avg, v)
         print(f"  new_value={v:.1f} -> avg={avg:.3f}")
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 4: 完整流程 (模拟数据)
     print("\n--- 测试 4: 模拟数据完整流程 ---")
@@ -574,7 +574,7 @@ if __name__ == "__main__":
               f"freq={p.frequency}, "
               f"peak={p.peak_type})")
     assert len(profiles) > 0
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 5: 最小频次过滤
     print("\n--- 测试 5: 频次过滤 (min_frequency=5) ---")
@@ -582,7 +582,7 @@ if __name__ == "__main__":
     print(f"  min_freq=3: {len(profiles)} 条")
     print(f"  min_freq=5: {len(profiles_high)} 条")
     assert len(profiles_high) <= len(profiles)
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 6: 手动构造测试
     print("\n--- 测试 6: 手动构造用例 ---")
@@ -598,8 +598,8 @@ if __name__ == "__main__":
     for p in manual_profiles:
         print(f"    {p.user_id}: {p.route_label}, avg={p.depart_hour_avg:.1f}h, freq={p.frequency}")
     assert len(manual_profiles) == 2
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     print("\n" + "=" * 60)
-    print("所有测试通过 ✅")
+    print("所有测试通过 [PASS]")
     print("=" * 60)

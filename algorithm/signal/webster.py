@@ -375,10 +375,10 @@ if __name__ == "__main__":
     data1 = {
         "intersection_id": "INT-001",
         "phases": [
-            {"phase_id": "A (东西直行)", "flow": 800, "saturation_flow": 1800},
-            {"phase_id": "B (东西左转)", "flow": 400, "saturation_flow": 1600},
-            {"phase_id": "C (南北直行)", "flow": 700, "saturation_flow": 1800},
-            {"phase_id": "D (南北左转)", "flow": 350, "saturation_flow": 1600},
+            {"phase_id": "A (东西直行)", "flow": 400, "saturation_flow": 1800},
+            {"phase_id": "B (东西左转)", "flow": 200, "saturation_flow": 1600},
+            {"phase_id": "C (南北直行)", "flow": 350, "saturation_flow": 1800},
+            {"phase_id": "D (南北左转)", "flow": 150, "saturation_flow": 1600},
         ],
         "loss_time_per_phase": 5,
         "min_green_sec": 10,
@@ -397,7 +397,7 @@ if __name__ == "__main__":
     assert 50 < result1.optimal_cycle_sec < 120, f"周期不在合理范围内: {result1.optimal_cycle_sec}"
     assert abs(result1.total_loss_time_sec - 20.0) < 0.01
     assert result1.intersection_capacity_veh_h > 0
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试用例 2: 两相位简单交叉口
     print("\n--- 测试 2: 两相位简单交叉口 ---")
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     for s in result2.green_splits:
         print(f"    {s['phase_id']}: {s['green_sec']:.1f}s ({s['green_pct']:.1f}%)")
     assert 30 < result2.optimal_cycle_sec < 120
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试用例 3: 拥堵交叉口 (高流量比)
     print("\n--- 测试 3: 高流量比交叉口 (接近饱和) ---")
@@ -434,9 +434,9 @@ if __name__ == "__main__":
         print(f"  流量比 Y: {result3.total_flow_ratio:.3f}")
         # 高流量比应产生较长周期
         assert result3.optimal_cycle_sec > 60
-        print("  ✅ 通过")
+        print("  [PASS] 通过")
     except ValueError as e:
-        print(f"  ⚠️ 过饱和: {e}")
+        print(f"  [WARN] 过饱和: {e}")
 
     # 测试用例 4: 过饱和交叉口
     print("\n--- 测试 4: 过饱和交叉口 ---")
@@ -450,9 +450,9 @@ if __name__ == "__main__":
     }
     try:
         webster_signal_timing(data4)
-        print("  ❌ 应该抛出 ValueError")
+        print("  [FAIL] 应该抛出 ValueError")
     except ValueError as e:
-        print(f"  ✅ 正确拒绝过饱和: {e}")
+        print(f"  [PASS] 正确拒绝过饱和: {e}")
 
     # 测试用例 5: 最小绿灯保障
     print("\n--- 测试 5: 最小绿灯保障 (支路流量极低) ---")
@@ -471,8 +471,8 @@ if __name__ == "__main__":
         print(f"    {s['phase_id']}: {s['green_sec']:.1f}s ({s['green_pct']:.1f}%)")
         if s['phase_id'] == 'B (支路)':
             assert s['green_sec'] >= 8.0, f"支路绿灯应 >= 8s, 实际 {s['green_sec']}s"
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     print("\n" + "=" * 60)
-    print("所有测试通过 ✅")
+    print("所有测试通过 [PASS]")
     print("=" * 60)

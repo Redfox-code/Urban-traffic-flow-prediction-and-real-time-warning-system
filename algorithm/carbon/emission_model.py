@@ -342,7 +342,7 @@ if __name__ == "__main__":
     print(f"  总排放: {result1.total_co2_kg:.2f} kg/h")
     assert result1.extra_co2_kg == 0.0, "自由流应无额外排放"
     assert result1.congestion_level == "freeflow"
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 2: 拥堵状态 (20 km/h)
     print("\n--- 测试 2: 拥堵 (20 km/h, 800 辆车/h) ---")
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     assert result2.extra_co2_kg > 0, "拥堵应有额外排放"
     assert result2.congestion_level == "congested"
     assert result2.total_co2_kg > result2.normal_co2_kg
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 3: 严重拥堵 (8 km/h)
     print("\n--- 测试 3: 严重拥堵 (8 km/h, 1000 辆车/h) ---")
@@ -367,7 +367,7 @@ if __name__ == "__main__":
     print(f"  总排放: {result3.total_co2_kg:.2f} kg/h")
     assert result3.congestion_level == "severe"
     assert result3.extra_co2_kg > result3.normal_co2_kg, "严重拥堵额外排放大"
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 4: 批量计算
     print("\n--- 测试 4: 批量计算 (5 个路段) ---")
@@ -386,7 +386,7 @@ if __name__ == "__main__":
     print(f"  拥堵分布: {summary['congestion_distribution']}")
     assert summary["num_segments"] == 5
     assert summary["extra_ratio_pct"] > 0
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 5: COPERT 排放率验证
     print("\n--- 测试 5: COPERT 排放率验证 ---")
@@ -394,14 +394,14 @@ if __name__ == "__main__":
         rate = copert_emission_rate(speed)
         print(f"  {speed} km/h -> {rate:.1f} g/km")
         # U 型曲线: 极低速和极高速排放率高
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 6: 不同类型车辆对比
     print("\n--- 测试 6: 不同车辆类型排放对比 (50 km/h) ---")
     for vtype in COPERT_COEFFICIENTS:
         rate = copert_emission_rate(50.0, vtype)
         print(f"  {vtype}: {rate:.1f} g/km")
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 7: 不同拥堵等级
     print("\n--- 测试 7: 拥堵等级判定 ---")
@@ -409,8 +409,8 @@ if __name__ == "__main__":
     for speed in test_speeds:
         level, factor = get_congestion_level(speed)
         print(f"  {speed:3d} km/h -> {level:10s} (factor={factor:.1f})")
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     print("\n" + "=" * 60)
-    print("所有测试通过 ✅")
+    print("所有测试通过 [PASS]")
     print("=" * 60)

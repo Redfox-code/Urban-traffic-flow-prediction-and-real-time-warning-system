@@ -28,6 +28,17 @@
 |----|------|-------|
 | FEAT-AMAP-RETRAIN | 高德API真实数据重新训练KNN+RF(463条,17路段) | agent-lead |
 
+## ✅ Done (2026-07-12)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| ALGO-SIG-01 | Webster信号配时计算(algorithm/signal/webster.py) | agent-algorithm |
+| ALGO-CARB-01 | 碳排放估算模型(algorithm/carbon/emission_model.py) | agent-algorithm |
+| ALGO-PROP-01 | 图扩散传播算法(algorithm/propagation/diffusion_model.py) | agent-algorithm |
+| ALGO-PROF-01 | 常用路线自动识别(algorithm/profile/route_learning.py) | agent-algorithm |
+| ALGO-RTE-01 | 三路线生成算法(algorithm/route/three_route_planner.py) | agent-algorithm |
+| ALGO-SCEN-01 | What-If仿真引擎(algorithm/scenario/whatif_engine.py) | agent-algorithm |
+
 ## ✅ Done (2026-07-08)
 
 | ID | 任务 | Agent |

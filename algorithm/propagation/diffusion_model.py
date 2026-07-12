@@ -549,9 +549,9 @@ if __name__ == "__main__":
         print(f"  连通分量数: {len(components)}")
         for i, comp in enumerate(components[:5]):
             print(f"    分量 {i+1}: {len(comp)} 个路段")
-        print("  ✅ 通过")
+        print("  [PASS] 通过")
     except FileNotFoundError as e:
-        print(f"  ⚠️ {e}, 使用模拟路网测试")
+        print(f"  [WARN] {e}, 使用模拟路网测试")
         # 创建模拟路网
         mock_segments = []
         for i in range(1, 21):
@@ -581,7 +581,7 @@ if __name__ == "__main__":
         prob = calculate_propagation_probability(src_speed, tgt_speed, dist)
         delay = estimate_delay_minutes(src_speed, tgt_speed, dist)
         print(f"  {label}: P={prob:.3f}, delay={delay:.1f}min")
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 3: 模拟传播路径
     print("\n--- 测试 3: 模拟路网传播 ---")
@@ -627,7 +627,7 @@ if __name__ == "__main__":
                   f"delay={item['delay_minutes']:.1f}min, "
                   f"depth={item['depth']}")
     assert result.total_nodes > 1
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 4: 剪枝测试
     print("\n--- 测试 4: 概率剪枝测试 (threshold=0.5) ---")
@@ -641,7 +641,7 @@ if __name__ == "__main__":
     print(f"  剪枝前节点数: {result.total_nodes}")
     print(f"  剪枝后节点数: {result_pruned.total_nodes}")
     assert result_pruned.total_nodes <= result.total_nodes
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     # 测试 5: 深度限制测试
     print("\n--- 测试 5: 深度限制 (max_depth=1) ---")
@@ -655,8 +655,8 @@ if __name__ == "__main__":
     print(f"  max_depth=3 节点数: {result.total_nodes}")
     print(f"  max_depth=1 节点数: {result_shallow.total_nodes}")
     assert result_shallow.total_nodes < result.total_nodes
-    print("  ✅ 通过")
+    print("  [PASS] 通过")
 
     print("\n" + "=" * 60)
-    print("所有测试通过 ✅")
+    print("所有测试通过 [PASS]")
     print("=" * 60)

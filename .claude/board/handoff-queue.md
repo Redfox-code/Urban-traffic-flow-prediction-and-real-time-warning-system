@@ -5,6 +5,12 @@
 
 ---
 
+## ALGO-ENGINES 六算法模块完成 (2026-07-12)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/12 | Algorithm → Lead | ALGO-SIG-01~SCEN-01全部完成。6算法模块待集成到backend API: signal(Webster配时), carbon(碳排放), propagation(拥堵传播), profile(路线学习), route(三路线规划), scenario(What-If). 所有模块可独立运行测试通过。 |
+
 ## D3 概要设计 (2026-07-01)
 
 | 时间 | 交付方 → 接收方 | 说明 |
