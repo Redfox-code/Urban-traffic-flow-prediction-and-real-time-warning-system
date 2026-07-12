@@ -152,65 +152,102 @@ function extractFlat(tree) {
   return result
 }
 
-function buildEChartsTree(node) {
+function findSectionName(sid) {
+  const sec = sections.value.find(s => s.id === Number(sid) || String(s.id) === String(sid))
+  return sec?.name || `路段${sid}`
+}
+
+function buildEChartsTree(node, parentName) {
   if (!node) return null
-  const label = `${node.section_id}\nP=${(node.probability * 100).toFixed(0)}%`
-  const color = node.probability >= 0.7 ? '#f44336' : node.probability >= 0.5 ? '#ff9800' : '#ffeb3b'
+  const secName = findSectionName(node.section_id)
+  const label = `${secName}\nP=${((node.probability || 0) * 100).toFixed(0)}% | 延迟${(node.delay_minutes || 0).toFixed(1)}min`
+  const color = (node.probability || 0) >= 0.7 ? '#f44336' : (node.probability || 0) >= 0.5 ? '#ff9800' : (node.probability || 0) >= 0.3 ? '#4caf50' : '#2196f3'
+  const children = (node.children || [])
+    .filter(c => c && c.section_id)
+    .map(c => buildEChartsTree(c, secName))
+    .filter(Boolean)
   return {
     name: label,
     value: node.section_id,
-    itemStyle: { color },
-    children: (node.children || []).map(buildEChartsTree).filter(Boolean),
+    collapsed: (node.depth || 0) >= 3,
+    itemStyle: { color, borderColor: color, borderWidth: 2 },
+    children: children.length > 0 ? children : undefined,
   }
 }
 
 function renderTreeChart() {
   if (!treeChartRef.value || !treeData.value) return
-  if (!treeChart) treeChart = echarts.init(treeChartRef.value)
+  if (treeChart) { treeChart.dispose(); treeChart = null }
+  treeChart = echarts.init(treeChartRef.value, 'dark')
 
   const root = treeData.value.propagation_tree || treeData.value
   const treeRoot = buildEChartsTree(root)
 
   if (!treeRoot) return
 
-  // find section name for root
-  const sec = sections.value.find(s => s.id === Number(root.section_id) || s.id === root.section_id)
-  treeRoot.name = `${sec?.name || root.section_id}\n${treeRoot.name}`
-
   treeChart.setOption({
     tooltip: {
       trigger: 'item',
+      triggerOn: 'mousemove',
       formatter: (params) => {
         const lines = params.name.split('\n')
-        return `<strong>路段: ${lines[0]}</strong><br/>${lines.slice(1).join('<br/>')}`
+        return `<strong>${lines[0]}</strong><br/>${lines.slice(1).join('<br/>')}`
       },
     },
     series: [{
       type: 'tree',
       data: [treeRoot],
-      top: '5%',
-      left: '10%',
-      bottom: '5%',
-      right: '20%',
-      symbolSize: 10,
+      top: '3%',
+      left: '8%',
+      bottom: '3%',
+      right: '15%',
+      symbolSize: 14,
       orient: 'LR',
+      roam: true,
       expandAndCollapse: true,
-      initialTreeDepth: 3,
+      initialTreeDepth: -1,
+      edgeShape: 'curve',
+      edgeForkPosition: '50%',
       label: {
         position: 'right',
         verticalAlign: 'middle',
         align: 'left',
-        fontSize: 12,
-        color: '#ccc',
+        fontSize: 11,
+        color: '#e0e0e0',
+        backgroundColor: 'rgba(30,30,30,0.8)',
+        padding: [4, 8],
+        borderRadius: 4,
       },
-      leaves: { label: { position: 'right', align: 'left' } },
-      lineStyle: { color: '#555', width: 1.5 },
+      leaves: {
+        label: {
+          position: 'right',
+          verticalAlign: 'middle',
+          align: 'left',
+          fontSize: 11,
+          color: '#e0e0e0',
+        },
+      },
+      emphasis: {
+        focus: 'descendant',
+        itemStyle: { borderWidth: 3, shadowBlur: 10, shadowColor: 'rgba(255,255,255,0.3)' },
+      },
+      lineStyle: { color: '#666', width: 2, curveness: 0.5 },
     }],
-  })
+  }, true)
+}
+
+function handleResize() {
+  treeChart?.resize()
 }
 
 onMounted(async () => {
   await loadSections()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  treeChart?.dispose()
 })
 
 onUnmounted(() => {
