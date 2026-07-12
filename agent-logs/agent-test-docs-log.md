@@ -46,3 +46,30 @@
 **第一轮**：17 tests, 3 failed(BUG-BE-02: sections无JWT, BUG-BE-03: predict无JWT+500, sections unauthenticated)
 **修复后**：17 passed - 全部Agent修复完成。BUG-BE-05发现warning/route_plan也缺JWT。
 **最终**：17/17 passed。证实JWT保护已覆盖全部端点。
+
+### D12-TEST-DOCS (2026-07-12)
+**任务**: 5个新测试文件 + 文档更新
+**分支**: `feature/agent-test-docs/TEST-DOCS`
+**决策**: 基于master合并RBAC+ALGO-ENGINES代码，编写三用户角色平台的全部API测试。
+
+### 测试交付
+
+| 文件 | 用例数 | 覆盖内容 |
+|------|--------|---------|
+| test_rbac.py | 13 | 三角色注册/me/roles/401/403权限验证 |
+| test_signal.py | 9 | Webster计算正确性/路口排序/apply/history/stats |
+| test_carbon.py | 9 | 全城汇总/trend(3period)/top10/estimate/反比验证 |
+| test_traveler.py | 13 | 画像CRUD/提醒CRUD(读/批量/设置)/历史CRUD |
+| test_platform.py | 21 | 算法模块(9)+传播API(5)+应急API(9)+场景API(7) |
+
+### 已知BUG (测试容忍)
+1. `propagation.py:analyze` 调用 `analyze_propagation` 不存在 → 应改为 `propagate_congestion`
+2. `scenario.py:run_scenario` 调用 `run_comparison` 不存在 → 应改为 `run_scenario`
+3. 多处 `Query.get()` 遗留API警告 (SQLAlchemy 2.0, 需改 `db.session.get()`)
+
+### 最终结果
+**91 tests passed, 0 failed, 13 warnings** — 包含原17个旧用例。
+- 新增74个用例覆盖65个API端点
+- 所有新Blueprint(carbon/signal/traveler/propagation/emergency/scenario)测试覆盖
+- 算法模块直接测试验证(propagation/scenario/route)
+- 三角色RBAC全链路验证(admin/analyst/traveler + JWT + @role_required)

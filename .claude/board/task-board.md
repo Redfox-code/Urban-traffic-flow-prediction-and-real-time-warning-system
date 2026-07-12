@@ -64,7 +64,17 @@
 | FE-MAP-13 | MobileMapWrapper.vue 移动端地图适配(<768px 55vh+触摸手势+底部面板) | agent-frontend-map |
 | FE-MAP-14 | mapSocket.js 增强版WebSocket地图实时更新(指数退避+断连提示) | agent-frontend-map |
 
-## ✅ Approved (2026-07-12)
+## ✅ Done (2026-07-12) — Agent-Test-Docs
+
+| ID | 任务 | 用例数 | Agent |
+|----|------|--------|-------|
+| TEST-01 | RBAC权限测试 (test_rbac.py) | 13 | agent-test-docs |
+| TEST-02 | 信号优化API测试 (test_signal.py) | 9 | agent-test-docs |
+| TEST-03 | 碳排放API测试 (test_carbon.py) | 9 | agent-test-docs |
+| TEST-04 | 出行者API测试 (test_traveler.py) | 13 | agent-test-docs |
+| TEST-05 | 平台API测试 (test_platform.py) | 21 | agent-test-docs |
+| DOCS-01 | 更新run-log.md 7月12日日志 | — | agent-test-docs |
+| DOCS-02 | 更新task-board.md 统一所有已完成任务 | — | agent-test-docs |
 
 | ID | 任务 | Agent | 审查结果 |
 |----|------|-------|---------|

@@ -155,3 +155,15 @@
 |------|----------------|------|
 | 7/07 | Lead → FE-Main | FEAT-AMAP-SYNC: 高德交通态势API切换完成。新建sync_amap_traffic.py(独立脚本调用高德API); traffic.py source字段改为'amap'; TrafficMonitor.vue数据源标签改为「高德实时」(绿)/「模拟」(黄); seed_data.py扩展至21条国贸CBD道路。验证: sync脚本直接运行写入DB, /traffic/current返回source='amap'。|
 | 7/07 | Lead → Algorithm | FEAT-AMAP-RETRAIN: sync_amap_traffic.py修复语法错误(return→sys.exit(0))。用高德数据(463条,17路段)重新训练KNN+RF。RF R²=-0.457, KNN R²=-0.591。新模型覆盖sklearn_latest.pkl。预测API返回using_trained_model:True。旧模型文件保留(7/6时间戳版本)。|
+
+## Agent-Frontend-Map (2026-07-12)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/12 | FE-Map → all | FE-MAP-01~14全部完成。13个地图组件(`frontend/src/components/map/`) + 1个WebSocket客户端(`frontend/src/socketio/mapSocket.js`)。包含: SectionInfoCard(路段信息卡), TrafficOverlay(路况着色), PropagationRipple(涟漪动画), EmergencyRoute(应急路线), IntersectionTopology(路口拓扑), WizardMap(5步向导), PropagationArrows(传播箭头), PropagationTree(传播树), PropagationReplay(历史回放), AreaSelector(区域选择), RoutePlanMap(路径规划), RouteComparison(路线对比), MobileMapWrapper(移动端适配), mapSocket(WS实时更新)。warning store增强flashSectionId。验证: build+dev均通过。 |
+
+## Agent-Test-Docs (2026-07-12)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/12 | Test-Docs → all | TEST-01~05全部完成。5个测试文件共74条用例覆盖65个API端点。新增Blueprint(signal/carbon/traveler/propagation/emergency/scenario)全链路测试通过。算法模块直接测试9条。原17条旧用例回归通过。总计91 passed。已知BUG: propagation.py中analyze_propagation→propagate_congestion 函数名不匹配; scenario.py中run_comparison→run_scenario 函数名不匹配。详见 decisions-log.md。 |

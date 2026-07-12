@@ -933,3 +933,22 @@ knn_mae = 5.34
 14. mapSocket指数退避重连(1s→2s→4s→...→30s)
 
 **影响**：warning store新增flashSectionId；全部前端组件零后端变更
+
+### [BUG] propagation.py 中 analyze_propagation 函数名不匹配 — Agent-Test-Docs (2026-07-12)
+
+**背景**：Agent-Test-Docs 在编写传播分析API测试时发现 `propagation.py:analyze` 端点调用 `from propagation.diffusion_model import analyze_propagation`，但算法模块中该函数命名为 `propagate_congestion`。
+
+**影响**：
+- POST /api/v1/propagation/analyze 传入有效section_id时产生未捕获的 ImportError
+- ImportError 位于 try/except 块之外，导致 Flask 返回 500 而非友好错误
+
+**建议修复**：将 `propagation.py:33` 的 `analyze_propagation` 改为 `propagate_congestion`，或将 import 语句移入 try/except 块内。
+
+### [BUG] scenario.py 中 run_comparison 函数名不匹配 — Agent-Test-Docs (2026-07-12)
+
+**背景**：`scenario.py:run_scenario` 端点调用 `from scenario.whatif_engine import run_comparison`，但算法模块中该函数命名为 `run_scenario`。
+
+**影响**：
+- POST /api/v1/scenario/{id}/run 执行时产生 ImportError → 500
+
+**建议修复**：将 `scenario.py:94` 的 `run_comparison` 改为 `run_scenario`。
