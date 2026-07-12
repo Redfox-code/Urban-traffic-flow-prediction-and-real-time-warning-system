@@ -3,18 +3,43 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.decorators import role_required
 from app.models.emergency_route import EmergencyRoute
+from app.models.traffic_section import TrafficSection
 from app import db
 from datetime import datetime
+import math
 
 
 emergency_bp = Blueprint('emergency', __name__)
+
+
+def _find_nearest_section(lat, lng):
+    """根据经纬度找到最近的DB路段，返回 section_id 或 None"""
+    sections = TrafficSection.query.all()
+    best_id, best_dist = None, float('inf')
+    for s in sections:
+        c = s.coordinates
+        if not c:
+            continue
+        wp = c.get('waypoints', []) or c.get('path', [])
+        if not wp:
+            continue
+        # 取路段中心点
+        ct = wp[len(wp) // 2]
+        # haversine 近似：1度 ≈ 111km
+        dlng = (ct[0] - lng) * 111000 * math.cos(math.radians((ct[1] + lat) / 2))
+        dlat = (ct[1] - lat) * 111000
+        d = math.sqrt(dlng**2 + dlat**2)
+        if d < best_dist:
+            best_dist = d
+            best_id = s.id
+    return best_id
 
 
 @emergency_bp.route('/plan', methods=['POST'])
 @jwt_required()
 @role_required('admin')
 def plan():
-    """计算应急最优路径 + 绿波带建议。"""
+    """应急路径规划 — 复用route_service的真实路网Dijkstra + 应急绿波带调整。"""
     data = request.get_json(silent=True) or {}
     vehicle_type = data.get('vehicle_type', 'ambulance')
     origin = data.get('origin', {})
@@ -26,57 +51,56 @@ def plan():
     o_lat, o_lng = origin.get('lat', 0), origin.get('lng', 0)
     d_lat, d_lng = destination.get('lat', 0), destination.get('lng', 0)
 
-    # 基础路径：从起点到终点（地图可渲染的最小路径）
-    # AMap 使用 [lng, lat] 格式
-    base_path = [[o_lng, o_lat], [d_lng, d_lat]]
+    # 找到坐标对应的最近路段
+    origin_section_id = _find_nearest_section(o_lat, o_lng)
+    dest_section_id = _find_nearest_section(d_lat, d_lng)
 
-    # 尝试用算法规划（如有路段匹配则生成更真实的路径）
-    import sys, os
-    algo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
-    if algo_dir not in sys.path:
-        sys.path.insert(0, algo_dir)
+    if not origin_section_id or not dest_section_id:
+        # Fallback: 路段匹配失败，画直线路径
+        return jsonify({'code': 200, 'data': {
+            'route': [{'name': '应急路线(无匹配路段)', 'path': [[o_lng, o_lat], [d_lng, d_lat]], 'length_km': 1.0}],
+            'est_travel_time_sec': 180,
+            'normal_travel_time_sec': 300,
+            'green_wave': [],
+            'time_saved_pct': 40,
+            'vehicle_type': vehicle_type
+        }, 'message': '应急路径规划完成（路段匹配失败，使用直线）'})
 
-    algo_route = None
-    try:
-        from route.three_route_planner import plan_three_routes, build_sample_graph
-        graph = build_sample_graph()
-        result_obj = plan_three_routes(graph, o_lat, o_lng, d_lat, d_lng)
-        if result_obj.route_a:
-            algo_route = result_obj.route_a.to_dict()
-    except Exception:
-        pass
+    # 使用route_service的真实路网Dijkstra（和出行者路径规划同一引擎）
+    from app.services.route_service import plan_route
+    path_detail, distance, route_segments, estimated_time, error = plan_route(
+        origin_section_id, dest_section_id
+    )
 
-    # 构建路线数据（优先用算法结果，fallback到直线路径）
-    if algo_route and algo_route.get('path'):
-        route_segments = algo_route.get('path', [])
-        total_time = algo_route.get('total_time_sec', 180)
-    else:
-        # 生成带中间点的模拟路线（避免纯直线太假）
-        mid_lng = (o_lng + d_lng) / 2 + 0.002
-        mid_lat = (o_lat + d_lat) / 2 + 0.001
-        route_segments = [{
-            'name': '应急路线',
-            'path': [base_path[0], [mid_lng, mid_lat], base_path[1]],
-            'length_km': 2.5,
-            'travel_time_sec': 180
-        }]
-        total_time = 180
+    if error:
+        # Dijkstra也失败，fallback到直线
+        return jsonify({'code': 200, 'data': {
+            'route': [{'name': '应急路线', 'path': [[o_lng, o_lat], [d_lng, d_lat]], 'length_km': round(distance, 2) if distance else 1.0}],
+            'est_travel_time_sec': 180,
+            'normal_travel_time_sec': 300,
+            'green_wave': [],
+            'time_saved_pct': 40,
+            'vehicle_type': vehicle_type
+        }, 'message': '应急路径规划完成'})
 
-    # 估算绿波带
-    est_time = total_time
-    normal_time = est_time * 1.4
-    time_saved = round((1 - est_time / normal_time) * 100) if normal_time > 0 else 28
+    # 应急车辆优先级调整：按车型缩短时间
+    priority_map = {'ambulance': 0.65, 'fire': 0.75, 'police': 0.80}
+    priority = priority_map.get(vehicle_type, 0.75)
 
-    result = {
-        'route': route_segments if isinstance(route_segments, list) else [route_segments],
-        'est_travel_time_sec': est_time,
-        'normal_travel_time_sec': round(normal_time, 1),
+    est_time_min = estimated_time  # plan_route 返回的是分钟
+    est_time_sec = round(est_time_min * 60 * priority)
+    normal_time_sec = round(est_time_min * 60)
+    time_saved = round((1 - priority) * 100)
+
+    return jsonify({'code': 200, 'data': {
+        'route': route_segments,  # 真实路网坐标，TrafficMap直接渲染
+        'est_travel_time_sec': est_time_sec,
+        'normal_travel_time_sec': normal_time_sec,
         'green_wave': [],
         'time_saved_pct': time_saved,
-        'vehicle_type': vehicle_type
-    }
-
-    return jsonify({'code': 200, 'data': result, 'message': '应急路径规划完成'})
+        'vehicle_type': vehicle_type,
+        'total_distance_km': round(distance, 2),
+    }, 'message': '应急路径规划完成'})
 
 
 @emergency_bp.route('/records', methods=['GET'])
