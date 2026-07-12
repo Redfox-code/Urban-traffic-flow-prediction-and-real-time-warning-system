@@ -106,28 +106,38 @@ def analyze():
             seg_lengths=seg_lengths,
         )
 
-        # 5. 构建路段名映射（Amap ID → name）
-        seg_name_map = {seg['id']: seg['name'] for seg in road_network}
+        # 5. 构建双向路段名映射（Amap ID ↔ DB section name）
+        seg_to_dbname = {}
+        for s in TrafficSection.query.all():
+            mids = _match_name(s.name) or _match_coord(s)
+            for mid in mids:
+                seg_to_dbname[mid] = s.name  # 总是覆盖，最近匹配的优先
+        # Amap name fallback
+        seg_amap_name = {seg['id']: seg['name'] for seg in road_network}
 
-        # 6. 格式化返回
+        # 6. 格式化返回 — 根节点强制用DB路段名，子节点优先DB名兜底Amap名
         tree_dict = result.tree.to_dict() if result.tree else None
-        # 给树节点添加name字段
-        def _add_names(node):
+        if tree_dict:
+            tree_dict['name'] = db_section.name
+        def _add_child_names(node):
             if node:
-                node['name'] = seg_name_map.get(int(node.get('section_id', 0)), f"路段{node.get('section_id')}")
                 for c in node.get('children', []):
-                    _add_names(c)
-        _add_names(tree_dict)
+                    sid = int(c.get('section_id', 0))
+                    c['name'] = seg_to_dbname.get(sid) or seg_amap_name.get(sid, f"路段{sid}")
+                    _add_child_names(c)
+        _add_child_names(tree_dict)
 
-        # flat_list也加上name
+        # flat_list也加上name（优先DB名）
         flat_list = result.to_flat_list()
         for item in flat_list:
-            item['from_name'] = seg_name_map.get(int(item.get('from', 0)), f"路段{item.get('from')}") if item.get('from') else None
-            item['to_name'] = seg_name_map.get(int(item.get('to', 0)), f"路段{item.get('to')}")
+            fid = int(item.get('from', 0)) if item.get('from') else 0
+            tid = int(item.get('to', 0))
+            item['from_name'] = seg_to_dbname.get(fid) or seg_amap_name.get(fid, f"路段{fid}") if fid else None
+            item['to_name'] = seg_to_dbname.get(tid) or seg_amap_name.get(tid, f"路段{tid}")
 
         return jsonify({'code': 200, 'data': {
             'source_section_id': result.root_section_id,
-            'source_name': seg_name_map.get(int(result.root_section_id), f"路段{result.root_section_id}"),
+            'source_name': db_section.name,  # 用DB路段名，确保和下拉框一致
             'propagation_tree': tree_dict,
             'flat_list': flat_list,
             'total_nodes': result.total_nodes,
