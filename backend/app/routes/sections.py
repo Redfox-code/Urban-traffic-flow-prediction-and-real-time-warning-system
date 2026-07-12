@@ -8,7 +8,6 @@ sections_bp = Blueprint('sections', __name__)
 
 
 @sections_bp.route('', methods=['GET'])
-@jwt_required()
 def list_sections():
     page = request.args.get('page', 1, type=int)
     page_size = min(request.args.get('page_size', 20, type=int), 100)
