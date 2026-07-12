@@ -5,6 +5,12 @@
 
 ---
 
+## FE-MAP-ROUTE RoutePlanMap 路线渲染 (2026-07-12)
+
+| 时间 | 交付方 → 接收方 | 说明 |
+|------|----------------|------|
+| 7/12 | FE-Map → FE-Main | FE-MAP-ROUTE: RoutePlanMap.vue新增routeData prop + Polyline路线渲染+起终点标记+途经点标记+setFitView自动缩放。验证: npx vite build 2298 modules 0 errors。分支: feature/agent-frontend-map/FE-MAP-ROUTE |
+
 ## ALGO-ENGINES 六算法模块完成 (2026-07-12)
 
 | 时间 | 交付方 → 接收方 | 说明 |

@@ -81,6 +81,8 @@
 | FEAT-SIM-REWRITE | 实时仿真重写 | agent-lead | ✅ APPROVED |
 | FEAT-ANALYSIS-REPORT | 预测分析报告模块 | agent-lead | ✅ APPROVED |
 
+| FE-MAP-ROUTE | RoutePlanMap 路线渲染(routeData prop + Polyline + 起终点/途经点标记 + setFitView) | agent-frontend-map |
+
 ## 🔄 InProgress
 
 （空）
@@ -91,6 +93,10 @@
 |----|------|-------|
 | FIX-LOGIN-01 | 登录页+注册页增加角色选择下拉框，按角色跳转首页 | agent-lead |
 | FE-ANALYST-01~05 | 分析员5个页面填充真实内容(模型管理/拥堵传播/碳排放/数据探索/场景仿真) — 对接后端API+ECharts | agent-frontend-main |
+| FE-TRAVELER-01 | 路径规划页(RoutePlanView): 移动端优先+GPS+地图选点+3路线+拥堵度+收藏 | agent-frontend-main |
+| FE-TRAVELER-02 | 我的出行页(MyTripsView): 路线卡片网格+路况指示条30s轮询+ECharts时段分布 | agent-frontend-main |
+| FE-TRAVELER-03 | 出行提醒页(AlertsView): 通勤开关+无限滚动+类型徽标+未读蓝色竖线标记已读 | agent-frontend-main |
+| FE-TRAVELER-04 | 历史记录页(HistoryView): 查询列表+重新加载+单条删除+清空全部 | agent-frontend-main |
 
 ## 📋 Backlog
 
@@ -98,7 +104,6 @@
 |----|------|--------|-------|------|
 | D12-T01 | 演示视频录制 | P1 | agent-test-docs | |
 | FE-ADMIN-01~05 | 管理员5个页面填充真实内容 | P2 | agent-frontend-main | 后续 |
-| FE-TRAVELER-01~04 | 出行者4个页面填充真实内容 | P2 | agent-frontend-main | 后续 |
 
 ## ✅ Done (2026-07-12) — Bug修复
 

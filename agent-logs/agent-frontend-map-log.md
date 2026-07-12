@@ -71,3 +71,19 @@
 **💭分析**：.env中VITE_AMAP_KEY='a7e...'带了单引号。Vite原样读取.env值不去引号，所以import.meta.env.VITE_AMAP_KEY返回的是带引号的字符串。
 **📝修复**：去掉引号。同时修正高德JS API URL路径，marker改为watch动态渲染。
 **教训**：.env值不要加引号——和Shell变量不同。
+
+### FE-MAP-ROUTE RoutePlanMap 路线渲染增强 (2026-07-12)
+**分支**：feature/agent-frontend-map/FE-MAP-ROUTE
+
+**变更**：RoutePlanMap.vue 新增路线渲染能力
+1. **新增 `routeData` prop**: 接收 `{ path: [{lat, lng, name}, ...], routes: [...] }` 格式数据
+2. **watch(routeData)**: 数据变化时自动清除旧路线+渲染新路线
+3. **Polyline绘制**: 蓝色(#1677ff)粗线(strokeWeight:6)，圆角连接
+4. **起终点标记**: 起点蓝色圆形「起」标签 / 终点红色圆形「终」标签
+5. **途经点**: 路径中间点用蓝色小圆点标记(直径10px)
+6. **自动缩放**: `map.setFitView()` 适配路线至可视范围
+7. **清除机制**: `clearRoute()` 清除路线线和所有标记，unmounted时自动清理
+8. **兼容旧逻辑**: routeData为空时不影响原有选点/GPS/POI搜索功能
+9. **暴露方法**: `clearRoute`, `renderRoute` 通过 defineExpose 暴露
+
+**验证**：`npx vite build` — 2298 modules transformed，0 errors
