@@ -161,60 +161,87 @@ watch(() => props.sections, () => {
   if (mapReady.value) fetchTrafficData()
 }, { deep: true })
 
-// ===== 高亮规划路线 =====
-let routePolyline = null
+// ===== 高亮规划路线（每个路段独立绘制，沿实际道路） =====
+let routePolylines = []
 let routeMarkers = []
 
 const clearRoute = () => {
-  if (routePolyline) { mapInstance.value?.remove(routePolyline); routePolyline = null }
+  routePolylines.forEach(p => mapInstance.value?.remove(p))
+  routePolylines = []
   routeMarkers.forEach(m => mapInstance.value?.remove(m))
   routeMarkers = []
 }
 
 const highlightRoute = (segments) => {
-  if (!mapInstance.value || !segments.length) return
+  if (!mapInstance.value || !segments || !segments.length) return
   clearRoute()
 
-  // 收集所有路径坐标
-  const fullPath = []
-  segments.forEach(seg => {
-    if (seg.path) fullPath.push(...seg.path)
+  // 支持格式:
+  // 1) route_segments: [{seg_id, name, path: [[lng,lat],...], length_km}, ...] (新，推荐)
+  // 2) full_coordinates: [[lng,lat], ...] (旧，单条连续线)
+  // 3) 带path字段的对象数组: [{name, path: [[lng,lat],...]}, ...] (旧)
+
+  let segList = []
+
+  if (Array.isArray(segments[0])) {
+    // 格式2: 纯坐标数组 → 当作一个路段处理
+    segList = [{ path: segments, name: '' }]
+  } else {
+    segList = segments
+  }
+
+  // 所有路段等亮绘制，沿实际道路，路径连续不断开
+  segList.forEach((seg) => {
+    const segPath = seg.path || seg.coordinates || []
+    if (segPath.length < 2) return
+
+    const polyline = new AMap.Polyline({
+      path: segPath,
+      strokeColor: '#00d4ff',
+      strokeWeight: 6,
+      strokeOpacity: 0.85,
+      lineJoin: 'round',
+      lineCap: 'round',
+      zIndex: 100,
+    })
+    mapInstance.value.add(polyline)
+    routePolylines.push(polyline)
   })
 
-  if (fullPath.length < 2) return
+  if (routePolylines.length === 0) return
 
-  // 画高亮路线
-  routePolyline = new AMap.Polyline({
-    path: fullPath,
-    strokeColor: '#00d4ff',
-    strokeWeight: 8,
-    strokeOpacity: 0.9,
-    lineJoin: 'round',
-    lineCap: 'round',
-    zIndex: 100,  // 最上层
-    showDir: true,  // 显示方向箭头
-  })
-  mapInstance.value.add(routePolyline)
+  // 起终点标记：取第一个路段起点和最后一个路段终点
+  let allPaths = segList.filter(s => (s.path || s.coordinates || []).length >= 2)
+  if (allPaths.length === 0) return
 
-  // 起终点标记
-  const start = fullPath[0], end = fullPath[fullPath.length - 1]
+  const firstPath = allPaths[0].path || allPaths[0].coordinates
+  const lastPath = allPaths[allPaths.length - 1].path || allPaths[allPaths.length - 1].coordinates
+  const start = firstPath[0]
+  const end = lastPath[lastPath.length - 1]
+
   if (window.AMap?.Marker) {
     const startM = new AMap.Marker({
-      position: start, content: '<div style="background:#00d4ff;color:#000;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:bold">起</div>', offset: new AMap.Pixel(-12, -12), zIndex: 101,
+      position: start,
+      content: '<div style="background:#00d4ff;color:#000;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:bold">起</div>',
+      offset: new AMap.Pixel(-12, -12),
+      zIndex: 101,
     })
     const endM = new AMap.Marker({
-      position: end, content: '<div style="background:#ff4d4f;color:#fff;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:bold">终</div>', offset: new AMap.Pixel(-12, -12), zIndex: 101,
+      position: end,
+      content: '<div style="background:#ff4d4f;color:#fff;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:bold">终</div>',
+      offset: new AMap.Pixel(-12, -12),
+      zIndex: 101,
     })
     mapInstance.value.add([startM, endM])
     routeMarkers = [startM, endM]
   }
 
-  // 自适应视野
-  mapInstance.value.setFitView([routePolyline])
+  // 自适应视野（适配所有路段）
+  mapInstance.value.setFitView(routePolylines)
 }
 
 watch(() => props.routePath, (val) => {
-  if (mapReady.value) highlightRoute(val)
+  if (mapReady.value && val) highlightRoute(val)
 }, { deep: true })
 </script>
 
