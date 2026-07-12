@@ -424,12 +424,20 @@ class PredictionService:
             best_model = metrics.get('best_model', 'RF')
 
             # 根据R²生成推荐建议
-            if rf_r2 > 0.5:
-                recommendation = f"当前预测使用RF模型，MAE={rf_mae:.2f}veh/h，R²={rf_r2:.2f}，模型可解释性较好。"
-            elif rf_r2 > 0:
-                recommendation = f"当前预测使用RF模型，MAE={rf_mae:.2f}veh/h。建议结合实时路况综合判断。"
+            best_r2 = max(rf_r2, knn_r2)
+            training_date = metrics.get('training_date', 'unknown')
+            total_records = metrics.get('total_records', 0)
+
+            if best_r2 > 0.5:
+                recommendation = (f"模型可解释性较好（{best_model} R²={best_r2:.2f}，MAE={min(rf_mae, knn_mae):.1f}veh/h）。"
+                                  f"训练数据{total_records}条({training_date[:10]})。")
+            elif best_r2 > 0:
+                recommendation = (f"模型有一定预测能力（{best_model} R²={best_r2:.2f}，MAE={min(rf_mae, knn_mae):.1f}veh/h）。"
+                                  f"建议结合实时路况综合判断。训练数据{total_records}条。")
             else:
-                recommendation = f"当前预测使用RF模型，MAE={rf_mae:.2f}veh/h。模型精度有限，请以实时路况数据为准。"
+                recommendation = (f"[注意] 当前模型R²为负值（{best_model} R²={best_r2:.2f}），预测精度不如简单均值。"
+                                  f"原因：训练数据仅{total_records}条高德实时数据，时间跨度不足，滞后特征价值有限。"
+                                  f"请以实时路况数据为准。积累更多时段数据后可改善。")
 
             return {
                 'best_model': best_model,
@@ -437,6 +445,8 @@ class PredictionService:
                 'rf_r2': rf_r2,
                 'knn_mae': knn_mae,
                 'knn_r2': knn_r2,
+                'training_date': training_date,
+                'total_records': total_records,
                 'recommendation': recommendation,
             }
 
@@ -457,25 +467,30 @@ class PredictionService:
         import json
         model_dir = self._get_model_dir()
         metrics_path = os.path.join(model_dir, 'metrics.json')
-        rf_mae = 6.16
-        knn_mae = 5.34
+        rf_mae = None
+        knn_mae = None
         if os.path.exists(metrics_path):
             with open(metrics_path, 'r') as f:
                 metrics = json.load(f)
-            rf_mae = metrics.get('RF_mae', rf_mae)
-            knn_mae = metrics.get('KNN_mae', knn_mae)
+            rf_mae = metrics.get('RF_mae')
+            knn_mae = metrics.get('KNN_mae')
 
-        max_mae = max(rf_mae, knn_mae)
-        if difference <= max_mae:
-            note = f"RF预测值略{'高' if rf_flow > knn_flow else '低'}于KNN，差异在模型MAE范围内(±{max_mae:.1f}veh/h)"
+        if rf_mae is not None and knn_mae is not None:
+            max_mae = max(rf_mae, knn_mae)
+            if difference <= max_mae:
+                note = f"RF预测值略{'高' if rf_flow > knn_flow else '低'}于KNN，差异在模型MAE范围内(±{max_mae:.1f}veh/h)"
+            else:
+                note = f"RF与KNN预测差异{difference:.1f}veh/h，超出模型MAE范围(±{max_mae:.1f}veh/h)，建议检查输入数据"
         else:
-            note = f"RF与KNN预测差异{difference:.1f}veh/h，超出模型MAE范围(±{max_mae:.1f}veh/h)，建议检查输入数据"
+            note = f"RF({rf_flow:.0f})与KNN({knn_flow:.0f})预测差异{difference:.1f}veh/h（无历史metrics数据对比）"
 
         return {
             'rf_predicted': rf_flow,
             'knn_predicted': knn_flow,
             'difference': difference,
             'note': note,
+            'rf_mae': rf_mae,
+            'knn_mae': knn_mae,
         }
 
     def get_accuracy(self, section_id=None):

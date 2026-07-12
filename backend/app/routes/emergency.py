@@ -32,15 +32,17 @@ def plan():
     try:
         from route.three_route_planner import plan_three_routes, build_sample_graph
         graph = build_sample_graph()
-        routes = plan_three_routes(
+        result_obj = plan_three_routes(
             graph,
             origin.get('lat', 0), origin.get('lng', 0),
             destination.get('lat', 0), destination.get('lng', 0)
         )
+        # ThreeRouteResult 对象 — 取推荐路线A
+        route_a = result_obj.route_a.to_dict() if result_obj.route_a else {}
         result = {
-            'route': routes[0] if routes else [],
-            'est_travel_time_sec': routes[0].get('total_time_sec', 180) if routes else 180,
-            'normal_travel_time_sec': routes[0].get('total_time_sec', 180) * 1.4 if routes else 252,
+            'route': [route_a] if route_a else [],
+            'est_travel_time_sec': route_a.get('total_time_sec', 180),
+            'normal_travel_time_sec': route_a.get('total_time_sec', 180) * 1.4,
             'green_wave': [],
             'time_saved_pct': 28,
             'vehicle_type': vehicle_type
