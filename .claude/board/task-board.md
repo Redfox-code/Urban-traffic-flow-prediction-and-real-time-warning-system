@@ -83,6 +83,12 @@
 
 | FE-MAP-ROUTE | RoutePlanMap 路线渲染(routeData prop + Polyline + 起终点/途经点标记 + setFitView) | agent-frontend-map |
 
+## ✅ Done (2026-07-13)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| FE-MODEL-CHART | ModelsView增加模型评估可视化图表（KNN vs RF柱状图 + 预测vs实际散点图） | agent-frontend-main |
+
 ## 🔄 InProgress
 
 （空）
