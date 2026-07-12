@@ -117,6 +117,26 @@ def history():
     return jsonify({'code': 200, 'data': result, 'message': 'ok'})
 
 
+@traveler_bp.route('/history', methods=['POST'])
+@jwt_required()
+def save_history():
+    """保存路线查询历史。"""
+    user_id = int(get_jwt_identity())
+    data = request.get_json(silent=True) or {}
+    from app.models.route_record import RouteRecord
+    from datetime import datetime
+    record = RouteRecord(
+        user_id=user_id,
+        origin_section_id=data.get('origin_section_id'),
+        dest_section_id=data.get('dest_section_id'),
+        distance=data.get('distance'),
+        estimated_time=data.get('estimated_time'),
+    )
+    db.session.add(record)
+    db.session.commit()
+    return jsonify({'code': 201, 'data': {'id': record.id}, 'message': '已保存'})
+
+
 @traveler_bp.route('/history/<int:record_id>', methods=['DELETE'])
 @jwt_required()
 def delete_history_item(record_id):
