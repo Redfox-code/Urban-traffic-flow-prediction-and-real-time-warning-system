@@ -94,7 +94,7 @@
         <el-card v-if="result" shadow="never" style="background:var(--bg-panel)">
           <div style="display:flex;gap:12px">
             <el-button type="primary" @click="saveAsFavorite" :loading="savingFavorite" :disabled="!userStore.isLoggedIn">
-              ⭐ 保存为常用路线
+              📌 保存到我的行程
             </el-button>
             <span v-if="!userStore.isLoggedIn" style="font-size:12px;color:var(--text-secondary);align-self:center">登录后可保存</span>
           </div>
@@ -244,7 +244,7 @@ const saveAsFavorite = async () => {
       dest_name: d?.name||'', dest_lat: d?.coordinates?.[0]?.[0]||null, dest_lng: d?.coordinates?.[0]?.[1]||null,
       origin_section_id: origin.value, dest_section_id: dest.value
     })
-    ElMessage.success('已保存为常用路线')
+    ElMessage.success('已保存到我的行程')
   } catch (e) { ElMessage.error('保存失败') }
   finally { savingFavorite.value = false }
 }

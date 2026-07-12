@@ -60,6 +60,18 @@ def save_route_profile(user_id, data):
         except (ValueError, TypeError):
             depart_hour = 8.0  # 默认早上8点
 
+    # 限制最多3条常用路线：超限时删除最旧（frequency最低）的非活跃路线
+    active_count = UserTravelProfile.query.filter_by(
+        user_id=user_id, is_active=True
+    ).count()
+    if not matched and active_count >= 3:
+        oldest = UserTravelProfile.query.filter_by(
+            user_id=user_id, is_active=True
+        ).order_by(UserTravelProfile.frequency.asc()).first()
+        if oldest:
+            oldest.is_active = False
+            db.session.flush()
+
     if matched:
         # EWMA更新
         if depart_hour is not None:

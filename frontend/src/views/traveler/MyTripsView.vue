@@ -24,6 +24,11 @@
       <el-button type="primary" @click="goRoutePlan">🚘 去规划路线</el-button>
     </el-empty>
 
+    <!-- 上限提示 -->
+    <div v-if="profiles.length >= 3" class="mtv-limit-hint">
+      ⚠️ 最多保存3条行程（已达上限），保存新路线将自动替换最旧记录
+    </div>
+
     <!-- 卡片网格 -->
     <template v-else>
       <div class="mtv-grid">
@@ -68,6 +73,11 @@
             <el-tag v-if="p.alert_enabled" size="small" type="success" effect="plain" @click.stop="toggleAlert(p)" style="cursor:pointer">🔔 提醒已开</el-tag>
             <el-tag v-else size="small" type="info" effect="plain" @click.stop="toggleAlert(p)" style="cursor:pointer">🔕 提醒关闭</el-tag>
           </div>
+
+          <!-- 删除按钮 -->
+          <el-button class="mtv-delete-btn" text size="small" type="danger" @click.stop="deleteTrip(p)">
+            ✕ 删除
+          </el-button>
         </div>
       </div>
 
@@ -89,7 +99,7 @@ import { useUserStore } from '@/store/user'
 import { travelerApi } from '@/api/traveler'
 import { trafficApi } from '@/api/traffic'
 import * as echarts from 'echarts'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
@@ -272,6 +282,21 @@ function goRouteWith(p) {
   })
 }
 
+// ===== 删除行程 =====
+async function deleteTrip(p) {
+  try {
+    await ElMessageBox.confirm(`确认删除"${p.route_label || p.origin_name + '→' + p.dest_name}"？`, '删除行程', {
+      confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning'
+    })
+  } catch { return }
+  try {
+    await travelerApi.deleteRoute(p.id)
+    ElMessage.success('已删除')
+    refreshProfile()
+    nextTick(initChart)
+  } catch { ElMessage.error('删除失败') }
+}
+
 async function toggleAlert(p) {
   const newState = !p.alert_enabled
   try {
@@ -410,6 +435,15 @@ async function toggleAlert(p) {
 .mtv-card-tags {
   display: flex;
   gap: 6px;
+}
+.mtv-delete-btn {
+  margin-top: 8px; width: 100%; justify-content: center;
+  opacity: 0; transition: opacity .2s;
+}
+.mtv-card:hover .mtv-delete-btn { opacity: 1; }
+.mtv-limit-hint {
+  font-size: 12px; color: #ff9800; background: rgba(255,152,0,.08);
+  border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; text-align: center;
 }
 /* 图表 */
 .mtv-chart-card {

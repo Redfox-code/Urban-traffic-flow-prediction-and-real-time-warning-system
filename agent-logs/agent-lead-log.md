@@ -458,3 +458,30 @@ trend: 上升(6.0%), peak: 19.5@02:55, congestion: 低(0.0%), best_model: RF
 - `Register.vue`: 新增角色选择下拉框，携带角色描述；移除硬编码 `role:'analyst'`，改用 `form.role`；默认值改为 `traveler`
 
 ✅ **验证**: `npx vite build` — built in 5.87s, 0 errors
+
+---
+
+## 2026-07-15 🎯 需求分析：保存常用路线 → 保存到我的行程
+
+### 📋 需求原文
+
+> "路径规划里保存为常用路线改成保存到我的行程，可以把记录保存到我的行程界面为一块，最多储存三块，可以自由选择删除，并能点击跳转到规划界面"
+
+### 🔍 现状分析
+
+- RoutePlanView 已有"⭐ 保存为常用路线"按钮 → 调 `travelerApi.saveRoute()` → 写入 `user_travel_profiles` 表
+- MyTripsView 已展示卡片网格 + 点击跳转规划页 + 路况指示条
+- **缺失**：无限流（未限制3条）、卡片上无删除按钮、按钮文案不对
+
+### 📊 任务拆分
+
+| ID | 描述 | Agent | 文件 |
+|----|------|-------|------|
+| FEAT-MYTRIPS-01 | 后端 save_route_profile 限制最多3条（超限删最旧） | agent-lead | traveler_service.py |
+| FEAT-MYTRIPS-02 | RoutePlanView 按钮改为"保存到我的行程" | agent-lead | RoutePlanView.vue |
+| FEAT-MYTRIPS-03 | MyTripsView 卡片加删除按钮 + 上限提示 | agent-lead | MyTripsView.vue |
+
+### 🎯 关键决策
+
+- 上限策略：超3条时自动删除最旧（frequency最低）的记录，而非拒绝保存
+- 删除确认：用 `ElMessageBox.confirm` 二次确认
