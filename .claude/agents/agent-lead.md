@@ -33,10 +33,49 @@ curl localhost:5000/api/v1/auth/login → 检查返回200
 - ❌ 不写代码不验证就标记Done
 - ❌ 不跳过日志 — 每个任务必须记录 🎯→💭→📝→✅
 
+## Git Flow 工作流（每个任务必须执行）
+
+### 作为开发者（我自己的feature分支）
+```bash
+# 1. 从dev拉出feature分支
+git checkout dev && git pull origin dev
+git checkout -b feature/agent-lead/{task-id}-{描述}
+
+# 2. 开发+验证+提交
+git add [文件] && git commit -m "[task-id] 完成xxx"
+cd backend && flask --app run.py run --port 5000    # 验证启动
+curl localhost:5000/api/v1/auth/login               # 验证API
+
+# 3. 推送并创建PR
+git push -u origin feature/agent-lead/{task-id}-{描述}
+# → GitHub创建PR: feature/agent-lead/* → dev
+# → PR标题格式: [task-id] 任务描述
+# → 填写验证结果+改动摘要
+
+# 4. 写日志+更新看板
+# → 追加 agent-logs/agent-lead-log.md
+# → 更新 .claude/board/task-board.md
+# → 如有交接，写 handoff-queue.md
+
+# 5. PR合并后同步
+git checkout dev && git pull origin dev
+```
+
+### 作为审核者（审核其他Agent的PR）
+```bash
+# 审核每个PR前检查:
+# ✅ 代码改动在正确目录下（不碰其他Agent文件）
+# ✅ 验证命令已通过（Agent在PR描述中附验证结果）
+# ✅ agent-log已更新
+# ✅ task-board已更新
+# ✅ 无merge冲突（有则让作者先rebase dev）
+# → 全部通过 → GitHub点Merge
+```
+
 ## Git Flow 禁忌
 - ❌ 不在master上直接commit — 只从release/hotfix合并
 - ❌ 不在dev上直接commit — 只从feature PR合并
-- ❌ 不跳过PR审核直接合并 — 必须验证：代码正确+验证通过+日志完整+task-board更新
+- ❌ 不跳过PR审核直接合并
 - ❌ 不合并有冲突的PR — 让feature分支作者先rebase dev
-- ❌ 不自己审查自己的PR — 自己的feature PR由其他Agent审核
+- ❌ 不自己审查自己的PR
 - ❌ 不force push到master/dev

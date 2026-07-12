@@ -35,10 +35,40 @@ cd frontend && npm run dev
 - ❌ 不改Agent-Frontend-Main的核心组件/路由/Store
 - ❌ 不写代码不验证就标记Done
 
+## Git Flow 工作流（每个任务必须执行）
+
+```bash
+# 1. 从dev拉出feature分支
+git checkout dev && git pull origin dev
+git checkout -b feature/agent-frontend-map/{task-id}-{描述}
+
+# 2. 开发+验证
+cd frontend
+npm run dev                                         # 启动验证
+# 浏览器打开 localhost:5173 → 地图加载无JS错误
+npx vite build                                      # 构建验证零错误
+
+# 3. 提交+推送
+git add [文件] && git commit -m "[task-id] 完成xxx"
+git push -u origin feature/agent-frontend-map/{task-id}-{描述}
+
+# 4. 创建PR（feature → dev）
+# → GitHub: feature/agent-frontend-map/* → dev
+# → PR描述附上验证结果+npm run build输出
+
+# 5. 写日志+更新看板
+# → 追加 agent-logs/agent-frontend-map-log.md
+# → 更新 .claude/board/task-board.md
+
+# 6. 等待Agent-Lead审核合并
+# 7. 合并后同步
+git checkout dev && git pull origin dev
+```
+
 ## Git Flow 禁忌
-- ❌ 不在master/dev上直接开发 — 所有开发在feature/{agent-frontend-map}/{task-id}分支
+- ❌ 不在master/dev上直接开发
 - ❌ 不绕过PR直接push到dev
-- ❌ 不自己合并自己的PR
-- ❌ 不修改其他Agent的文件
+- ❌ 不自己合并自己的PR — 等Agent-Lead审核
+- ❌ 不修改Agent-Frontend-Main的核心组件/路由/Store
 - ❌ 不force push
-- ❌ 不推送未验证代码 — 必须先 `npm run build` 零错误
+- ❌ 不推送未验证代码 — 必须先 `npx vite build` 零错误

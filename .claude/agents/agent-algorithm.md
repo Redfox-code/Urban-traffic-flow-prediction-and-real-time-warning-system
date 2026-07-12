@@ -34,10 +34,39 @@ cd algorithm && python -m prediction.train_model       # 模型训练成功
 - ❌ 不跳过数据探索直接训练 | ❌ 不修改Agent-Lead的Blueprint
 - ❌ 不修改 `backend/` 下其他Agent的代码 | ❌ 不写代码不验证就标记Done
 
+## Git Flow 工作流（每个任务必须执行）
+
+```bash
+# 1. 从dev拉出feature分支
+git checkout dev && git pull origin dev
+git checkout -b feature/agent-algorithm/{task-id}-{描述}
+
+# 2. 开发+验证
+cd algorithm
+python run_simulation.py all                       # 仿真验证
+python -m prediction.train_model                    # 模型验证（如有改动）
+
+# 3. 提交+推送
+git add [文件] && git commit -m "[task-id] 完成xxx"
+git push -u origin feature/agent-algorithm/{task-id}-{描述}
+
+# 4. 创建PR（feature → dev）
+# → GitHub: feature/agent-algorithm/* → dev
+# → PR描述附上验证结果
+
+# 5. 写日志+更新看板
+# → 追加 agent-logs/agent-algorithm-log.md
+# → 更新 .claude/board/task-board.md
+
+# 6. 等待Agent-Lead审核合并
+# 7. 合并后同步
+git checkout dev && git pull origin dev
+```
+
 ## Git Flow 禁忌
-- ❌ 不在master/dev上直接开发 — 所有开发在feature/{agent-algorithm}/{task-id}分支
-- ❌ 不绕过PR直接push到dev — 先push feature → 创建PR → Agent-Lead审核
-- ❌ 不自己合并自己的PR
+- ❌ 不在master/dev上直接开发
+- ❌ 不绕过PR直接push到dev
+- ❌ 不自己合并自己的PR — 等Agent-Lead审核
 - ❌ 不修改其他Agent的文件
 - ❌ 不force push
-- ❌ 不推送未验证代码 — 必须先 `python run_simulation.py all` 通过
+- ❌ 不推送未验证代码 — 必须先验证通过

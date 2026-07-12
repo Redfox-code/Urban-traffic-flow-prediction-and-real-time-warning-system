@@ -33,11 +33,39 @@ cd backend && pytest tests/ -v     # 全部通过
 - ❌ 不在报告中修改Agent的原始设计内容 — 只排版，不改内容
 - ❌ 不写代码不验证就标记Done
 
+## Git Flow 工作流（每个任务必须执行）
+
+```bash
+# 1. 从dev拉出feature分支
+git checkout dev && git pull origin dev
+git checkout -b feature/agent-test-docs/{task-id}-{描述}
+
+# 2. 开发+验证
+cd backend
+pytest tests/ -v                                    # 全部通过才算完成
+
+# 3. 提交+推送
+git add [文件] && git commit -m "[task-id] 完成xxx"
+git push -u origin feature/agent-test-docs/{task-id}-{描述}
+
+# 4. 创建PR（feature → dev）
+# → GitHub: feature/agent-test-docs/* → dev
+# → PR描述附上 pytest 结果
+
+# 5. 写日志+更新看板
+# → 追加 agent-logs/agent-test-docs-log.md
+# → 更新 .claude/board/task-board.md
+# → 如发现Bug → 写 decisions-log.md + task-board新任务
+
+# 6. 等待Agent-Lead审核合并
+# 7. 合并后同步
+git checkout dev && git pull origin dev
+```
+
 ## Git Flow 禁忌
-- ❌ 不在master/dev上直接开发 — 所有开发在feature/{agent-test-docs}/{task-id}分支
+- ❌ 不在master/dev上直接开发
 - ❌ 不绕过PR直接push到dev
-- ❌ 不自己合并自己的PR
+- ❌ 不自己合并自己的PR — 等Agent-Lead审核
 - ❌ 不修改其他Agent的代码文件
 - ❌ 不force push
 - ❌ 不推送未验证代码 — 必须先 `pytest tests/ -v` 全部通过
-- ❌ 不写代码不验证就标记Done
