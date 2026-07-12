@@ -178,21 +178,21 @@ function buildEChartsTree(node, parentName) {
 function renderTreeChart() {
   if (!treeChartRef.value || !treeData.value) return
   if (treeChart) { treeChart.dispose(); treeChart = null }
-  treeChart = echarts.init(treeChartRef.value, 'dark')
+  treeChart = echarts.init(treeChartRef.value)
 
   const root = treeData.value.propagation_tree || treeData.value
   const treeRoot = buildEChartsTree(root)
 
+  console.log('[Propagation] treeRoot:', JSON.stringify(treeRoot, null, 2).slice(0, 500))
+  console.log('[Propagation] treeData keys:', Object.keys(treeData.value))
+
   if (!treeRoot) return
 
   treeChart.setOption({
+    backgroundColor: '#1a1a2e',
     tooltip: {
       trigger: 'item',
       triggerOn: 'mousemove',
-      formatter: (params) => {
-        const lines = params.name.split('\n')
-        return `<strong>${lines[0]}</strong><br/>${lines.slice(1).join('<br/>')}`
-      },
     },
     series: [{
       type: 'tree',
@@ -205,7 +205,7 @@ function renderTreeChart() {
       orient: 'LR',
       roam: true,
       expandAndCollapse: true,
-      initialTreeDepth: -1,
+      initialTreeDepth: 5,
       edgeShape: 'curve',
       edgeForkPosition: '50%',
       label: {
@@ -219,21 +219,14 @@ function renderTreeChart() {
         borderRadius: 4,
       },
       leaves: {
-        label: {
-          position: 'right',
-          verticalAlign: 'middle',
-          align: 'left',
-          fontSize: 11,
-          color: '#e0e0e0',
-        },
+        label: { position: 'right', verticalAlign: 'middle', align: 'left', fontSize: 11, color: '#e0e0e0' },
       },
-      emphasis: {
-        focus: 'descendant',
-        itemStyle: { borderWidth: 3, shadowBlur: 10, shadowColor: 'rgba(255,255,255,0.3)' },
-      },
+      emphasis: { focus: 'descendant' },
       lineStyle: { color: '#666', width: 2, curveness: 0.5 },
     }],
   }, true)
+
+  treeChart.resize()
 }
 
 function handleResize() {
