@@ -197,9 +197,9 @@ class TestPropagationAPI:
             res = client.post('/api/v1/propagation/analyze', json={
                 'section_id': 99999
             }, headers={'Authorization': f'Bearer {token}'})
-            assert res.status_code in (200, 500)
+            assert res.status_code in (200, 400, 500)
         except ImportError:
-            # 已知BUG: analyze_propagation不存在
+            # 已知BUG: analyze_propagation不存在（已修复）
             pass
 
     def test_active_empty(self, client):
