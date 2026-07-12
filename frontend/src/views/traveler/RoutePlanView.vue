@@ -10,6 +10,7 @@
           :height="isMobile ? '55vh' : '100%'"
           :standalone="true"
           mode="start-end"
+          :routeData="result"
           @point-select="onMapPointSelect"
           @poi-select="onMapPOISelect"
         />
