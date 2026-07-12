@@ -26,16 +26,61 @@ def analyze():
         return jsonify({'code': 400, 'data': None, 'message': '请指定起始路段ID'}), 400
 
     # 调用算法模块
-    import sys, os
+    import sys, os, json
     algo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
     if algo_dir not in sys.path:
         sys.path.insert(0, algo_dir)
-    from propagation.diffusion_model import propagate_congestion
+    from propagation.diffusion_model import propagate_congestion, build_adjacency_matrix, load_road_network
 
     try:
-        tree = propagate_congestion(int(section_id), max_depth, min_probability, time_window)
-        return jsonify({'code': 200, 'data': tree, 'message': '传播分析完成'})
+        # 1. 从roadNetwork.json构建邻接矩阵
+        road_network = load_road_network()
+        adj_matrix = build_adjacency_matrix(road_network)
+
+        # 2. 从数据库获取各路段最新速度
+        from app.models.traffic_record import TrafficRecord
+        from sqlalchemy import func
+        section_speeds = {}
+        latest_records = TrafficRecord.query.filter(
+            TrafficRecord.section_id.in_(list(adj_matrix.keys()))
+        ).order_by(TrafficRecord.timestamp.desc()).limit(500).all()
+
+        seen = set()
+        for r in latest_records:
+            if r.section_id not in seen and r.avg_speed:
+                section_speeds[r.section_id] = float(r.avg_speed)
+                seen.add(r.section_id)
+
+        # 3. 对没有数据的路段使用默认速度
+        for sid in adj_matrix:
+            if sid not in section_speeds:
+                section_speeds[sid] = 40.0
+
+        # 4. 执行传播分析
+        sid = int(section_id)
+        if sid not in adj_matrix:
+            return jsonify({'code': 400, 'data': None,
+                           'message': f'路段{sid}不在路网中，可用范围: {min(adj_matrix.keys())}-{max(adj_matrix.keys())}'}), 400
+
+        result = propagate_congestion(
+            source_section_id=sid,
+            adjacency_matrix=adj_matrix,
+            section_speeds=section_speeds,
+            max_depth=max_depth,
+            prob_threshold=min_probability,
+        )
+
+        # 5. 格式化返回
+        return jsonify({'code': 200, 'data': {
+            'source_section_id': result.root_section_id,
+            'propagation_tree': result.tree.to_dict() if result.tree else None,
+            'flat_list': result.to_flat_list(),
+            'total_nodes': result.total_nodes,
+            'max_depth': result.max_depth,
+        }, 'message': '传播分析完成'})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'code': 500, 'data': None, 'message': f'传播分析失败: {str(e)}'}), 500
 
 
