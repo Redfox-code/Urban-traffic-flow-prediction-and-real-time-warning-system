@@ -347,3 +347,52 @@ trend: 上升(6.0%), peak: 19.5@02:55, congestion: 低(0.0%), best_model: RF
 - `backend/saved_models/knn_model_20260707_102153.pkl` (新建) — 时间戳版本
 - `backend/saved_models/rf_model_20260707_102154.pkl` (新建) — 时间戳版本
 - `backend/saved_models/metrics.json` (更新) — 463条记录, RF R²=-0.457
+
+---
+
+## 2026-07-12 — Agent协作系统修复 + 三用户角色平台 Phase 1
+
+### 🎯 FIX-01~06: 基础设施修复
+
+💭 **问题分析**：CLAUDE.md 339行太长，Agent角色文件50-200行，加上要求启动时读取4份设计文档→单次会话2000+行上下文。D10之后只有Agent-Lead在工作，心跳/站会停摆。
+
+📝 **修复产出**：
+1. **CLAUDE.md** — 339行→70行，只保留核心规则+Agent速查表+禁忌+构建命令
+2. **6个Agent角色文件** — 各压缩到~40行，移除"启动必读设计文档"要求（改为按需读取）
+3. **STATE.md** — 更新阶段为"收尾交付+三用户角色平台"
+4. **心跳恢复** — CronCreate: 每5分钟扫描task-board
+5. **站会恢复** — CronCreate: 每30分钟(:03和:33)汇总进展到run-log.md
+6. **Memory更新** — project-overview.md + lessons-learned.md 更新阶段信息和新禁忌
+
+✅ **验证通过**：CLAUDE.md ~70行, Agent角色文件~40行, cron任务2个活跃, 锁文件已清理
+
+### 🎯 RBAC-01: User模型+角色字段+JWT改造
+
+💭 **决策**：将`db.Enum('admin','analyst')`改为`db.String(20)`，原因：SQLite不支持Enum ALTER，String更可移植。默认角色从'analyst'改为'traveler'。JWT token中通过`additional_claims`嵌入role和username。
+
+📝 **产出**：
+- `backend/app/models/user.py` — role字段改为String(20)，默认值'traveler'
+- `backend/app/services/auth_service.py` — 增加VALID_ROLES校验，默认role='traveler'
+- `backend/app/routes/auth.py` — JWT嵌入role+username claims；新增GET /auth/me；新增GET /auth/roles
+
+✅ **验证通过**：Flask app created OK，无import错误
+
+### 🎯 RBAC-02: @role_required装饰器
+
+📝 **产出**：
+- `backend/app/utils/decorators.py` — `@role_required('admin')` + `@optional_role`两个装饰器
+- role_required: 从JWT claims读取role，不在允许列表→403
+- optional_role: 允许未登录访问，但解析role供视图函数使用
+
+### 🎯 LEAD-DB-01: 7张新表模型
+
+📝 **产出**：
+- `congestion_propagation` — 拥堵传播记录（from/to_section, 概率, 延迟, 深度）
+- `user_travel_profiles` — 用户出行画像（OD对, 标签, 频次, EWMA出发时间）
+- `user_alert_history` — 用户提醒历史（类型, 标题, 消息, 已读状态）
+- `signal_optimizations` — 信号配时建议（Webster周期, 绿信比JSON, 改善指标）
+- `emergency_routes` — 应急调度记录（车辆类型, 路径JSON, 绿波带JSON）
+- `scenario_simulations` — What-If场景（干预类型, 基线/干预结果JSON）
+- `carbon_emissions` — 碳排放记录（路段, 速度, 总排放/正常/额外CO2）
+
+✅ **验证通过**：全部7张表在DB中创建成功（inspector.get_table_names确认）
