@@ -30,10 +30,10 @@ def analyze():
     algo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
     if algo_dir not in sys.path:
         sys.path.insert(0, algo_dir)
-    from propagation.diffusion_model import analyze_propagation
+    from propagation.diffusion_model import propagate_congestion
 
     try:
-        tree = analyze_propagation(int(section_id), max_depth, min_probability, time_window)
+        tree = propagate_congestion(int(section_id), max_depth, min_probability, time_window)
         return jsonify({'code': 200, 'data': tree, 'message': '传播分析完成'})
     except Exception as e:
         return jsonify({'code': 500, 'data': None, 'message': f'传播分析失败: {str(e)}'}), 500

@@ -100,10 +100,11 @@ def run_scenario(scenario_id):
         algo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
         if algo_dir not in sys.path:
             sys.path.insert(0, algo_dir)
-        from scenario.whatif_engine import run_comparison
+        from scenario.whatif_engine import run_scenario, build_demo_network
 
         params = json.loads(scenario.params_json) if scenario.params_json else {}
-        result = run_comparison(
+        demo_segments = build_demo_network()
+        result = run_scenario(
             intervention_type=scenario.intervention_type,
             params=params
         )
