@@ -32,6 +32,22 @@
 
 ---
 
+## 🔴 改代码前强制自检（每次 Write/Edit/Bash 修改文件前必答）
+
+**协调者（Claude）/ Agent-Lead 在修改任何文件之前，必须先用以下三个问题自问：**
+
+| # | 问题 | 检查方法 |
+|---|------|---------|
+| 1 | 📝 分析日志写了吗？ | `agent-logs/agent-lead-log.md` 最后一条是本次的 🎯 需求分析？ |
+| 2 | 📋 task-board有任务吗？ | `.claude/board/task-board.md` 的 InProgress 列有这个任务ID？ |
+| 3 | 👤 分配给正确的Agent了吗？ | 任务在正确Agent的名下？改的文件在该Agent的目录范围内？ |
+
+**三个答案全部是 YES 才能动手。任何一个 NO → 停止，补全缺失步骤。**
+
+> 历史教训：同一问题（传播树）被 Agent-Lead 连改 4 次，每次都跳过上述三步。见 [[lessons-learned]](.claude/memory/lessons-learned.md) #11。
+
+---
+
 ## 完整开发流程：从用户需求到代码上线
 
 ### 阶段一：需求分析（Agent-Lead）
