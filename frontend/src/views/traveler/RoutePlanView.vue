@@ -4,8 +4,15 @@
     <div class="rpv-container" :class="{ 'is-desktop': !isMobile }">
       <!-- 地图区 -->
       <div class="rpv-map-section" :style="isMobile ? 'height:55vh;min-height:280px' : 'flex:1.2'">
+        <!-- 地图加载中 -->
+        <div v-if="mapLoading" class="rpv-map-loading">
+          <div class="rpv-map-loading-spinner"></div>
+          <span>地图加载中...</span>
+        </div>
         <!-- 地图组件(独立AMap实例 + POI搜索 + GPS + 长按选点) -->
         <RoutePlanMap
+          v-else-if="!mapError"
+          :key="mapKey"
           ref="mapRef"
           :height="isMobile ? '55vh' : '100%'"
           :standalone="true"
@@ -13,7 +20,15 @@
           :routeData="result"
           @point-select="onMapPointSelect"
           @poi-select="onMapPOISelect"
+          @map-ready="onMapReady"
+          @error="onMapError"
         />
+        <!-- 地图加载失败 -->
+        <div v-else class="rpv-map-error">
+          <span class="rpv-map-error-icon">⚠️</span>
+          <span>地图加载失败，请</span>
+          <el-button text size="small" @click="retryLoadMap">重新加载</el-button>
+        </div>
         <!-- GPS手动定位按钮(地图组件自带一个,此处补充大按钮) -->
         <div class="rpv-gps-big" @click="locateGPS" title="GPS定位">
           <span class="rpv-gps-icon">📍</span>
@@ -172,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { routeApi } from '@/api/routePlan'
@@ -205,15 +220,36 @@ const scheduledTime = ref('')
 
 const mapRef = ref(null)
 
+// ===== 地图加载保护状态 =====
+const mapLoading = ref(true)
+const mapError = ref(false)
+const mapKey = ref(0)
+
+// ===== 规划防抖锁 =====
+const planningLock = ref(false)
+
 // ===== 加载路段列表 =====
 onMounted(async () => {
   try {
     const res = await sectionsApi.getList()
     sections.value = res.data?.items || res?.items || []
+    if (!Array.isArray(sections.value)) sections.value = []
     sectionOptions.value = sections.value
   } catch (e) {
     console.warn('加载路段列表失败', e)
+    sections.value = []
+    sectionOptions.value = []
+    // 不阻塞页面 — 用户仍可在地图长按选点
   }
+})
+
+// ===== 全局错误边界 =====
+onErrorCaptured((err) => {
+  console.warn('[RoutePlanView] 组件错误:', err)
+  if (!errorMsg.value) {
+    errorMsg.value = '页面渲染异常，请刷新重试'
+  }
+  return false  // 阻止传播，避免空白页
 })
 
 // ===== 路段搜索 =====
@@ -282,6 +318,21 @@ function autoMatchNearestSection(lng, lat, target) {
   }
 }
 
+// ===== 地图加载保护 =====
+function onMapReady() {
+  mapLoading.value = false
+}
+function onMapError(err) {
+  mapLoading.value = false
+  mapError.value = true
+  console.warn('[RoutePlanView] 地图加载失败:', err)
+}
+function retryLoadMap() {
+  mapError.value = false
+  mapLoading.value = true
+  mapKey.value++  // 通过key变化强制重新创建RoutePlanMap组件
+}
+
 // ===== 地图选点 =====
 function onMapPointSelect(data) {
   if (!data || !data.lng) return
@@ -309,6 +360,7 @@ function disablePastDate(time) {
 
 // ===== 路径规划 =====
 async function planRoute() {
+  if (planningLock.value) return  // 防抖锁: 避免快速重复提交
   if (!origin.value || !dest.value) {
     errorMsg.value = '请选择起点和终点路段'
     return
@@ -319,6 +371,7 @@ async function planRoute() {
   }
   errorMsg.value = ''
   loading.value = true
+  planningLock.value = true
   result.value = null
   try {
     const payload = {
@@ -340,6 +393,7 @@ async function planRoute() {
     errorMsg.value = msg
   } finally {
     loading.value = false
+    planningLock.value = false
   }
 }
 
@@ -457,6 +511,35 @@ function startNavigation() {
 }
 .rpv-gps-big:hover { background: rgba(0,212,255,.15); }
 .rpv-gps-icon { font-size: 16px; }
+/* 地图加载/错误占位 */
+.rpv-map-loading {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+  background: rgba(0,0,0,.3);
+  color: var(--text-secondary);
+  font-size: 14px;
+  z-index: 50;
+}
+.rpv-map-loading-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(255,255,255,.1);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: rpv-spin .8s linear infinite;
+}
+.rpv-map-error {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  background: rgba(0,0,0,.4);
+  color: var(--text-secondary);
+  font-size: 14px;
+  z-index: 50;
+}
+.rpv-map-error-icon { font-size: 24px; }
+@keyframes rpv-spin { to { transform: rotate(360deg); } }
 .rpv-panel-section {
   flex: 1;
   overflow: hidden;

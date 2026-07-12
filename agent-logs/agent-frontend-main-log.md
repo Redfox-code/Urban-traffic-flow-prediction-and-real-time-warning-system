@@ -76,33 +76,6 @@
 
 **✅验证**：`npm run dev` → build成功，零红色错误。15个视图全部import按需加载正常。
 
-### FE-MODEL-CHART 模型评估可视化图表 (2026-07-13)
-
-**🎯 任务接收**：给 ModelsView 增加模型评估可视化图表
-
-**💭 分析**：
-- 需要在现有指标卡片下方增加2个ECharts图表
-- API未就绪(GET /predict/evaluation不存在)，用硬编码默认数据
-- 需要ScatterChart + MarkLineComponent组件
-- 按需引入保持构建体积
-
-**📝 实现**：
-
-1. `frontend/src/api/prediction.js` — 新增 `getEvaluation()` 方法
-2. `frontend/src/views/analyst/ModelsView.vue`：
-   - **KNN vs RF 对比柱状图**：MAE / RMSE / R² 三组对比，KNN蓝色渐变、RF绿色渐变柱体，带tooltip
-   - **预测值 vs 实际值散点图**：KNN红点、RF蓝点，对角线y=x参考线，实际值X轴、预测值Y轴
-   - 默认数据：`{ metric: "MAE", knn: 158.29, rf: 162.52 }` 等
-   - 散点图mock数据随机生成30个点模拟偏差分布
-   - 暗色主题适配（splitLine/axisLabel/textStyle统一#8899aa）
-
-**✅ 验证**：`npx vite build` → 2298 modules, 0 errors
-
-**📦 交付**：
-- 分支: `feature/agent-frontend-main/FE-MODEL-CHART`
-- 文件: `frontend/src/api/prediction.js`, `frontend/src/views/analyst/ModelsView.vue`
-- PR: 已推送等待Agent-Lead审查合并
-
 ## 思考轨迹
 
 ### D6-T03 Vue初始化
@@ -184,22 +157,33 @@
 ### UI-04 TrafficMonitor重写
 **问题**：页面仍是D6骨架「TODO D8: 地图组件 + 实时数据面板」。
 **修复**：左地图+右数据面板双栏布局。24路段列表可滚动点击。TrafficBadge组件(畅通🟢/缓行🟡/拥堵🟠/严重🔴)。选中路段调trafficApi.getCurrent()显示实时数据。
-### FE-MODEL-CHART 模型评估可视化图表 (2026-07-13)
 
-**任务接收**：给 ModelsView 增加模型评估可视化图表
+### FIX-route-spinner RoutePlanView一直转圈修复 (2026-07-13)
 
-**分析**：
-- 需要在现有指标卡片下方增加2个ECharts图表
-- API未就绪(GET /predict/evaluation不存在)，用硬编码默认数据
-- 需要ScatterChart + MarkLineComponent组件
+**🎯 问题**：RoutePlanView.vue在AMap加载失败、API请求超时等边界场景下无限转圈/卡死。
 
-**实现**：
-1. frontend/src/api/prediction.js — 新增 getEvaluation() 方法
-2. frontend/src/views/analyst/ModelsView.vue：
-   - KNN vs RF 对比柱状图：MAE / RMSE / R2 三组对比
-   - 预测值 vs 实际值散点图：KNN红点、RF蓝点，对角线y=x参考线
-   - 硬编码默认数据回退
+**💭 根因分析**：
+1. `RoutePlanMap` 的 `initMap` catch 只 `console.warn`，不通知父组件——AMap脚本加载失败时地图区空白，用户看不到任何反馈
+2. `planRoute()` 无防抖锁——快速双击"规划路径"可能并发请求
+3. `onMounted` 的 catch 未显式置空 `sections.value`——API失败后 `sectionOptions` 状态不可控
+4. 无全局错误边界——子组件渲染报错可导致白屏
+5. `RoutePlanMap` 初始化期间无 loading 状态指示
 
-**验证**：npx vite build -> 2298 modules, 0 errors
+**📝 修复方案**：
 
-**交付**：分支 feature/agent-frontend-main/FE-MODEL-CHART
+| 文件 | 改动 |
+|------|------|
+| `RoutePlanMap.vue` | 增加 `error` 和 `map-ready` emit，catch 中主动通知父组件 |
+| `RoutePlanView.vue` | 4项修复见下 |
+
+**4项具体修复**：
+1. **地图加载保护**：新增 `mapLoading`/`mapError`/`mapKey` 状态 + `onMapReady`/`onMapError`/`retryLoadMap` 回调。模板中 RoutePlanMap 用 `v-if="!mapError"` 条件渲染 + `:key="mapKey"` 支持重试。加载中/加载失败各有占位UI
+2. **防抖锁**：`planningLock` ref，在 `planRoute()` 开头 `if (planningLock.value) return`，`finally` 中释放
+3. **onMounted兜底**：catch 中显式 `sections.value = []; sectionOptions.value = []`
+4. **全局错误边界**：`onErrorCaptured` 捕获子组件渲染异常，显示友好错误提示而非白屏
+
+**✅ 验证**：`npx vite build` → 2298 modules transformed, 0 errors
+
+**📁 修改文件**：
+- `frontend/src/views/traveler/RoutePlanView.vue`
+- `frontend/src/components/map/RoutePlanMap.vue`
