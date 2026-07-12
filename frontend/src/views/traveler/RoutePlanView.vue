@@ -239,7 +239,11 @@ const saveAsFavorite = async () => {
   const d = sections.value.find(s => s.id === dest.value)
   savingFavorite.value = true
   try {
-    await travelerApi.saveRoute({ origin_name: o?.name||'', dest_name: d?.name||'', origin_section_id: origin.value, dest_section_id: dest.value })
+    await travelerApi.saveRoute({
+      origin_name: o?.name||'', origin_lat: o?.coordinates?.[0]?.[0]||null, origin_lng: o?.coordinates?.[0]?.[1]||null,
+      dest_name: d?.name||'', dest_lat: d?.coordinates?.[0]?.[0]||null, dest_lng: d?.coordinates?.[0]?.[1]||null,
+      origin_section_id: origin.value, dest_section_id: dest.value
+    })
     ElMessage.success('已保存为常用路线')
   } catch (e) { ElMessage.error('保存失败') }
   finally { savingFavorite.value = false }

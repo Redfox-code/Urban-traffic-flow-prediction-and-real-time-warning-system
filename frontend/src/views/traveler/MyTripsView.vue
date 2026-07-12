@@ -63,10 +63,10 @@
             <span class="mtv-traffic-label">{{ trafficLabel(p) }}</span>
           </div>
 
-          <!-- 标签 -->
-          <div class="mtv-card-tags" v-if="p.alert_enabled != null">
-            <el-tag v-if="p.alert_enabled" size="small" type="success" effect="plain">🔔 提醒已开</el-tag>
-            <el-tag v-else size="small" type="info" effect="plain">🔕 提醒关闭</el-tag>
+          <!-- 标签 + 提醒开关 -->
+          <div class="mtv-card-tags">
+            <el-tag v-if="p.alert_enabled" size="small" type="success" effect="plain" @click.stop="toggleAlert(p)" style="cursor:pointer">🔔 提醒已开</el-tag>
+            <el-tag v-else size="small" type="info" effect="plain" @click.stop="toggleAlert(p)" style="cursor:pointer">🔕 提醒关闭</el-tag>
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { travelerApi } from '@/api/traveler'
 import { trafficApi } from '@/api/traffic'
@@ -92,6 +92,7 @@ import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 const profiles = ref([])
@@ -125,6 +126,9 @@ onUnmounted(() => {
   if (trafficTimer) clearInterval(trafficTimer)
   if (chartInstance) { chartInstance.dispose(); chartInstance = null }
 })
+
+// 监听路由，导航到本页时自动刷新
+watch(() => route.name, (n) => { if (n === 'TravelerMyTrips') refreshProfile() })
 
 // ===== 路况刷新 =====
 const trafficMap = ref({})
@@ -266,6 +270,15 @@ function goRouteWith(p) {
       dest_lng: p.dest_lng,
     }
   })
+}
+
+async function toggleAlert(p) {
+  const newState = !p.alert_enabled
+  try {
+    await travelerApi.updateAlertSettings({ profile_id: p.id, alert_enabled: newState })
+    p.alert_enabled = newState
+    ElMessage.success(newState ? '已开启提醒' : '已关闭提醒')
+  } catch { ElMessage.error('操作失败') }
 }
 </script>
 
