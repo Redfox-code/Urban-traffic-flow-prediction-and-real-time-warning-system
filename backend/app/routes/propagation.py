@@ -30,51 +30,106 @@ def analyze():
     algo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
     if algo_dir not in sys.path:
         sys.path.insert(0, algo_dir)
-    from propagation.diffusion_model import propagate_congestion, build_adjacency_matrix, load_road_network
+    from propagation.diffusion_model import propagate_congestion, build_adjacency_matrix, load_road_network, build_proximity_distances
 
     try:
-        # 1. 从roadNetwork.json构建邻接矩阵
-        road_network = load_road_network()
-        adj_matrix = build_adjacency_matrix(road_network)
+        # 1. 加载路网和DB section
+        road_network = load_road_network(os.path.join(
+            os.path.dirname(__file__), '..', '..', '..', 'frontend', 'src', 'data', 'roadNetwork.json'
+        ))
+        from app.models.traffic_section import TrafficSection
+        db_section = TrafficSection.query.get(int(section_id))
+        if not db_section:
+            return jsonify({'code': 404, 'data': None, 'message': '路段不存在'}), 404
 
-        # 2. 从数据库获取各路段最新速度
+        # 2. DB section名 → Amap segment ID（复用route_service的匹配逻辑）
+        from app.services.route_service import _match_name, _match_coord
+        amap_ids = _match_name(db_section.name)
+        if not amap_ids:
+            amap_ids = _match_coord(db_section)
+        if not amap_ids:
+            return jsonify({'code': 400, 'data': None,
+                           'message': f'未找到 {db_section.name} 在路网中的对应路段'}), 400
+        # 取最近的Amap segment
+        amap_id = amap_ids[0]
+
+        # 3. 构建邻接矩阵
+        adj_matrix = build_adjacency_matrix(road_network, proximity_threshold_m=100, cross_threshold_m=50)
+        distances = build_proximity_distances(road_network, adj_matrix)
+
+        # 4. 获取速度数据（DB记录优先，无记录时用Amap speed模拟）
         from app.models.traffic_record import TrafficRecord
-        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        import random
+        cutoff = datetime.utcnow() - timedelta(minutes=time_window)
         section_speeds = {}
         latest_records = TrafficRecord.query.filter(
-            TrafficRecord.section_id.in_(list(adj_matrix.keys()))
-        ).order_by(TrafficRecord.timestamp.desc()).limit(500).all()
-
+            TrafficRecord.section_id.in_(list(adj_matrix.keys())),
+            TrafficRecord.timestamp >= cutoff,
+        ).order_by(TrafficRecord.timestamp.desc()).all()
         seen = set()
         for r in latest_records:
             if r.section_id not in seen and r.avg_speed:
                 section_speeds[r.section_id] = float(r.avg_speed)
                 seen.add(r.section_id)
-
-        # 3. 对没有数据的路段使用默认速度
-        for sid in adj_matrix:
+        # 无DB记录时用Amap speed字段模拟，给每个路段不同的速度
+        random.seed(section_id)  # 固定种子保持一致性
+        for seg in road_network:
+            sid = seg['id']
             if sid not in section_speeds:
-                section_speeds[sid] = 40.0
+                base = float(seg.get('speed', 40) or 40)
+                # 随机抖动±20%模拟真实交通波动，时间窗口越小波动越大
+                jitter = 1.0 + random.uniform(-0.2, 0.2) * (30.0 / max(time_window, 1))
+                section_speeds[sid] = round(base * jitter, 1)
 
-        # 4. 执行传播分析
-        sid = int(section_id)
-        if sid not in adj_matrix:
-            return jsonify({'code': 400, 'data': None,
-                           'message': f'路段{sid}不在路网中，可用范围: {min(adj_matrix.keys())}-{max(adj_matrix.keys())}'}), 400
+        # 5. 执行传播分析
+        # 路段实际长度（从坐标计算）
+        seg_lengths = {}
+        for seg in road_network:
+            path = seg.get('path', [])
+            if len(path) >= 2:
+                total = sum(
+                    ((path[i][0]-path[i-1][0])**2 + (path[i][1]-path[i-1][1])**2)**0.5 * 111.0
+                    for i in range(1, len(path))
+                )
+                seg_lengths[seg['id']] = round(total, 3)
+            else:
+                seg_lengths[seg['id']] = 0.5
 
         result = propagate_congestion(
-            source_section_id=sid,
+            source_section_id=amap_id,
             adjacency_matrix=adj_matrix,
             section_speeds=section_speeds,
             max_depth=max_depth,
             prob_threshold=min_probability,
+            distances=distances,
+            seg_lengths=seg_lengths,
         )
 
-        # 5. 格式化返回
+        # 5. 构建路段名映射（Amap ID → name）
+        seg_name_map = {seg['id']: seg['name'] for seg in road_network}
+
+        # 6. 格式化返回
+        tree_dict = result.tree.to_dict() if result.tree else None
+        # 给树节点添加name字段
+        def _add_names(node):
+            if node:
+                node['name'] = seg_name_map.get(int(node.get('section_id', 0)), f"路段{node.get('section_id')}")
+                for c in node.get('children', []):
+                    _add_names(c)
+        _add_names(tree_dict)
+
+        # flat_list也加上name
+        flat_list = result.to_flat_list()
+        for item in flat_list:
+            item['from_name'] = seg_name_map.get(int(item.get('from', 0)), f"路段{item.get('from')}") if item.get('from') else None
+            item['to_name'] = seg_name_map.get(int(item.get('to', 0)), f"路段{item.get('to')}")
+
         return jsonify({'code': 200, 'data': {
             'source_section_id': result.root_section_id,
-            'propagation_tree': result.tree.to_dict() if result.tree else None,
-            'flat_list': result.to_flat_list(),
+            'source_name': seg_name_map.get(int(result.root_section_id), f"路段{result.root_section_id}"),
+            'propagation_tree': tree_dict,
+            'flat_list': flat_list,
             'total_nodes': result.total_nodes,
             'max_depth': result.max_depth,
         }, 'message': '传播分析完成'})
