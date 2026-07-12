@@ -28,6 +28,8 @@ export const travelerApi = {
   // ===== 历史 =====
   /** 获取查询历史（分页） */
   getHistory: (params) => request.get('/traveler/history', { params }),
+  /** 保存历史记录 */
+  saveHistory: (data) => request.post('/traveler/history', data),
   /** 删除单条历史 */
   deleteHistory: (id) => request.delete(`/traveler/history/${id}`),
   /** 清空全部历史 */

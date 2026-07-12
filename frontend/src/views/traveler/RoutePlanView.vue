@@ -90,6 +90,16 @@
           </div>
         </el-card>
 
+        <!-- 保存按钮 -->
+        <el-card v-if="result" shadow="never" style="background:var(--bg-panel)">
+          <div style="display:flex;gap:12px">
+            <el-button type="primary" @click="saveAsFavorite" :loading="savingFavorite" :disabled="!userStore.isLoggedIn">
+              ⭐ 保存为常用路线
+            </el-button>
+            <span v-if="!userStore.isLoggedIn" style="font-size:12px;color:var(--text-secondary);align-self:center">登录后可保存</span>
+          </div>
+        </el-card>
+
         <!-- 预测联动提示 -->
         <el-card v-if="result" shadow="never" style="background:var(--bg-panel)">
           <div style="font-size:13px;color:var(--text-secondary)">
@@ -111,9 +121,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { routeApi } from '@/api/routePlan'
 import { sectionsApi } from '@/api/sections'
+import { travelerApi } from '@/api/traveler'
+import { useUserStore } from '@/store/user'
+import { ElMessage } from 'element-plus'
 import TrafficMap from '@/components/map/TrafficMap.vue'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 const sections = ref([])
 const origin = ref(null)
@@ -191,12 +208,31 @@ const planRoute = async () => {
     result.value = data
     // 使用 route_segments（每段独立坐标），地图分段绘制避免走到路外
     routeCoords.value = data.route_segments || []
+    // 自动保存到历史记录（已登录用户）
+    saveToHistory()
   } catch (e) {
     const msg = e?.response?.data?.message || e?.message || '网络请求失败'
     errorMsg.value = msg
   } finally {
     loading.value = false
   }
+}
+
+const savingFavorite = ref(false)
+const saveToHistory = async () => {
+  if (!userStore.isLoggedIn || !result.value) return
+  try { await travelerApi.saveHistory({ origin_section_id: origin.value, dest_section_id: dest.value }) } catch {}
+}
+const saveAsFavorite = async () => {
+  if (!userStore.isLoggedIn) { ElMessage.warning('请先登录'); return }
+  const o = sections.value.find(s => s.id === origin.value)
+  const d = sections.value.find(s => s.id === dest.value)
+  savingFavorite.value = true
+  try {
+    await travelerApi.saveRoute({ origin_name: o?.name||'', dest_name: d?.name||'', origin_section_id: origin.value, dest_section_id: dest.value })
+    ElMessage.success('已保存为常用路线')
+  } catch (e) { ElMessage.error('保存失败') }
+  finally { savingFavorite.value = false }
 }
 </script>
 
