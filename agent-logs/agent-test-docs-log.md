@@ -73,3 +73,16 @@
 - 所有新Blueprint(carbon/signal/traveler/propagation/emergency/scenario)测试覆盖
 - 算法模块直接测试验证(propagation/scenario/route)
 - 三角色RBAC全链路验证(admin/analyst/traveler + JWT + @role_required)
+
+### D12-T01 演示视频脚本 (2026-07-13)
+**分支**: `feature/agent-test-docs/D12-T01-demo-script`
+**交付**: `docs/demo-video-script.md`
+
+| 项 | 内容 |
+|---|------|
+| 脚本结构 | 9个分镜, 4分30秒总时长 |
+| 覆盖页面 | admin 5页 + analyst 5页 + traveler 5页 = 15页面 |
+| 三角色登录 | admin/admin123, analyst/analyst123, traveler/traveler123 |
+| 附录 | 测试账号速查表 + 页面清单 + 演示要点提示 |
+
+**测试状态**: 89 passed, 2 failed (已知: sections公开端点未JWT保护, 与STATE.md记录一致)

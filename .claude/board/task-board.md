@@ -130,11 +130,17 @@
 | FE-ADMIN-04 | EmergencyView 应急调度（规划表单+地图路线+调度记录CRUD+状态管理） | agent-frontend-main |
 | FE-ADMIN-05 | ReportsView 统计报表（ECharts四图：流量趋势+拥堵饼图+预警柱图+信号效果） | agent-frontend-main |
 
+## ✅ Done (2026-07-13) — Agent-Test-Docs
+
+| ID | 任务 | 交付物 | Agent |
+|----|------|--------|-------|
+| D12-T01 | 演示视频脚本 | docs/demo-video-script.md (15页面分镜+附录) | agent-test-docs |
+
 ## 📋 Backlog
 
 | ID | 任务 | 优先级 | Agent | 备注 |
 |----|------|--------|-------|------|
-| D12-T01 | 演示视频录制 | P1 | agent-test-docs | |
+| BUG-MAP-STORE | TrafficOverlay.vue store.updateRealtime(map)参数错误 — 传入整个dict而非逐项，导致realtimeData[undefined] | P2 | agent-frontend-map | 见agent-frontend-map-log巡检报告A项 |
 
 ## 🔄 InProgress
 
