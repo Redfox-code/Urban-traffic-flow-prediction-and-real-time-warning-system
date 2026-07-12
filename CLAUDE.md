@@ -6,11 +6,115 @@
 
 ## ⚠️ 核心AI协作规则
 
-> **用户提出的任何需求，若未指定由谁处理，一律由 Agent-Lead 负责：**
-> 1. Agent-Lead 读取需求 → 在 `.claude/board/task-board.md` 创建任务，分配给对应 Agent
-> 2. 各 Agent 在自己的 Git 分支上开发 → 验证通过 → commit + push
-> 3. 每个 Agent 完成后必须写: agent-logs + handoff-queue（如需交接）+ decisions-log（如有决策）
-> 4. **协调者（Claude）不得跳过 Agent 直接修改代码。即使一行改动，也必须走 Agent 流程。**
+> **协调者（Claude）不得跳过 Agent 直接修改代码。即使一行改动，也必须走 Agent 流程。**
+
+---
+
+## 完整开发流程：从用户需求到代码上线
+
+### 阶段一：需求分析（Agent-Lead）
+
+```
+用户提出需求
+    │
+    ▼
+Agent-Lead 读取分析需求
+    │
+    ├── 读取 STATE.md 了解当前进度
+    ├── 读取 task-board.md 了解现有任务
+    ├── 拆分为可执行任务（每个任务 ≤ 1个Agent）
+    ├── 写入 task-board.md（Backlog → Todo列）
+    │   格式: | ID | 任务描述 | Agent | 依赖 | 分支 |
+    └── @唤醒 对应Agent开始工作
+```
+
+### 阶段二：任务执行（各Agent — Git Flow）
+
+```
+Agent被唤醒后:
+    │
+    ├─ 1. 读自己的角色文件 .claude/agents/agent-*.md
+    ├─ 2. 读 STATE.md + task-board.md 找自己的Todo任务
+    ├─ 3. 检查依赖(BlockedBy) — 阻塞则等，非阻塞则开始
+    │
+    ├─ 4. 从dev拉feature分支
+    │      git checkout dev && git pull origin dev
+    │      git checkout -b feature/{agent-name}/{task-id}-{描述}
+    │
+    ├─ 5. 编码开发（只改自己负责的目录）
+    │      Agent-Lead:          backend/app/routes/ + services/ + models/
+    │      Agent-Algorithm:     algorithm/ + backend/app/routes/traffic.py + prediction.py
+    │      Agent-Frontend-Main: frontend/src/views/ + router/ + store/ + api/
+    │      Agent-Frontend-Map:  frontend/src/components/map/ + socketio/
+    │      Agent-Test-Docs:     backend/tests/ + docs/
+    │
+    ├─ 6. 运行验证命令（必须通过，不通过不算完成）
+    │      Agent-Lead:          flask run + curl测试关键端点200
+    │      Agent-Algorithm:     python run_simulation.py all
+    │      Agent-Frontend-*:    npx vite build（零错误）
+    │      Agent-Test-Docs:     pytest tests/ -v（全部通过）
+    │
+    ├─ 7. git add + git commit + git push feature分支
+    │
+    ├─ 8. 到GitHub创建 Pull Request: feature/* → dev
+    │      PR标题: [task-id] 任务描述
+    │      PR描述: 改动摘要 + 验证结果
+    │
+    ├─ 9. 写追踪文件（缺一不可）
+    │      agent-logs/{agent-name}-log.md  — 追加 🎯→💭→📝→✅
+    │      task-board.md                   — 任务状态 → Done
+    │      handoff-queue.md                — 如有下游依赖，登记交付
+    │      decisions-log.md                — 如有技术决策，记录背景+选项+决议
+    │
+    └─ 10. 等待Agent-Lead审核PR → 合并后 git checkout dev && git pull
+```
+
+### 阶段三：PR审核合并（Agent-Lead）
+
+```
+Agent-Lead 收到PR通知:
+    │
+    ├── 检查代码在正确目录下（不碰其他Agent文件）
+    ├── 检查验证命令已通过（PR描述中有验证结果）
+    ├── 检查追踪文件已更新（agent-log + task-board）
+    ├── 检查无merge冲突（有则让作者先rebase dev解决）
+    │
+    └── 全部通过 → GitHub点 Merge PR → 通知Agent同步dev
+```
+
+### 阶段四：审查验收（Agent-Judge，周期性）
+
+```
+Agent-Judge 被唤醒后:
+    │
+    ├── 定位 Done列任务 → 读取交付物
+    ├── 逐项对照验收条件检查 → 存在性/完整性/规范性/正确性
+    ├── 写审查报告到 decisions-log.md
+    └── 更新看板: ✅Approved / ⚠️Changes Requested / ❌Rejected
+```
+
+### 阶段五：发布上线（Agent-Lead）
+
+```
+阶段性功能稳定后:
+    │
+    ├── git checkout dev && git pull
+    ├── git checkout -b release/x.x
+    ├── 最终测试 + 文档完善 + 版本号
+    ├── git push → 创建PR: release/x.x → master + dev
+    └── 合并 → 生产上线
+```
+
+### 紧急修复流程（hotfix）
+
+```
+生产紧急Bug:
+    │
+    ├── git checkout master
+    ├── git checkout -b hotfix/{描述}
+    ├── 修复 → 验证 → push
+    └── 创建两个PR: hotfix → master + dev
+```
 
 ---
 
