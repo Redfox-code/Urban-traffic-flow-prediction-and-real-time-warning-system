@@ -87,6 +87,14 @@ def create_app(config_name=None):
     app.register_blueprint(carbon_bp, url_prefix='/api/v1/carbon')
     app.register_blueprint(traveler_bp, url_prefix='/api/v1/traveler')
 
+    # 注册传播分析 + 应急调度 + 场景仿真 Blueprint
+    from app.routes.propagation import propagation_bp
+    from app.routes.emergency import emergency_bp
+    from app.routes.scenario import scenario_bp
+    app.register_blueprint(propagation_bp, url_prefix='/api/v1/propagation')
+    app.register_blueprint(emergency_bp, url_prefix='/api/v1/emergency')
+    app.register_blueprint(scenario_bp, url_prefix='/api/v1/scenario')
+
     # 创建数据库表（开发环境）
     with app.app_context():
         from app.models import user, traffic_section, traffic_detector
