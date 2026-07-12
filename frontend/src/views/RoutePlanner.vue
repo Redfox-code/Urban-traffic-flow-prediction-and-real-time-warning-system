@@ -1,35 +1,57 @@
 <template>
   <div style="color:var(--text-primary);height:calc(100vh - 120px)">
-    <h2>路径规划</h2>
+    <h2>路径规划 <span style="font-size:13px;color:var(--text-secondary);font-weight:normal">点击地图路段快速选择起终点</span></h2>
     <div style="display:flex;gap:20px;height:calc(100% - 50px)">
       <!-- 左侧：表单 + 结果 -->
       <div style="width:420px;display:flex;flex-direction:column;gap:16px;overflow-y:auto">
         <!-- 表单 -->
         <el-card shadow="never" style="background:var(--bg-panel)">
           <div style="display:flex;flex-direction:column;gap:12px">
+            <!-- 起点 -->
             <div>
-              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">起点路段</div>
-              <el-select v-model="origin" placeholder="选择起点" filterable style="width:100%">
+              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">
+                🟢 起点路段
+                <span v-if="pickingOrigin" style="color:var(--accent-blue);font-size:12px">— 点击地图选择</span>
+              </div>
+              <el-select v-model="origin" placeholder="选择起点或点击地图" filterable style="width:100%"
+                @focus="pickingOrigin = true" @change="pickingOrigin = false">
                 <el-option v-for="s in sections" :key="s.id" :label="s.name" :value="s.id" />
               </el-select>
             </div>
+
+            <!-- 交换按钮 -->
+            <div style="display:flex;justify-content:center">
+              <el-button circle size="small" @click="swapPoints" :disabled="!origin && !dest" title="交换起终点">
+                ⇅
+              </el-button>
+            </div>
+
+            <!-- 终点 -->
             <div>
-              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">终点路段</div>
-              <el-select v-model="dest" placeholder="选择终点" filterable style="width:100%">
+              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">
+                🔴 终点路段
+                <span v-if="pickingDest" style="color:#ff4d4f;font-size:12px">— 点击地图选择</span>
+              </div>
+              <el-select v-model="dest" placeholder="选择终点或点击地图" filterable style="width:100%"
+                @focus="pickingDest = true" @change="pickingDest = false">
                 <el-option v-for="s in sections" :key="s.id" :label="s.name" :value="s.id" />
               </el-select>
             </div>
-            <el-button type="primary" @click="planRoute" :loading="loading" style="width:100%">
-              <span v-if="!loading">&#x1F698; 规划路径</span>
+
+            <el-button type="primary" @click="planRoute" :loading="loading" :disabled="!origin || !dest" style="width:100%">
+              <span v-if="!loading">🚘 规划路径</span>
               <span v-else>规划中...</span>
             </el-button>
+
+            <!-- 错误提示 -->
+            <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon :closable="true" @close="errorMsg = ''" />
           </div>
         </el-card>
 
         <!-- 结果 -->
         <el-card v-if="result" shadow="never" style="background:var(--bg-panel)">
           <template #header>
-            <span style="font-weight:bold;color:var(--accent-blue)">&#x1F4CD; 规划结果</span>
+            <span style="font-weight:bold;color:var(--accent-blue)">📍 规划结果</span>
           </template>
           <div style="display:flex;gap:16px;margin-bottom:16px">
             <div style="flex:1;text-align:center;padding:12px;background:rgba(0,212,255,.08);border-radius:8px">
@@ -42,16 +64,26 @@
             </div>
           </div>
 
-          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">路径详情 ({{ result.path.length }} 个路段)</div>
+          <!-- 途经路段 -->
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">
+            途经 {{ result.path.length }} 个路段
+          </div>
           <div v-for="(p, i) in result.path" :key="i" class="route-segment">
             <div class="segment-num">{{ i + 1 }}</div>
             <div class="segment-info">
               <div class="segment-name">{{ p.name }}</div>
-              <div class="segment-sub">{{ p.length || 0 }} km
-                <span v-if="p.occupancy != null" style="margin-left:8px">
-                  <el-tag size="small" :type="p.occupancy < 30 ? 'success' : p.occupancy < 60 ? 'warning' : 'danger'" effect="dark">
+              <div class="segment-sub">
+                {{ p.length || 0 }} km
+                <span v-if="p.avg_speed != null && p.avg_speed > 0" style="margin-left:8px">🚗 {{ p.avg_speed }} km/h</span>
+                <span v-if="p.occupancy != null" style="margin-left:4px">
+                  <el-tag size="small"
+                    :type="p.occupancy < 30 ? 'success' : p.occupancy < 60 ? 'warning' : 'danger'"
+                    effect="dark">
                     {{ p.occupancy < 30 ? '畅通' : p.occupancy < 60 ? '缓行' : p.occupancy < 85 ? '拥堵' : '严重' }}
                   </el-tag>
+                </span>
+                <span v-else style="margin-left:4px">
+                  <el-tag size="small" type="info" effect="plain">无实时数据</el-tag>
                 </span>
               </div>
             </div>
@@ -61,7 +93,7 @@
         <!-- 预测联动提示 -->
         <el-card v-if="result" shadow="never" style="background:var(--bg-panel)">
           <div style="font-size:13px;color:var(--text-secondary)">
-            &#x1F4CA; 想了解这条路径的未来交通状况？
+            📊 想了解这条路径的未来交通状况？
             <el-link type="primary" @click="$router.push('/prediction')" style="font-size:13px">前往流量预测 →</el-link>
           </div>
         </el-card>
@@ -81,8 +113,6 @@
 import { ref, onMounted } from 'vue'
 import { routeApi } from '@/api/routePlan'
 import { sectionsApi } from '@/api/sections'
-import { trafficApi } from '@/api/traffic'
-import { ROAD_SEGMENTS } from '@/data/roadNetwork'
 import TrafficMap from '@/components/map/TrafficMap.vue'
 
 const sections = ref([])
@@ -90,76 +120,83 @@ const origin = ref(null)
 const dest = ref(null)
 const loading = ref(false)
 const result = ref(null)
-const routeCoords = ref([])  // 传给 TrafficMap 的路线坐标
+const routeCoords = ref([])
+const errorMsg = ref('')
+const pickingOrigin = ref(false)
+const pickingDest = ref(false)
 
 onMounted(async () => {
   try {
     const res = await sectionsApi.getList()
     sections.value = res.data?.items || res?.items || []
-  } catch {}
+  } catch (e) {
+    console.warn('加载路段列表失败', e)
+  }
 })
 
-// 按名称匹配 ROAD_SEGMENTS 获取坐标
-const findSegment = (name) => {
-  if (!name) return null
-  // 精确匹配
-  for (const seg of ROAD_SEGMENTS) {
-    if (seg.name === name) return seg
-  }
-  // 子串匹配（高德名含方向后缀）
-  for (const seg of ROAD_SEGMENTS) {
-    if (seg.name && name && (seg.name.includes(name) || name.includes(seg.name))) return seg
-  }
-  return null
+/** 交换起终点 */
+const swapPoints = () => {
+  const tmp = origin.value
+  origin.value = dest.value
+  dest.value = tmp
 }
 
+/** 地图点击路段 → 智能填入起点或终点 */
+const onMapClick = (data) => {
+  if (!data || !data.name) return
+  // 找到匹配的路段
+  const matched = sections.value.find(s => s.name === data.name || data.name.includes(s.name) || s.name.includes(data.name))
+  if (!matched) return
+
+  if (pickingOrigin.value) {
+    // 正在设置起点
+    origin.value = matched.id
+    pickingOrigin.value = false
+  } else if (pickingDest.value) {
+    // 正在设置终点
+    dest.value = matched.id
+    pickingDest.value = false
+  } else if (!origin.value) {
+    // 起点未设置 → 填起点
+    origin.value = matched.id
+  } else if (!dest.value) {
+    // 终点未设置 → 填终点
+    dest.value = matched.id
+  } else {
+    // 都已设置 → 覆盖终点（常见：修改终点）
+    dest.value = matched.id
+  }
+}
+
+/** 规划路径 */
 const planRoute = async () => {
-  if (!origin.value || !dest.value) return
+  if (!origin.value || !dest.value) {
+    errorMsg.value = '请选择起点和终点路段'
+    return
+  }
+  errorMsg.value = ''
   loading.value = true
+  result.value = null
+  routeCoords.value = []
   try {
     const res = await routeApi.plan({
       origin_section_id: origin.value,
       dest_section_id: dest.value,
     })
     const data = res.data || res
-    result.value = data
-
-    // 匹配路径坐标 → 传给地图
-    const segments = data.path || []
-    const coords = []
-    for (const p of segments) {
-      const seg = findSegment(p.name)
-      if (seg) {
-        coords.push({ name: p.name, path: seg.path, length: p.length })
-      }
+    if (!data || !data.path) {
+      errorMsg.value = '规划失败，请尝试其他路段组合'
+      return
     }
-    routeCoords.value = coords
-
-    // 获取路径各路段的车流数据
-    try {
-      const trafficRes = await trafficApi.getCurrent()
-      const items = trafficRes.data?.items || trafficRes?.items || trafficRes.data || []
-      if (Array.isArray(items)) {
-        const trafficMap = {}
-        items.forEach(t => { if (t.section_name) trafficMap[t.section_name] = t })
-        // 把车流数据注入到result.path中
-        for (const p of result.value.path) {
-          const td = trafficMap[p.name]
-          if (td) {
-            p.occupancy = td.occupancy
-            p.vehicle_count = td.vehicle_count
-            p.avg_speed = td.avg_speed
-          }
-        }
-      }
-    } catch {}
+    result.value = data
+    // 使用 route_segments（每段独立坐标），地图分段绘制避免走到路外
+    routeCoords.value = data.route_segments || []
+  } catch (e) {
+    const msg = e?.response?.data?.message || e?.message || '网络请求失败'
+    errorMsg.value = msg
   } finally {
     loading.value = false
   }
-}
-
-const onMapClick = (data) => {
-  // 地图上点击路段可以快速选择为起点/终点
 }
 </script>
 
