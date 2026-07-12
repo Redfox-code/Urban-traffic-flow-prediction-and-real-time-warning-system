@@ -76,6 +76,33 @@
 
 **✅验证**：`npm run dev` → build成功，零红色错误。15个视图全部import按需加载正常。
 
+### FE-MODEL-CHART 模型评估可视化图表 (2026-07-13)
+
+**🎯 任务接收**：给 ModelsView 增加模型评估可视化图表
+
+**💭 分析**：
+- 需要在现有指标卡片下方增加2个ECharts图表
+- API未就绪(GET /predict/evaluation不存在)，用硬编码默认数据
+- 需要ScatterChart + MarkLineComponent组件
+- 按需引入保持构建体积
+
+**📝 实现**：
+
+1. `frontend/src/api/prediction.js` — 新增 `getEvaluation()` 方法
+2. `frontend/src/views/analyst/ModelsView.vue`：
+   - **KNN vs RF 对比柱状图**：MAE / RMSE / R² 三组对比，KNN蓝色渐变、RF绿色渐变柱体，带tooltip
+   - **预测值 vs 实际值散点图**：KNN红点、RF蓝点，对角线y=x参考线，实际值X轴、预测值Y轴
+   - 默认数据：`{ metric: "MAE", knn: 158.29, rf: 162.52 }` 等
+   - 散点图mock数据随机生成30个点模拟偏差分布
+   - 暗色主题适配（splitLine/axisLabel/textStyle统一#8899aa）
+
+**✅ 验证**：`npx vite build` → 2298 modules, 0 errors
+
+**📦 交付**：
+- 分支: `feature/agent-frontend-main/FE-MODEL-CHART`
+- 文件: `frontend/src/api/prediction.js`, `frontend/src/views/analyst/ModelsView.vue`
+- PR: 已推送等待Agent-Lead审查合并
+
 ## 思考轨迹
 
 ### D6-T03 Vue初始化
