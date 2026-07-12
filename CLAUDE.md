@@ -7,6 +7,8 @@
 ## ⚠️ 核心AI协作规则
 
 > **协调者（Claude）不得跳过 Agent 直接修改代码。即使一行改动，也必须走 Agent 流程。**
+>
+> **每次输出时必须标明当前所处阶段**：`[阶段一 需求分析]` / `[阶段二 任务执行]` / `[阶段三 PR审核]` / `[阶段四 审查验收]` / `[阶段五 发布上线]`
 
 ---
 
@@ -22,11 +24,20 @@ Agent-Lead 读取分析需求
     │
     ├── 读取 STATE.md 了解当前进度
     ├── 读取 task-board.md 了解现有任务
-    ├── 拆分为可执行任务（每个任务 ≤ 1个Agent）
+    │
+    ├── ⚠️ 先写分析日志（必须，不写完不分配任务）
+    │     在 agent-logs/agent-lead-log.md 追加:
+    │     🎯 需求原文 + 🔍 现状分析（读相关代码，不要凭空猜测）
+    │     📊 任务拆分表(ID/描述/Agent/优先级/预估)
+    │     🔗 依赖关系 + 📝 执行策略 + 🎯 关键决策
+    │
     ├── 写入 task-board.md（Backlog → Todo列）
     │   格式: | ID | 任务描述 | Agent | 依赖 | 分支 |
+    │
     └── @唤醒 对应Agent开始工作
 ```
+
+> **铁律**：Agent-Lead 在完成需求分析日志之前，**不得**分配任务、**不得**创建分支、**不得**写任何代码。
 
 ### 阶段二：任务执行（各Agent — Git Flow）
 
@@ -74,13 +85,20 @@ Agent被唤醒后:
 ```
 Agent-Lead 收到PR通知:
     │
+    ├── ⚠️ 运行全量测试确认PR合并后不会破坏dev
+    │      cd backend && pytest tests/ -v     # 必须91+ passed
+    │      cd frontend && npx vite build       # 必须0 errors
+    │
     ├── 检查代码在正确目录下（不碰其他Agent文件）
     ├── 检查验证命令已通过（PR描述中有验证结果）
     ├── 检查追踪文件已更新（agent-log + task-board）
     ├── 检查无merge冲突（有则让作者先rebase dev解决）
     │
-    └── 全部通过 → GitHub点 Merge PR → 通知Agent同步dev
+    └── 全部通过 → 用 git merge --no-ff 合并（保留分支历史痕迹）
+         GitHub必须选 "Create a merge commit"，禁止 Squash/Rebase
 ```
+
+> **铁律**：任何PR合并前必须跑全量测试。测试不通过 → 打回，不让合并。
 
 ### 阶段四：审查验收（Agent-Judge，周期性）
 
@@ -90,20 +108,41 @@ Agent-Judge 被唤醒后:
     ├── 定位 Done列任务 → 读取交付物
     ├── 逐项对照验收条件检查 → 存在性/完整性/规范性/正确性
     ├── 写审查报告到 decisions-log.md
-    └── 更新看板: ✅Approved / ⚠️Changes Requested / ❌Rejected
+    └── 更新看板:
+         ✅ APPROVED          → 任务移到 Approved 列
+         ⚠️ CHANGES_REQUESTED → 向 Agent-Lead 反馈具体问题
+         ❌ REJECTED          → 向 Agent-Lead 反馈具体问题
 ```
 
-### 阶段五：发布上线（Agent-Lead）
-
+**Judge 审查不通过时的修复流程（回到阶段一）**：
 ```
-阶段性功能稳定后:
+Agent-Judge 向 Agent-Lead 反馈问题
     │
-    ├── git checkout dev && git pull
-    ├── git checkout -b release/x.x
-    ├── 最终测试 + 文档完善 + 版本号
-    ├── git push → 创建PR: release/x.x → master + dev
-    └── 合并 → 生产上线
+    ▼
+Agent-Lead 分析问题 → 写分析日志 → 拆分修复任务 → 分配Agent
+    │
+    ▼
+回到 阶段二（任务执行）→ 阶段三（PR审核）→ 阶段四（重新审查）
 ```
+
+**阶段四结束标志**：dev 分支合并完毕 + Agent-Judge 审查 APPROVED。
+
+> ⚠️ **阶段四结束后，立即停止，等待用户手动测试。** 未经用户确认，不得进入阶段五。
+
+### 阶段五：发布上线（Agent-Lead，用户确认后方可执行）
+
+```
+用户确认测试通过后:
+    │
+    ├── git checkout dev && git pull origin dev
+    ├── git checkout -b release/x.x
+    ├── 更新版本号 + 文档完善
+    ├── git push -u origin release/x.x
+    └── 通知用户：release/x.x 已就绪，请用户自行合并到 master
+```
+
+> 🔒 **禁止推送 master**：Agent-Lead 不得 push 到 master。master 合并只能由用户手动执行。
+> 🔒 **禁止未经用户确认就创建 release**：阶段五必须在用户明确说"可以发布"之后才能启动。
 
 ### 紧急修复流程（hotfix）
 
@@ -204,6 +243,7 @@ git checkout dev && git pull origin dev
 - ❌ 禁止自己合并自己的 PR — 由 Agent-Lead 审核合并
 - ❌ 禁止 force push 到 master/dev
 - ❌ 禁止推送未验证代码 — 每个Agent必须先运行验证命令通过
+- ❌ 禁止 Fast-Forward 合并 — 合并必须用 `git merge --no-ff` 或 GitHub "Create a merge commit"，保留分支历史痕迹
 
 ## 设计文档索引（按需读取，不必每次启动加载）
 
