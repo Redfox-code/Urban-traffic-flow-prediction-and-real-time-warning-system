@@ -100,18 +100,40 @@ def run_scenario(scenario_id):
         algo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'algorithm'))
         if algo_dir not in sys.path:
             sys.path.insert(0, algo_dir)
-        from scenario.whatif_engine import run_scenario, build_demo_network
+        from scenario.whatif_engine import run_scenario, build_demo_network, ScenarioInput, ScenarioType
 
         params = json.loads(scenario.params_json) if scenario.params_json else {}
         demo_segments = build_demo_network()
-        result = run_scenario(
-            intervention_type=scenario.intervention_type,
-            params=params
+
+        # 映射 intervention_type → ScenarioType
+        type_map = {
+            'limit_flow': ScenarioType.FLOW_LIMIT,
+            'signal_adjust': ScenarioType.SIGNAL_OPTIMIZE,
+            'road_closure': ScenarioType.ROAD_CLOSURE,
+            'combined': ScenarioType.COMBINED,
+        }
+        stype = type_map.get(scenario.intervention_type, ScenarioType.FLOW_LIMIT)
+
+        # 构建 ScenarioInput
+        area = json.loads(scenario.intervention_area_json) if scenario.intervention_area_json else {}
+        section_ids = area.get('section_ids', [])
+        sinput = ScenarioInput(
+            segments=demo_segments,
+            scenario_type=stype,
+            scenario_name=scenario.name,
+            flow_limit_pct=params.get('reduction_pct', 30),
+            flow_limit_zone=section_ids if stype == ScenarioType.FLOW_LIMIT else None,
+            signal_efficiency_gain_pct=params.get('efficiency_gain', 15),
+            signal_zone=section_ids if stype == ScenarioType.SIGNAL_OPTIMIZE else None,
+            closed_roads=section_ids if stype == ScenarioType.ROAD_CLOSURE else None,
         )
 
-        scenario.baseline_result_json = str(result.get('baseline', {}))
-        scenario.intervention_result_json = str(result.get('intervention', {}))
-        scenario.improvement_pct = result.get('improvement_pct', 0)
+        result_obj = run_scenario(sinput)
+        result = result_obj.to_dict()
+
+        scenario.baseline_result_json = json.dumps(result.get('baseline', {}))
+        scenario.intervention_result_json = json.dumps(result.get('intervention', {}))
+        scenario.improvement_pct = result.get('delta', {}).get('delay_reduction_pct', 0)
         scenario.status = 'completed'
         scenario.completed_at = datetime.utcnow()
         db.session.commit()
