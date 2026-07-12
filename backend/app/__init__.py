@@ -79,11 +79,31 @@ def create_app(config_name=None):
     from app.routes.simulation_routes import sim_bp
     app.register_blueprint(sim_bp, url_prefix='/api/v1/simulation')
 
+    # 注册三用户角色平台新增 Blueprint（Agent-Lead）
+    from app.routes.signal import signal_bp
+    from app.routes.carbon import carbon_bp
+    from app.routes.traveler import traveler_bp
+    app.register_blueprint(signal_bp, url_prefix='/api/v1/signal')
+    app.register_blueprint(carbon_bp, url_prefix='/api/v1/carbon')
+    app.register_blueprint(traveler_bp, url_prefix='/api/v1/traveler')
+
+    # 注册传播分析 + 应急调度 + 场景仿真 Blueprint
+    from app.routes.propagation import propagation_bp
+    from app.routes.emergency import emergency_bp
+    from app.routes.scenario import scenario_bp
+    app.register_blueprint(propagation_bp, url_prefix='/api/v1/propagation')
+    app.register_blueprint(emergency_bp, url_prefix='/api/v1/emergency')
+    app.register_blueprint(scenario_bp, url_prefix='/api/v1/scenario')
+
     # 创建数据库表（开发环境）
     with app.app_context():
         from app.models import user, traffic_section, traffic_detector
         from app.models import traffic_record, prediction_result
         from app.models import warning_event, route_record, system_log
+        from app.models import simulation
+        # 三用户角色平台新增模型
+        from app.models import congestion_propagation, user_travel_profile, user_alert_history
+        from app.models import signal_optimization, emergency_route, scenario_simulation, carbon_emission
         db.create_all()
 
     # 生产环境：serve 前端静态文件 + SPA fallback

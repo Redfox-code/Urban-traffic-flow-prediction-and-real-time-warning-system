@@ -200,6 +200,33 @@
 
 ---
 
+### [决策] ALGO-ENGINES 六算法模块设计 — Agent-Algorithm
+
+**时间**：2026-07-12
+**背景**：系统需要新增6个算法模块支持信号配时、碳排放、拥堵传播、出行画像、多路线规划和场景仿真功能。
+**设计方案**：
+
+**ALGO-SIG-01 Webster配时**：纯函数实现Webster公式C_opt=(1.5L+5)/(1-Y)。支持多相位输入→最优周期+绿灯分配+延误对比。工程约束 30s≤C≤180s, 最小绿灯保障。
+
+**ALGO-CARB-01 碳排放**：简化COPERT模型(CO2=a+bv+cv²+d/v)，6种车辆类型加权。拥堵额外排放=正常排放*(40/v-1)当v<40km/h。4级拥堵等级(freeflow/moderate/congested/severe)。
+
+**ALGO-PROP-01 拥堵传播**：从roadNetwork.json(92段,225边)构建邻接矩阵。递归DFS传播P=base_prob*exp(-alpha*d)*speed_factor。剪枝条件：P<0.3或深度>3。支持连通分量分析。
+
+**ALGO-PROF-01 路线学习**：OD对聚合(容差0.001), K-means出发时间聚类(k=2), semantic标签(上班/回家/周末), EWMA更新(alpha=0.3), 频次过滤(f>=3)。
+
+**ALGO-RTE-01 三路线**：Dijkstra最短时间(A)+排除拥堵备选(B)+(C)最短距离。BPR速度-流量函数。8节点示例图测试通过。
+
+**ALGO-SCEN-01 What-If**：数学估算模型(4策略:限流/信号优化/路段封闭/组合)。BPR函数更新速度。基线vs干预指标对比(延误/速度/拥堵/CO2)。
+
+**关键约束**：
+1. 全部纯Python实现，不依赖SUMO/TraCI
+2. 每模块含完整独立测试用例
+3. 所有模块即日起可被Agent-Lead集成到backend API
+
+**影响**：等待Agent-Lead在backend/app/services/和routes/中创建对应的API端点。
+
+---
+
 ## 审查记录
 
 ---
@@ -736,3 +763,192 @@
 1. python sync_amap_traffic.py 成功写入traffic_records
 2. /api/v1/traffic/current 返回 source=amap
 3. 前端标签显示高德实时
+
+---
+
+## 审查记录（2026-07-12）
+
+---
+
+## [审查] FEAT-SIM-REWRITE 实时仿真重写 — 2026-07-12
+
+### 审查结果：✅ APPROVED
+
+### 审查概要
+实时仿真全生命周期（启动→运行→暂停→继续→停止）实现完整，孤儿进程防护机制（PID文件+心跳检测+进程树清理）三层兜底，回放模式下暂停/停止信号精确响应。除少量非阻塞细节外完全通过。
+
+### 逐项检查
+
+| # | 验收条件 | 结果 | 说明 |
+|---|---------|------|------|
+| 1 | 启动（/run_realtime） | ✅ 通过 | `sumo.py:121-138` — `_cleanup_orphans()`先清理，再启动`sync_amap_traffic.py --replay --speed 300`，返回`status:started` |
+| 2 | 运行（进程存活+进度更新） | ✅ 通过 | `sync_amap_traffic.py:302-314` — 每批写入`PROGRESS_FILE`（0-100%）和`HEARTBEAT_FILE`（时间戳） |
+| 3 | 暂停（/pause） | ✅ 通过 | `sumo.py:155-159` — 写入`PAUSE_FILE`后立即返回；`sync_amap_traffic.py:280-299` — 检测到PAUSE_FILE进入等待循环，同时检测STOP_FILE |
+| 4 | 继续（/resume） | ✅ 通过 | `sumo.py:162-166` — 删除`PAUSE_FILE`；回放循环检测到文件不存在后继续执行 |
+| 5 | 停止（/stop） | ✅ 通过 | `sumo.py:141-152` — 写入`STOP_FILE` + terminate进程；回放侧多处检测STOP_FILE双保险 |
+| 6 | 孤儿进程防护 | ✅ 通过 | `sumo.py:19-66` — PID文件精确匹配(`.sim_pid`)，`_kill_process_tree`优雅→强制两步兜底，模块加载时自动清理 |
+| 7 | 心跳检测 | ✅ 通过 | `sumo.py:184-192` — `/status`端点检测`HEARTBEAT_FILE`>60秒未更新则`heartbeat_stale:True` |
+| 8 | 回放模式正确性 | ✅ 通过 | `sync_amap_traffic.py:217-342` — speed参数控制速度，进度百分比0→100，暂停/停止精确定时检测，信号文件清理完整 |
+| 9 | 离线仿真（/run） | ✅ 通过 | `sumo.py:202-235` — 启动前清理，120秒超时保护，失败时返回stderr尾部 |
+
+### 修改建议（非阻塞）
+1. **`sumo.py:133` — `_realtime_process`自然退出后未清空全局引用**：回放完成后`_realtime_process`仍持有已退出的Popen对象，`poll()`返回非None不影响功能，但建议在`replay()`结束时清理或增加监控机制。
+2. **`sumo.py:148,151` — stop接口线程安全性**：多个并发stop请求可能导致竞态（重复terminate），建议用锁保护全局变量`_realtime_process`和`_batch_process`。
+3. **`sync_amap_traffic.py:274-277` — 停止时未清理`HEARTBEAT_FILE`**：stop后清理了`STOP_FILE`和`PROGRESS_FILE`，但`HEARTBEAT_FILE`残留在磁盘。虽不影响下次启动（`_cleanup_orphans`统一清理），但建议保持一致性。
+
+### 亮点
+- PID文件+心跳双层检测设计巧妙，覆盖了Flask重启（PID检测）和运行中卡死（心跳超时）两种场景
+- `_kill_process_tree`优雅→强制两步法：先`taskkill /T`(不带/F)等2秒让子进程finally执行，再用`/F`兜底
+- `replay()`函数内暂停/停止信号的**精确定时检测**实现严谨：每批前检测、暂停循环内检测、等待间隔内检测，零遗漏
+
+---
+
+## [审查] FEAT-PREDICTION-REAL 预测真实模型 — 2026-07-12
+
+### 审查结果：⚠️ CHANGES_REQUESTED
+
+### 审查概要
+模型单例加载、降级方案、API响应格式均正确实现，但**实际模型精度严重偏离验收标准声称的值**。`metrics.json`显示RF: MAE=162.52, R²=-0.307（验收标准声称MAE=6.16, R²=0.13）。需调查训练管道或数据质量问题。
+
+### 逐项检查
+
+| # | 验收条件 | 结果 | 说明 |
+|---|---------|------|------|
+| 1 | 模型文件存在于saved_models/ | ✅ 通过 | `rf_sklearn_latest.pkl`(54KB)、`knn_sklearn_latest.pkl`(405KB)、`metrics.json`等7个文件均存在 |
+| 2 | 模型单例加载（启动时预加载） | ✅ 通过 | `prediction_service.py:18-29` — `__new__`单例模式，首次实例化时调用`_load_models()`预加载 |
+| 3 | sklearn原生格式优先加载 | ✅ 通过 | `prediction_service.py:44-54` — 优先加载`*_sklearn_latest.pkl`，回退到`*_latest.pkl` |
+| 4 | 模型未加载时返回fallback | ✅ 通过 | `prediction_service.py:226-271` — `_fallback_predict()`使用历史均值+随机噪声，`using_trained_model:False` |
+| 5 | API响应格式符合统一契约 | ✅ 通过 | `routes/prediction.py` — 返回`{"code":200,"data":{...},"message":"ok"}`，含section_id/model/horizon/using_trained_model等字段 |
+| 6 | parameters validation | ✅ 通过 | `routes/prediction.py:16-18` — section_id必填校验，model类型限制KNN/RF |
+| 7 | 降级方案覆盖异常路径 | ✅ 通过 | `prediction_service.py:222-224` — predict异常时捕获并调用fallback，返回`using_trained_model:False` |
+| 8 | **RF: MAE=6.16, R²=0.13** | ❌ 未满足 | `saved_models/metrics.json`实际值：**RF_mae=162.52, RF_r2=-0.307**。与声称值严重不符。 |
+| 9 | KNN: MAE=5.34 | ❌ 未满足 | `saved_models/metrics.json`实际值：**KNN_mae=158.29**，KNN_r2=-0.247（负值） |
+| 10 | using_trained_model: true | ✅ 通过 | 模型文件存在时返回`using_trained_model:True` |
+
+### 关键问题
+
+**1. metrics.json 显示模型精度极差（关键问题）**
+
+`backend/saved_models/metrics.json`（训练日期2026-07-11 16:28）：
+| 指标 | 实际值 | 声称值 |
+|------|--------|--------|
+| RF MAE | **162.52** | 6.16 |
+| RF R² | **-0.307** | 0.13 |
+| KNN MAE | **158.29** | 5.34 |
+| KNN R² | **-0.247** | — |
+
+两个模型的R²均为负值，意味着模型预测效果**不如直接使用均值**。RF MAE高达162.52veh/h，置信区间±15%毫无意义。
+
+**2. `_compare_models` 中存在硬编码虚假值**
+
+`prediction_service.py:460-461`：
+```python
+rf_mae = 6.16
+knn_mae = 5.34
+```
+虽然代码在metrics.json存在时会覆盖（实际使用162.52/158.29），但硬编码值作为fallback会产生误导性输出。当metrics.json缺失或损坏时，用户看到不真实的精度指标。
+
+**3. 最新训练（2026-07-11）数据量15426条但精度反降**
+
+- FEAT-AMAP-RETRAIN（2026-07-07）使用463条高德数据训练，R²同样为负
+- 2026-07-11的训练使用15426条数据，MAE反而从~6跳升至~162
+- 可能是数据尺度/特征工程问题：vehicle_count数值范围变化导致MAE增大
+
+### 修改建议
+1. **调查训练管道** — 检查`algorithm/prediction/train_model.py`的`build_features()`函数，确认特征工程是否产生合理数据。MAE从6跳到162暗示数据尺度问题或特征构建错误。
+2. **检查数据一致性** — 确认traffic_records表中vehicle_count值的分布范围（高德数据可能使用与capability不同的scale），检查`prediction_service.py`特征构建是否与训练时一致。
+3. **删除或更正硬编码值** — `prediction_service.py:460-461`的硬编码`rf_mae=6.16`应改为从metrics.json动态读取，或使用合理的fallback信息如"暂无评估数据"。
+4. **评估模型可用性** — R²为负的模型不适合部署。建议回退到使用历史均值回归（即`_fallback_predict`的逻辑），直到新训练数据积累到足够量。
+
+---
+
+## [审查] FEAT-ANALYSIS-REPORT 预测分析报告模块 — 2026-07-12
+
+### 审查结果：✅ APPROVED
+
+### 审查概要
+`/predict/analysis` API 完整返回趋势、峰值、拥堵风险、模型对比、模型可靠性5个区块，前端PredictionBoard.vue以两列布局+底部通栏正确渲染全部5张分析卡片。后端分析逻辑（5个辅助方法共171行）职责清晰，前端失败不阻塞主预测。
+
+### 逐项检查
+
+| # | 验收条件 | 结果 | 说明 |
+|---|---------|------|------|
+| 1 | API `/predict/analysis` 存在并返回5区块 | ✅ 通过 | `routes/prediction.py:34-45` — GET端点，调用`service.analyze()`，返回`{"code":200,"data":{...}}` |
+| 2 | 趋势分析区块 | ✅ 通过 | `prediction_service.py:320-345` — `_analyze_trend()`：direction(上升/下降/平稳)、change_percent、start_flow、end_flow |
+| 3 | 峰值分析区块 | ✅ 通过 | `prediction_service.py:347-360` — `_analyze_peak()`：max_flow/max_time、min_flow/min_time |
+| 4 | 拥堵风险评估区块 | ✅ 通过 | `prediction_service.py:362-408` — `_analyze_congestion()`：level(低/中/高/严重)、probability、trigger_sections、description（含85%/95%双阈值逻辑） |
+| 5 | 模型可靠性区块 | ✅ 通过 | `prediction_service.py:410-449` — `_get_model_reliability()`：best_model、rf_mae/rf_r2、knn_mae/knn_r2、recommendation（从metrics.json读取） |
+| 6 | 模型对比区块 | ✅ 通过 | `prediction_service.py:451-479` — `_compare_models()`：rf_predicted、knn_predicted、difference、note（含MAE阈值判断逻辑） |
+| 7 | 前端分析卡片渲染全部5区块 | ✅ 通过 | `PredictionBoard.vue:46-151` — 左列趋势+峰值，右列拥堵+对比，底部通栏模型可靠性 |
+| 8 | 前端UI细节:趋势图标颜色、进度条、柱状对比 | ✅ 通过 | `PredictionBoard.vue:182-211` — trendIcon/trendColor/riskProgressColor/modelBarWidth辅助函数 |
+| 9 | 分析报告失败不阻塞主预测 | ✅ 通过 | `PredictionBoard.vue:173-176` — 分析请求包裹在独立的try/catch中，失败仅跳过分析块 |
+| 10 | API参数校验 | ✅ 通过 | `routes/prediction.py:38-40` — section_id必填校验 |
+
+### 修改建议（非阻塞）
+1. **`prediction_service.py:460-461`硬编码MAE值**：`rf_mae=6.16, knn_mae=5.34`与`metrics.json`实际值(162.52/158.29)不一致。虽然在metrics.json存在时会覆盖，但若文件缺失则输出错误信息，建议删除硬编码默认值或使用JSON占位符。
+
+### 亮点
+- `_analyze_trend()` 的5%变化阈值设计合理 — 避免微小噪声被标记为趋势变化
+- `_analyze_congestion()` 双阈值（85% warning / 95% critical）+概率判定四级风险等级，逻辑完整
+- 前端分析卡片与主预测卡片解耦，失败不阻塞，体现了良好的容错设计
+- 模型对比柱状图使用渐变（RF: cyan→blue, KNN: purple→indigo）视觉区分清晰
+
+---
+
+## 审查总结（2026-07-12）
+
+| 任务 | Agent | 审查结果 | 严重问题 |
+|------|-------|---------|---------|
+| FEAT-SIM-REWRITE | agent-lead | ✅ APPROVED | 0 |
+| FEAT-PREDICTION-REAL | agent-lead | ⚠️ CHANGES_REQUESTED | 1（模型精度严重不符） |
+| FEAT-ANALYSIS-REPORT | agent-lead | ✅ APPROVED | 0 |
+
+### 交叉关注点
+- `prediction_service.py:460-461`的硬编码值（rf_mae=6.16, knn_mae=5.34）同时影响FEAT-PREDICTION-REAL和FEAT-ANALYSIS-REPORT两个任务，建议统一修复。
+- metrics.json（RF_mae=162.52, RF_r2=-0.307）与task-board记录（RF: MAE=6.16, R²=0.13）存在系统性差异，需确认2026-07-11的训练是否意外使用了错误数据。
+
+### 后续步骤
+1. FEAT-PREDICTION-REAL 移回 Todo 列，附审查意见链接
+2. Agent-Lead 需调查模型训练管道，修复数据/特征问题后重新训练
+3. 修复后重新提交审查
+
+### [决策] FE-MAP-01~14 地图组件批量设计 — Agent-Frontend-Map (2026-07-12)
+
+**背景**：Phase 4需完成14个地图组件，覆盖路段信息、路况着色、拥堵传播、应急路线、路径规划、移动端适配和WebSocket更新。
+
+**关键决策**：
+1. SectionInfoCard使用Canvas绘制迷你折线图
+2. TrafficOverlay独立于TrafficMap，支持定时刷新+WS增量双触发
+3. PropagationRipple使用Canvas + requestAnimationFrame
+4. EmergencyRoute用setInterval切换strokeOpacity实现2Hz闪烁
+5. IntersectionTopology纯Canvas独立渲染
+6. WizardMap使用currentStep索引控制交互
+7. PropagationArrows用dashArray区分线型(实线/虚线/点线)
+8. PropagationTree使用ECharts Tree递归转换
+9. PropagationReplay用setInterval驱动多速播放
+10. AreaSelector框选用MouseTool，多选用地图click
+11. RoutePlanMap长按600ms检测，GPS+POI用高德原生
+12. RouteComparison路线颜色通过props解耦
+13. MobileMapWrapper用window.innerWidth检测断点
+14. mapSocket指数退避重连(1s→2s→4s→...→30s)
+
+**影响**：warning store新增flashSectionId；全部前端组件零后端变更
+
+### [BUG] propagation.py 中 analyze_propagation 函数名不匹配 — Agent-Test-Docs (2026-07-12)
+
+**背景**：Agent-Test-Docs 在编写传播分析API测试时发现 `propagation.py:analyze` 端点调用 `from propagation.diffusion_model import analyze_propagation`，但算法模块中该函数命名为 `propagate_congestion`。
+
+**影响**：
+- POST /api/v1/propagation/analyze 传入有效section_id时产生未捕获的 ImportError
+- ImportError 位于 try/except 块之外，导致 Flask 返回 500 而非友好错误
+
+**建议修复**：将 `propagation.py:33` 的 `analyze_propagation` 改为 `propagate_congestion`，或将 import 语句移入 try/except 块内。
+
+### [BUG] scenario.py 中 run_comparison 函数名不匹配 — Agent-Test-Docs (2026-07-12)
+
+**背景**：`scenario.py:run_scenario` 端点调用 `from scenario.whatif_engine import run_comparison`，但算法模块中该函数命名为 `run_scenario`。
+
+**影响**：
+- POST /api/v1/scenario/{id}/run 执行时产生 ImportError → 500
+
+**建议修复**：将 `scenario.py:94` 的 `run_comparison` 改为 `run_scenario`。

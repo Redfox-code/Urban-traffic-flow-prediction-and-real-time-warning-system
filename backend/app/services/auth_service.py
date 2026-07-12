@@ -4,10 +4,15 @@ from app.models.user import User
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-def register_user(username, password, role='analyst'):
+VALID_ROLES = {'admin', 'analyst', 'traveler'}
+
+
+def register_user(username, password, role='traveler'):
     """注册用户，返回(user, error)"""
     if not username or not password:
         return None, ('用户名和密码不能为空', 400)
+    if role not in VALID_ROLES:
+        return None, (f'无效角色: {role}，可选: {", ".join(VALID_ROLES)}', 400)
     if User.query.filter_by(username=username).first():
         return None, ('用户名已存在', 409)
     user = User(username=username, password_hash=generate_password_hash(password), role=role)

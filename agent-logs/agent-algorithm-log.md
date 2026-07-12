@@ -100,3 +100,18 @@
 **💭分析**：(1)prediction.py端点无@jwt_required(); (2)PredictionService模型未加载返回code:500应改为503。
 **📝修复**：prediction.py两个端点加@jwt_required(); prediction_service.py错误码500→503; traffic.py加JWT保护。
 **✅验证**：pytest 17 passed, test_forecast_no_auth通过。
+
+### ALGO-ENGINES 六算法模块 (2026-07-12)
+
+| 时间 | 任务ID | 类型 | 内容 |
+|------|--------|------|------|
+| 7/12 | ALGO-SIG-01 | ✅ | Webster信号配时计算(webster.py)。Webster公式C_opt=(1.5L+5)/(1-Y)，支持多相位绿灯分配+延误估计+通行能力计算。 |
+| 7/12 | ALGO-CARB-01 | ✅ | 碳排放估算模型(emission_model.py)。简化COPERT模型CO2=a+bv+cv²+d/v，6种车辆类型，拥堵额外排放计算。 |
+| 7/12 | ALGO-PROP-01 | ✅ | 图扩散传播算法(diffusion_model.py)。从roadNetwork.json(92段)构建邻接矩阵(225边)，递归多跳传播+概率剪枝+深度限制。 |
+| 7/12 | ALGO-PROF-01 | ✅ | 常用路线自动识别(route_learning.py)。OD对聚合+EWMA更新+K-means出发时间聚类+semantic标签(上班/回家/周末)。 |
+| 7/12 | ALGO-RTE-01 | ✅ | 三路线生成算法(three_route_planner.py)。Dijkstra最短时间(A)+排除拥堵备选(B)+最短距离(C)，BPR速度-流量模型。 |
+| 7/12 | ALGO-SCEN-01 | ✅ | What-If仿真引擎(whatif_engine.py)。数学估算模型：限流/信号优化/路段封闭/组合策略。基线vs干预对比(延误/速度/CO2/拥堵数)。 |
+
+**决策**：全部6个算法模块使用纯Python实现，不依赖外部仿真引擎，可直接独立运行测试。平均每个模块200+行代码+完整测试用例。
+
+**验证结果**：6个模块全部独立测试通过。
