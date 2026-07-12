@@ -98,6 +98,12 @@
 | FE-TRAVELER-03 | 出行提醒页(AlertsView): 通勤开关+无限滚动+类型徽标+未读蓝色竖线标记已读 | agent-frontend-main |
 | FE-TRAVELER-04 | 历史记录页(HistoryView): 查询列表+重新加载+单条删除+清空全部 | agent-frontend-main |
 
+## ✅ Done (2026-07-13)
+
+| ID | 任务 | Agent |
+|----|------|-------|
+| ALGO-EVAL-01 | 新增评估数据API端点 GET /api/v1/predict/evaluation | agent-algorithm |
+
 ## 📋 Backlog
 
 | ID | 任务 | 优先级 | Agent | 备注 |
