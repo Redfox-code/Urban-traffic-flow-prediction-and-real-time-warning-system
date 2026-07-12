@@ -21,10 +21,24 @@ def calculate_webster(intersection_data):
         dict: {optimal_cycle, green_splits, efficiency_gain_pct, delay_reduction_sec}
     """
     phases = intersection_data.get('phases', [])
-    L = intersection_data.get('loss_time_per_phase', 5.0) * len(phases)
+
+    # 兼容前端简化输入：从 phase_count + total_flow 自动生成 phases
+    if not phases:
+        phase_count = intersection_data.get('phase_count', 0)
+        total_flow = intersection_data.get('total_flow', 0)
+        saturation_flow = intersection_data.get('saturation_flow', 1800)
+        if phase_count > 0 and total_flow > 0:
+            flow_per_phase = total_flow / phase_count
+            phases = [{
+                'phase_id': f'相位{i+1}',
+                'flow': round(flow_per_phase, 1),
+                'saturation_flow': saturation_flow
+            } for i in range(phase_count)]
+
+    L = intersection_data.get('loss_time_per_phase', 5.0) * len(phases) if phases else 0
 
     if not phases:
-        return {'error': '至少需要一个相位'}
+        return {'error': '至少需要一个相位（请在路口下拉中选择路口，或手动输入路口名称）'}
 
     # 计算各相位流量比 y = flow / saturation_flow
     y_values = []
