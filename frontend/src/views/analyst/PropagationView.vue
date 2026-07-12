@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { sectionsApi } from '@/api/sections'
 import { propagationApi } from '@/api/propagation'
 import * as echarts from 'echarts/core'
@@ -87,6 +87,7 @@ const treeData = ref(null)
 const flatList = ref([])
 const treeChartRef = ref(null)
 let treeChart = null
+let chartReady = false
 
 const form = reactive({
   section_id: null,
@@ -124,9 +125,10 @@ async function handleAnalyze() {
     })
     treeData.value = res.data || res
     flatList.value = treeData.value?.flat_list || extractFlat(treeData.value?.propagation_tree)
+    // 渲染由 watch(treeData) 自动触发，无需手动调用 renderTreeChart
     await nextTick()
-    renderTreeChart()
-  } catch {
+  } catch (e) {
+    console.error('[Propagation] analyze error:', e)
     treeData.value = null
     flatList.value = []
   }
@@ -159,26 +161,51 @@ function findSectionName(sid) {
 
 function buildEChartsTree(node, parentName) {
   if (!node) return null
-  const secName = findSectionName(node.section_id)
-  const label = `${secName}\nP=${((node.probability || 0) * 100).toFixed(0)}% | 延迟${(node.delay_minutes || 0).toFixed(1)}min`
-  const color = (node.probability || 0) >= 0.7 ? '#f44336' : (node.probability || 0) >= 0.5 ? '#ff9800' : (node.probability || 0) >= 0.3 ? '#4caf50' : '#2196f3'
-  const children = (node.children || [])
-    .filter(c => c && c.section_id)
-    .map(c => buildEChartsTree(c, secName))
-    .filter(Boolean)
-  return {
-    name: label,
-    value: node.section_id,
-    collapsed: (node.depth || 0) >= 3,
-    itemStyle: { color, borderColor: color, borderWidth: 2 },
-    children: children.length > 0 ? children : undefined,
+  try {
+    const secName = findSectionName(node.section_id)
+    const prob = node.probability || 0
+    const delay = node.delay_minutes || 0
+    const label = `${secName}\nP=${(prob * 100).toFixed(0)}% | 延迟${delay.toFixed(1)}min`
+    const color = prob >= 0.7 ? '#f44336' : prob >= 0.5 ? '#ff9800' : prob >= 0.3 ? '#4caf50' : '#2196f3'
+    const children = (node.children || [])
+      .filter(c => c && c.section_id)
+      .map(c => buildEChartsTree(c, secName))
+      .filter(Boolean)
+    return {
+      name: label,
+      value: node.section_id,
+      collapsed: (node.depth || 0) >= 3,
+      itemStyle: { color, borderColor: color, borderWidth: 2 },
+      children: children.length > 0 ? children : undefined,
+    }
+  } catch (e) {
+    console.error('[Propagation] buildEChartsTree error:', e, node)
+    return null
   }
 }
 
 function renderTreeChart() {
-  if (!treeChartRef.value || !treeData.value) return
-  if (treeChart) { treeChart.dispose(); treeChart = null }
-  treeChart = echarts.init(treeChartRef.value)
+  if (!treeChartRef.value) {
+    console.warn('[Propagation] chart container ref not ready')
+    return
+  }
+  if (!treeData.value) {
+    console.warn('[Propagation] no tree data to render')
+    return
+  }
+
+  // dispose old instance before init
+  if (treeChart) {
+    try { treeChart.dispose() } catch (e) { /* already disposed */ }
+    treeChart = null
+  }
+
+  try {
+    treeChart = echarts.init(treeChartRef.value)
+  } catch (e) {
+    console.error('[Propagation] echarts.init failed:', e)
+    return
+  }
 
   const root = treeData.value.propagation_tree || treeData.value
   const treeRoot = buildEChartsTree(root)
@@ -186,52 +213,80 @@ function renderTreeChart() {
   console.log('[Propagation] treeRoot:', JSON.stringify(treeRoot, null, 2).slice(0, 500))
   console.log('[Propagation] treeData keys:', Object.keys(treeData.value))
 
-  if (!treeRoot) return
+  if (!treeRoot) {
+    console.warn('[Propagation] treeRoot is null — no valid tree structure')
+    return
+  }
 
-  treeChart.setOption({
-    backgroundColor: '#1a1a2e',
-    tooltip: {
-      trigger: 'item',
-      triggerOn: 'mousemove',
-    },
-    series: [{
-      type: 'tree',
-      data: [treeRoot],
-      top: '3%',
-      left: '8%',
-      bottom: '3%',
-      right: '15%',
-      symbolSize: 14,
-      orient: 'LR',
-      roam: true,
-      expandAndCollapse: true,
-      initialTreeDepth: 5,
-      edgeShape: 'curve',
-      edgeForkPosition: '50%',
-      label: {
-        position: 'right',
-        verticalAlign: 'middle',
-        align: 'left',
-        fontSize: 11,
-        color: '#e0e0e0',
-        backgroundColor: 'rgba(30,30,30,0.8)',
-        padding: [4, 8],
-        borderRadius: 4,
+  try {
+    treeChart.setOption({
+      backgroundColor: '#1a1a2e',
+      tooltip: {
+        trigger: 'item',
+        triggerOn: 'mousemove',
       },
-      leaves: {
-        label: { position: 'right', verticalAlign: 'middle', align: 'left', fontSize: 11, color: '#e0e0e0' },
-      },
-      emphasis: { focus: 'descendant' },
-      lineStyle: { color: '#666', width: 2, curveness: 0.5 },
-    }],
-  }, true)
+      series: [{
+        type: 'tree',
+        data: [treeRoot],
+        top: '3%',
+        left: '8%',
+        bottom: '3%',
+        right: '15%',
+        symbolSize: 14,
+        orient: 'LR',
+        roam: true,
+        expandAndCollapse: true,
+        initialTreeDepth: 5,
+        edgeShape: 'curve',
+        edgeForkPosition: '50%',
+        label: {
+          position: 'right',
+          verticalAlign: 'middle',
+          align: 'left',
+          fontSize: 11,
+          color: '#e0e0e0',
+          backgroundColor: 'rgba(30,30,30,0.8)',
+          padding: [4, 8],
+          borderRadius: 4,
+        },
+        leaves: {
+          label: { position: 'right', verticalAlign: 'middle', align: 'left', fontSize: 11, color: '#e0e0e0' },
+        },
+        emphasis: { focus: 'descendant' },
+        lineStyle: { color: '#666', width: 2, curveness: 0.5 },
+      }],
+    }, true)
 
-  treeChart.resize()
+    chartReady = true
+    treeChart.resize()
+  } catch (e) {
+    console.error('[Propagation] setOption failed:', e)
+  }
 }
 
 function handleResize() {
-  treeChart?.resize()
+  if (treeChart && chartReady) {
+    try { treeChart.resize() } catch (e) { /* disposed */ }
+  }
 }
+
+// 自动渲染：当 treeData 变化且 DOM 就绪时重新绘制
+watch(treeData, (val) => {
+  if (val) {
+    nextTick(() => {
+      // 首次渲染可能因 v-loading 遮挡导致尺寸为 0，延迟重绘确保尺寸正确
+      renderTreeChart()
+      setTimeout(() => renderTreeChart(), 100)
+    })
+  } else {
+    // 数据清空时销毁图表
+    if (treeChart) {
+      try { treeChart.dispose() } catch (e) { /* ignore */ }
+      treeChart = null
+      chartReady = false
+    }
+  }
+})
 
 onMounted(async () => {
   await loadSections()
@@ -240,11 +295,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  treeChart?.dispose()
-})
-
-onUnmounted(() => {
-  treeChart?.dispose()
+  if (treeChart) {
+    try { treeChart.dispose() } catch (e) { /* already disposed */ }
+    treeChart = null
+    chartReady = false
+  }
 })
 </script>
 
