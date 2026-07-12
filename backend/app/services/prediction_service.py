@@ -532,3 +532,134 @@ class PredictionService:
             },
             'updated_at': '',
         }
+
+    def evaluate(self, sample_size=50):
+        """从 traffic_records 随机采样，用当前模型预测并返回评估结果
+
+        Args:
+            sample_size: 采样条数（默认50，最终输出范围受限于数据库总量）
+
+        Returns:
+            dict: {
+                'models': {模型名: {mae, rmse, r2}},
+                'comparison': [{metric, knn, rf}, ...],
+                'predictions': [{actual, knn_pred, rf_pred}, ...],
+                'sample_count': int,
+            }
+        """
+        import json
+        import numpy as np
+        import pandas as pd
+        from app import db
+        from app.models import TrafficRecord
+        from sqlalchemy import func
+
+        model_dir = self._get_model_dir()
+        metrics_path = os.path.join(model_dir, 'metrics.json')
+
+        # 1. 从 metrics.json 读取当前模型指标
+        models_metrics = {}
+        if os.path.exists(metrics_path):
+            with open(metrics_path, 'r') as f:
+                metrics = json.load(f)
+            models_metrics = {
+                'KNN': {
+                    'mae': metrics.get('KNN_mae', 0),
+                    'rmse': metrics.get('KNN_rmse', 0),
+                    'r2': metrics.get('KNN_r2', 0),
+                },
+                'RF': {
+                    'mae': metrics.get('RF_mae', 0),
+                    'rmse': metrics.get('RF_rmse', 0),
+                    'r2': metrics.get('RF_r2', 0),
+                },
+            }
+
+        # 2. 随机采样
+        total = db.session.query(func.count(TrafficRecord.id)).scalar()
+        if not total:
+            return {'error': 'No data in traffic_records', 'code': 404}
+
+        actual_sample_size = min(sample_size, total)
+        sample = db.session.query(TrafficRecord).order_by(func.random()).limit(actual_sample_size).all()
+
+        # 3. 逐条特征构造 + 预测
+        predictions = []
+        for record in sample:
+            actual = float(record.vehicle_count)
+
+            # 找到同路段上一条记录作为滞后特征来源
+            prev = db.session.query(TrafficRecord).filter(
+                TrafficRecord.section_id == record.section_id,
+                TrafficRecord.timestamp < record.timestamp
+            ).order_by(TrafficRecord.timestamp.desc()).first()
+
+            if prev:
+                avg_speed_lag = float(prev.avg_speed)
+                occupancy_lag = float(prev.occupancy)
+                vehicle_count_lag = float(prev.vehicle_count)
+            else:
+                # 没有前序记录时，用当前记录自身作为近似
+                avg_speed_lag = float(record.avg_speed)
+                occupancy_lag = float(record.occupancy)
+                vehicle_count_lag = float(record.vehicle_count)
+
+            features = pd.DataFrame([[
+                record.section_id,
+                record.timestamp.hour,
+                record.timestamp.weekday(),
+                1 if record.timestamp.weekday() >= 5 else 0,
+                avg_speed_lag,
+                occupancy_lag,
+                vehicle_count_lag,
+            ]], columns=self._feature_cols)
+
+            knn_pred = None
+            rf_pred = None
+
+            if self._models.get('KNN'):
+                knn_pred = round(max(0, float(self._models['KNN'].predict(features)[0])), 1)
+
+            if self._models.get('RF'):
+                rf_pred = round(max(0, float(self._models['RF'].predict(features)[0])), 1)
+
+            predictions.append({
+                'actual': actual,
+                'knn_pred': knn_pred,
+                'rf_pred': rf_pred,
+            })
+
+        # 4. 计算样本上的对比指标（仅对两个模型均有有效预测的条目）
+        valid = [p for p in predictions if p['knn_pred'] is not None and p['rf_pred'] is not None]
+
+        if valid and len(valid) > 1:
+            actuals = np.array([p['actual'] for p in valid], dtype=float)
+            knn_preds = np.array([p['knn_pred'] for p in valid], dtype=float)
+            rf_preds = np.array([p['rf_pred'] for p in valid], dtype=float)
+
+            knn_mae = float(np.mean(np.abs(actuals - knn_preds)))
+            rf_mae = float(np.mean(np.abs(actuals - rf_preds)))
+            knn_rmse = float(np.sqrt(np.mean((actuals - knn_preds) ** 2)))
+            rf_rmse = float(np.sqrt(np.mean((actuals - rf_preds) ** 2)))
+
+            ss_tot = np.sum((actuals - np.mean(actuals)) ** 2)
+            if ss_tot > 0:
+                knn_r2 = float(1 - np.sum((actuals - knn_preds) ** 2) / ss_tot)
+                rf_r2 = float(1 - np.sum((actuals - rf_preds) ** 2) / ss_tot)
+            else:
+                knn_r2 = rf_r2 = 0.0
+        else:
+            knn_mae = rf_mae = knn_rmse = rf_rmse = knn_r2 = rf_r2 = 0.0
+
+        comparison = [
+            {'metric': 'MAE', 'knn': round(knn_mae, 2), 'rf': round(rf_mae, 2)},
+            {'metric': 'RMSE', 'knn': round(knn_rmse, 2), 'rf': round(rf_rmse, 2)},
+            {'metric': 'R²', 'knn': round(knn_r2, 3), 'rf': round(rf_r2, 3)},
+        ]
+
+        return {
+            'models': models_metrics,
+            'comparison': comparison,
+            'predictions': predictions,
+            'sample_count': len(predictions),
+        }
