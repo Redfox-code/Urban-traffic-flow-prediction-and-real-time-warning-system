@@ -22,7 +22,7 @@
     Saberi, M. et al. "A Complex Network Perspective on Traffic Congestion"
 """
 
-from typing import List, Dict, Optional, Set, Tuple
+from typing import List, Dict, Optional, Set, Tuple  # noqa: F401
 from dataclasses import dataclass, field
 import math
 import json
@@ -78,63 +78,62 @@ def load_road_network(json_path: str = None) -> List[Dict]:
 def build_adjacency_matrix(
     segments: List[Dict],
     proximity_threshold_m: float = 100.0,
+    cross_threshold_m: float = 50.0,
 ) -> Dict[int, List[int]]:
-    """
-    构建路段邻接矩阵。
+    """构建路段邻接矩阵。
 
-    两个路段相邻的条件: 一条路段的端点与另一条路段的端点的距离 < threshold。
+    两个路段相邻的条件（任一即可）：
+    1. 端点距离 < proximity_threshold_m（默认100m）
+    2. 空间交叉：任意两点距离 < cross_threshold_m（默认50m）
 
     Args:
         segments: 路段列表 [{id, path, ...}]
-        proximity_threshold_m: 相邻判定阈值 (米), 默认 100m
+        proximity_threshold_m: 端点相邻阈值 (米)
+        cross_threshold_m: 空间交叉检测阈值 (米)
 
     Returns:
         {section_id: [相邻的section_id列表]}
     """
     adj = {s["id"]: [] for s in segments}
-
-    # 提取每条路段的起点和终点
-    endpoints = {}
-    for s in segments:
-        path = s["path"]
-        if path:
-            endpoints[s["id"]] = {
-                "start": (path[0][0], path[0][1]),
-                "end": (path[-1][0], path[-1][1]),
-            }
-        else:
-            endpoints[s["id"]] = None
-
-    # 两两比较
+    paths = {s["id"]: s.get("path", []) for s in segments}
     threshold_km = proximity_threshold_m / 1000.0
+    cross_km = cross_threshold_m / 1000.0
     seg_ids = [s["id"] for s in segments]
 
     for i in range(len(seg_ids)):
         id_i = seg_ids[i]
-        ep_i = endpoints.get(id_i)
-        if ep_i is None:
+        path_i = paths.get(id_i, [])
+        if len(path_i) < 2:
             continue
 
-        # 只检查未配对的, 减少重复计算
         for j in range(i + 1, len(seg_ids)):
             id_j = seg_ids[j]
-            ep_j = endpoints.get(id_j)
-            if ep_j is None:
+            path_j = paths.get(id_j, [])
+            if len(path_j) < 2:
                 continue
 
-            # 检查端点间距离 (4 种组合)
-            dists = [
-                haversine_km(ep_i["start"][0], ep_i["start"][1],
-                             ep_j["start"][0], ep_j["start"][1]),
-                haversine_km(ep_i["start"][0], ep_i["start"][1],
-                             ep_j["end"][0], ep_j["end"][1]),
-                haversine_km(ep_i["end"][0], ep_i["end"][1],
-                             ep_j["start"][0], ep_j["start"][1]),
-                haversine_km(ep_i["end"][0], ep_i["end"][1],
-                             ep_j["end"][0], ep_j["end"][1]),
-            ]
+            connected = False
 
-            if any(d <= threshold_km for d in dists):
+            # 方式1: 端点距离检查
+            for pt_a in (path_i[0], path_i[-1]):
+                for pt_b in (path_j[0], path_j[-1]):
+                    if haversine_km(pt_a[0], pt_a[1], pt_b[0], pt_b[1]) <= threshold_km:
+                        connected = True
+                        break
+                if connected:
+                    break
+
+            # 方式2: 空间交叉检查
+            if not connected:
+                for pta in path_i[::2]:
+                    for ptb in path_j[::2]:
+                        if haversine_km(pta[0], pta[1], ptb[0], ptb[1]) <= cross_km:
+                            connected = True
+                            break
+                    if connected:
+                        break
+
+            if connected:
                 adj[id_i].append(id_j)
                 adj[id_j].append(id_i)
 
@@ -300,27 +299,17 @@ def estimate_delay_minutes(
     source_speed_kmh: float,
     target_speed_kmh: float,
     distance_km: float,
+    propagation_probability: Optional[float] = None,
 ) -> float:
+    """估算拥堵传播导致目标路段的预期延误 (分钟)。
+
+    delay = P × 10 + distance(km) × 3
+    概率权重10：代表拥堵严重程度对延误的影响
+    距离权重3：代表物理距离对延误的影响（min/km）
     """
-    估计传播导致的目标路段延误 (分钟)。
-
-    基于速度差异和距离:
-    delay = distance * (1/target_speed - 1/source_speed) * 60 (min)
-
-    Args:
-        source_speed_kmh: 源路段速度
-        target_speed_kmh: 目标路段当前速度
-        distance_km: 路段长度 (km)
-
-    Returns:
-        延误 (分钟), 最小 0
-    """
-    freeflow_speed = max(source_speed_kmh, 40.0)  # 假设自由流速度
-    current_speed = max(target_speed_kmh, 1.0)
-
-    delay_hours = distance_km * (1.0 / current_speed - 1.0 / freeflow_speed)
-    delay_min = max(0.0, delay_hours * 60.0)
-    return delay_min
+    prob = propagation_probability or 0.3
+    delay_min = max(0.5, prob * 10.0 + distance_km * 3.0)
+    return round(delay_min, 1)
 
 
 def propagate_congestion(
@@ -333,6 +322,7 @@ def propagate_congestion(
     base_prob: float = 0.6,
     alpha: float = 0.5,
     distances: Optional[Dict[Tuple[int, int], float]] = None,
+    seg_lengths: Optional[Dict[int, float]] = None,
 ) -> PropagationResult:
     """
     递归多跳拥堵传播计算。
@@ -356,9 +346,13 @@ def propagate_congestion(
         current_id: int,
         from_id: Optional[int],
         current_depth: int,
-        visited: Set[int],
+        path_ancestors: Set[int],
     ) -> Optional[PropagationNode]:
-        """递归 DFS 构建传播树"""
+        """递归 DFS 构建传播树。
+
+        使用 path_ancestors（当前路径上的祖先节点）而非全局 visited，
+        确保每个节点可以向所有邻居分支展开完整的树结构。
+        """
         if current_depth > max_depth:
             return None
 
@@ -384,7 +378,9 @@ def propagate_congestion(
             if section_delays and current_id in section_delays:
                 delay = section_delays[current_id]
             else:
-                delay = estimate_delay_minutes(source_speed, target_speed, distance)
+                # 用目标路段实际长度算延迟
+                road_len = seg_lengths.get(current_id, distance) if seg_lengths else distance
+                delay = estimate_delay_minutes(source_speed, target_speed, road_len, prob)
 
         # 剪枝
         if prob < prob_threshold and from_id is not None:
@@ -398,19 +394,23 @@ def propagate_congestion(
             depth=current_depth,
         )
 
-        visited.add(current_id)
+        # 构建当前路径的祖先集合（防止回环）
+        path_ancestors.add(current_id)
 
-        # 递归处理相邻路段
+        # 递归处理所有相邻路段（跳过已在当前路径上的）
         for neighbor in adjacency_matrix.get(current_id, []):
-            if neighbor not in visited:
-                child = _dfs(neighbor, current_id, current_depth + 1, visited)
+            if neighbor not in path_ancestors:
+                child = _dfs(neighbor, current_id, current_depth + 1, path_ancestors)
                 if child is not None:
                     node.children.append(child)
 
+        # 回溯：移除当前节点，让其他分支可以访问
+        path_ancestors.discard(current_id)
+
         return node
 
-    visited: Set[int] = set()
-    tree = _dfs(source_section_id, None, 0, visited)
+    path_ancestors: Set[int] = set()
+    tree = _dfs(source_section_id, None, 0, path_ancestors)
 
     if tree is None:
         tree = PropagationNode(

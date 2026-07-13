@@ -154,20 +154,23 @@ def _match_name(section_name):
     return ids
 
 def _section_center_point(section):
-    """DB路段的中心坐标"""
+    """DB路段的中心坐标。waypoints为空时用start/end中点兜底。"""
     c = section.coordinates
     if not c: return None
     wp = c.get('waypoints', []) or c.get('path', [])
-    if not wp: return None
-    return wp[len(wp) // 2]
+    if wp and len(wp) > 0:
+        return wp[len(wp) // 2]
+    start = c.get('start'); end = c.get('end')
+    if start and end:
+        return [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
+    return start or end
 
 
 def _match_coord(section):
     c = section.coordinates
     if not c: return []
-    wp = c.get('waypoints',[]) or c.get('path',[]);
-    if not wp: return []
-    ct = wp[len(wp)//2]
+    ct = _section_center_point(section)
+    if not ct: return []
     best, bd = None, float('inf')
     for seg in _AMAP:
         for pt in seg.get('path',[])[::2]:
